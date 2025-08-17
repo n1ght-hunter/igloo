@@ -448,7 +448,7 @@ impl Tour {
         let is_secure = self.input_is_secure;
         let is_showing_icon = self.input_is_showing_icon;
 
-        let mut text_input = text_input("Type something to continue...", value)
+        let text_input = text_input("Type something to continue...", value)
             .on_input(Message::InputChanged)
             .padding(10)
             .size(30);

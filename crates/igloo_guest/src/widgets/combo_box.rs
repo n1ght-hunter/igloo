@@ -17,7 +17,7 @@ pub struct State<T> {
 }
 
 impl<T: std::fmt::Display + Clone> State<T> {
-    fn new(options: Vec<T>) -> Self {
+    pub fn new(options: Vec<T>) -> Self {
         Self {
             str_options: options.iter().map(|o| o.to_string()).collect(),
             options,
