@@ -568,7 +568,7 @@ impl Screen {
 
 fn ferris<'a>(width: f32, filter_method: FilterMethod) -> Container<Message> {
     container(
-        image("tour/images/ferris.png")
+        image("assets/ferris.png")
             .filter_method(filter_method)
             .width(width),
     )
@@ -659,7 +659,7 @@ impl From<u64> for Layout {
 impl Default for Tour {
     fn default() -> Self {
         Self {
-            screen: Screen::TextInput,
+            screen: Screen::Welcome,
             slider: 50.0,
             layout: Layout::Row,
             spacing: 20.0,
