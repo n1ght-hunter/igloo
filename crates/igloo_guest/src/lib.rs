@@ -10,7 +10,7 @@ pub use iced_core::*;
 #[allow(unsafe_code)]
 pub mod bindings;
 
-use std::{cell::RefCell, collections::HashMap};
+use std::{collections::HashMap, sync::Mutex};
 
 pub use element::Element;
 
@@ -23,7 +23,7 @@ where
     State: Application<State, Message>,
 {
     message_manager: MessageManager<Message>,
-    state: RefCell<State>,
+    state: Mutex<State>,
 }
 
 impl<State, Message> StateManager<State, Message>
@@ -33,12 +33,12 @@ where
     pub fn new() -> Self {
         Self {
             message_manager: MessageManager::new(),
-            state: RefCell::new(State::new()),
+            state: Mutex::new(State::new()),
         }
     }
 
     pub fn view(&self) -> bindings::Element {
-        let state = self.state.borrow();
+        let state = self.state.lock().unwrap();
         let view = state.view();
         let element = view.as_element(&self.message_manager);
         element
@@ -47,12 +47,12 @@ where
     pub fn update(&self, message_id: u64, message: bindings::iced::app::message::Message) {
         let message = self.message_manager.get_message(message_id, message);
         if let Some(message) = message {
-            self.state.borrow_mut().update(message);
+            self.state.lock().unwrap().update(message);
         }
     }
 }
 
-pub trait Application<State, Message> {
+pub trait Application<State, Message>: Send + Sync {
     fn new() -> Self
     where
         Self: Sized;
@@ -144,7 +144,7 @@ macro_rules! export_guest {
                 }
             }
 
-            static STATE: std::cell::LazyCell<igloo_guest::StateManager<State, Message>> = std::cell::LazyCell::new(|| igloo_guest::StateManager::<State, Message>::new());
+            static STATE: std::sync::LazyLock<igloo_guest::StateManager<State, Message>> = std::sync::LazyLock::new(|| igloo_guest::StateManager::<State, Message>::new());
 
             impl igloo_guest::bindings::Guest for GuestComponent {
                 fn view() -> igloo_guest::bindings::Element {
