@@ -3,13 +3,18 @@
     <img src="assets/igloo.png" alt="Igloo Logo" width="120" style="border-radius: 15px;" />
 </p>
 
-# WASM-Test: WebAssembly GUI Plugin System
 
-A proof-of-concept WebAssembly plugin system for GUI applications using Rust, Iced, and the WebAssembly Component Model.
+# Igloo: WebAssembly Plugin System for Iced
+
+Igloo is a modular plugin system for GUI applications, built with Rust, Iced, and the WebAssembly Component Model. It enables dynamic loading of UI components as secure, sandboxed WebAssembly plugins, making it easy to extend and customize desktop applications.
 
 ## Overview
 
-This project demonstrates how to build a modular GUI application where the UI components are loaded as WebAssembly plugins. The system uses:
+
+Igloo lets you:
+- Build desktop GUIs with plugins written in Rust or other WASM-compatible languages
+- Use WIT (WebAssembly Interface Types) for type-safe host/guest communication
+- Run plugins in a secure, isolated environment
 
 - **Host Application**: An Iced-based GUI application that manages and renders WebAssembly plugins
 - **Guest Plugins**: WebAssembly components that define UI elements and behavior
@@ -29,45 +34,31 @@ This project demonstrates how to build a modular GUI application where the UI co
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
+
 ## Project Structure
 
 ```
-wasm-test/
+igloo/
 ├── crates/
-│   ├── igloo/              # Host library for managing WASM plugins
-│   │   ├── src/
-│   │   │   ├── lib.rs
-│   │   │   ├── plugin_manager.rs
-│   │   │   └── widgets/    # Host-side widget implementations
-│   │   └── Cargo.toml
-│   └── igloo_guest/        # Guest library for creating WASM plugins
-│       ├── src/
-│       │   ├── lib.rs
-│       │   ├── element.rs
-│       │   └── widgets/    # Guest-side widget implementations
-│       └── Cargo.toml
-├── examples/
-│   └── rust_host/          # Example host application
-│       ├── guest/          # Example guest plugin
-│       └── src/main.rs     # Main host application
-├── wit/                    # WebAssembly Interface Type definitions
-│   ├── world.wit          # Main interface definition
-│   ├── shared.wit         # Shared types
-│   ├── message.wit        # Message handling
-│   └── *.wit             # UI component definitions
+│   ├── igloo_host/        # Host library for managing WASM plugins
+│   └── igloo_guest/       # Guest library for creating WASM plugins (plugin authors)
 ├── plugins/
 │   └── js/                # JavaScript plugin support (experimental)
+├── examples/
+│   └── rust_host/         # Example host application
+├── wit/                   # WebAssembly Interface Type definitions
 └── justfile               # Build automation
 ```
 
+
 ## Features
 
-- **Type-Safe Plugin Communication**: Using WIT for interface definitions
-- **Rich UI Components**: Support for buttons, text, containers, layouts, and more
+- **Type-Safe Plugin Communication**: WIT-based interfaces for host/guest messaging
+- **Rich UI Components**: Buttons, text, containers, layouts, and more
 - **Message Passing**: Bidirectional communication between host and plugins
 - **Resource Management**: Efficient handling of UI elements across WASM boundary
 - **Plugin Isolation**: Secure sandboxed execution of plugin code
-- **Multi-Language Support**: Framework for supporting different plugin languages
+- **Multi-Language Support**: Rust, JavaScript (experimental), and more
 
 ## Getting Started
 
@@ -75,6 +66,7 @@ wasm-test/
 
 - Rust and rustup installed
 - [mise](https://mise.jdx.dev/) installed 
+
 
 ### Setup
 
@@ -156,15 +148,17 @@ impl igloo_guest::Application<MyPlugin, MyMessage> for MyPlugin {
 igloo_guest::export_guest!(MyPlugin, MyMessage);
 ```
 
+
 4. Compile to WASM:
 ```bash
 cargo build --target wasm32-wasip2 --release
 ```
 
+
 ### Loading Plugins in Host
 
 ```rust
-use igloo::plugin_manager::PluginManager;
+use test_host::plugin_manager::PluginManager;
 
 let mut plugin_manager = PluginManager::new()?;
 plugin_manager.add_plugin_from_file("my-plugin", "path/to/plugin.wasm")?;
