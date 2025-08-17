@@ -2249,6 +2249,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "igloo"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "iced",
+ "thiserror 2.0.14",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "igloo_guest"
+version = "0.1.0"
+dependencies = [
+ "iced_core",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "image"
 version = "0.25.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4311,28 +4333,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "igloo_guest"
-version = "0.1.0"
-dependencies = [
- "iced_core",
- "wit-bindgen",
-]
-
-[[package]]
-name = "igloo"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "iced",
- "thiserror 2.0.14",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "wasmtime",
- "wasmtime-wasi",
 ]
 
 [[package]]
