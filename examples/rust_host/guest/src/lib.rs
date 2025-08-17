@@ -1,11 +1,11 @@
+use igloo_guest::widgets::button;
 use igloo_guest::{
     Alignment, Color, Element, Length,
     alignment::Horizontal,
     image::FilterMethod,
     widgets::{
-        Column, Container, Slider, button, button::Button, checkbox, column, container,
-        horizontal_space, radio, row, scrollable, slider, text, text_input, toggler,
-        vertical_space,
+        Column, Container, Slider, button::Button, checkbox, column, container, horizontal_space,
+        image, radio, row, scrollable, slider, text, text_input, toggler, vertical_space,
     },
 };
 
@@ -568,12 +568,9 @@ impl Screen {
 
 fn ferris<'a>(width: f32, filter_method: FilterMethod) -> Container<Message> {
     container(
-        // This should go away once we unify resource loading on native
-        // platforms
-        // image("tour/images/ferris.png")
-        //     .filter_method(filter_method)
-        //     .width(width),
-        "",
+        image("tour/images/ferris.png")
+            .filter_method(filter_method)
+            .width(width),
     )
     .center_x(Length::Fill)
 }
