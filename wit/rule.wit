@@ -1,0 +1,11 @@
+interface rule {
+    use shared.{pixels};
+
+    /// A horizontal or vertical rule used for dividing content.
+    record rule {
+        /// Whether the rule is horizontal.
+        is-horizontal: bool,
+        /// Thickness of the rule in pixels.
+        thickness: pixels,
+    }
+}

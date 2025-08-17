@@ -1,0 +1,15 @@
+interface button {
+    use shared.{element};
+    use length.{length};
+    use padding.{padding};
+    use message.{message-id};
+
+    record button {
+        content: element,
+        width: option<length>,
+        height: option<length>,
+        padding: option<padding>,
+        on-press: option<message-id>,
+        clip: option<bool>
+    }
+}

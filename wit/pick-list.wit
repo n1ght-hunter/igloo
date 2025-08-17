@@ -1,0 +1,27 @@
+interface pick-list {
+    use message.{message-id};
+    use shared.{pixels};
+    use length.{length};
+    use text.{line-height, shaping};
+    use padding.{padding};
+
+    /// A widget for selecting a value from a set of options.
+    record pick-list {
+        /// The options displayed in the [`PickList`].
+        options: list<string>,
+        /// The index of the currently selected option.
+        selected: option<string>,
+        on-select: message-id,
+        /// The placeholder to display when no option is selected.
+        placeholder: option<string>,
+        width: option<length>,
+        padding: option<padding>,
+        text-size: option<pixels>,
+        text-line-height: option<line-height>,
+        text-shaping: option<shaping>,
+        /// The message produced when the [`PickList`] is opened.
+        on-open: option<message-id>,
+        /// The message produced when the [`PickList`] is closed.
+        on-close: option<message-id>,
+    }
+}

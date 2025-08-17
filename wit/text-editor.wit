@@ -1,0 +1,12 @@
+// interface text-editor {
+//     use message.{message};
+
+//     record content {
+
+//     }
+
+//     /// A multi-line editor for text input.
+//     record text-editor {
+//         content: content,
+//     }
+// }

@@ -1,0 +1,18 @@
+interface image {
+    use shared.{element, rotation, content-fit, filter-method};
+    use length.{length};
+
+    /// A frame that displays an image.
+    record image {
+        /// The path to the image file.
+        handle: string,
+        width: option<length>,
+        height: option<length>,
+        expand: option<bool>,
+        content-fit: option<content-fit>,
+        filter-method: option<filter-method>,
+        rotation: option<rotation>,
+        opacity: option<f32>,
+        scale: option<f32>,
+    }
+}

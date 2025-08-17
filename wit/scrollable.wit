@@ -1,0 +1,35 @@
+interface scrollable {
+    use shared.{pixels, element};
+    use length.{length};
+    use padding.{padding};
+    use alignment.{vertical};
+    use message.{message-id};
+
+    enum anchor {
+        start,
+        end,
+    }
+
+    record scrollbar {
+        width: option<pixels>,
+        margin: option<pixels>,
+        scroller-width: option<pixels>,
+        alignment: option<anchor>,
+        spacing: option<pixels>,
+    }
+
+    variant direction {
+        vertical(scrollbar),
+        horizontal(scrollbar),
+        both(tuple<scrollbar, scrollbar>),
+    }
+
+    record scrollable {
+        content: element,
+        width: option<length>,
+        height: option<length>,
+        on-scroll: option<message-id>,
+        direction: option<direction>,
+    }
+}
+

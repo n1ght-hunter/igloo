@@ -1,0 +1,12 @@
+interface padding {
+    record padding {
+        /// The amount of padding on the left side.
+        left: f32,
+        /// The amount of padding on the right side.
+        right: f32,
+        /// The amount of padding on the top side.
+        top: f32,
+        /// The amount of padding on the bottom side.
+        bottom: f32,
+    }
+}

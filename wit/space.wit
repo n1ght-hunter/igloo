@@ -1,0 +1,10 @@
+interface space {
+    use message.{message-id};
+    use length.{length};
+
+    /// A horizontal bar for selecting a value from a range of floats.
+    record space {
+        width: length,
+        height: length,
+    }
+}

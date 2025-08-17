@@ -1,0 +1,37 @@
+interface alignment {
+    /// The vertical [`alignment`] of some resource.
+    enum vertical {
+        /// Align top
+        top,
+
+        /// Vertically centered
+        center,
+
+        /// Align bottom
+        bottom,
+    }
+
+    /// The horizontal [`alignment`] of some resource.
+    enum horizontal {
+        /// Align left
+        left,
+
+        /// Horizontally centered
+        center,
+
+        /// Align right
+        right,
+    }
+
+    /// The alignment of some resource.
+    enum alignment {
+        /// Align start
+        start,
+
+        /// Vertically centered
+        center,
+
+        /// Align end
+        end,
+    }
+}

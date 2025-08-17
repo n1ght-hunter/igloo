@@ -1,0 +1,20 @@
+interface tooltip {
+    use shared.{element, pixels};
+
+     enum position {
+        top,
+        bottom,
+        left,
+        right,
+        follow-cursor,
+    }
+
+    record tooltip {
+        content: element,
+        tooltip: element,
+        position: position,
+        gap: option<pixels>,
+        padding: option<pixels>,
+        snap-within-viewport: option<bool>,
+    }
+}

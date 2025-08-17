@@ -1,0 +1,9 @@
+interface pane-grid {
+    use shared.{element};
+
+    /// A layout that can dynamically split its content into panes.
+    record pane-grid {
+        /// The elements to display in the grid.
+        children: list<element>,
+    }
+}

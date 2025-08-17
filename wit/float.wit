@@ -1,0 +1,21 @@
+interface float {
+    use shared.{element};
+
+    /// A translation applied to content.
+    record translation {
+        /// Horizontal offset.
+        x: f32,
+        /// Vertical offset.
+        y: f32,
+    }
+
+    /// Displays floating content on top of the application.
+    record float {
+        /// The content of the [`Float`].
+        content: element,
+        /// The optional scale to apply to the content.
+        scale: option<f32>,
+        /// The optional translation applied to the content.
+        translation: option<translation>,
+    }
+}

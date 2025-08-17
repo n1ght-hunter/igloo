@@ -1,0 +1,91 @@
+interface text {
+    use length.{length};
+    use alignment.{vertical};
+    use shared.{pixels, color};
+
+    /// The horizontal alignment of some text.
+    variant alignment {
+        /// No specific alignment.
+        ///
+        /// Left-to-right text will be aligned to the left, while
+        /// right-to-left text will be aligned to the right.
+        default,
+        /// Align text to the left.
+        left,
+        /// Center text.
+        center,
+        /// Align text to the right.
+        right,
+        /// Justify text.
+        justified,
+    }
+
+    /// The height of a line of text in a paragraph.
+    variant line-height {
+        /// A factor of the size of the text.
+        relative(f32),
+
+        /// An absolute height in logical pixels.
+        absolute(pixels),
+    }
+
+    /// The shaping strategy of some text.
+    enum shaping {
+        /// No shaping and no font fallback.
+        ///
+        /// This shaping strategy is very cheap, but it will not display complex
+        /// scripts properly nor try to find missing glyphs in your system fonts.
+        ///
+        /// You should use this strategy when you have complete control of the text
+        /// and the font you are displaying in your application.
+        ///
+        /// This is the default.
+        basic,
+        /// Advanced text shaping and font fallback.
+        ///
+        /// You will need to enable this flag if the text contains a complex
+        /// script, the font used needs it, and/or multiple fonts in your system
+        /// may be needed to display all of the glyphs.
+        ///
+        /// Advanced shaping is expensive! You should only enable it when necessary.
+        advanced,
+    }
+
+    /// The wrapping strategy of some text.
+    enum wrapping {
+        /// No wrapping.
+        none,
+        /// Wraps at the word level.
+        ///
+        /// This is the default.
+        word,
+        /// Wraps at the glyph level.
+        glyph,
+        /// Wraps at the word level, or fallback to glyph level if a word can't fit on a line by itself.
+        word-or-glyph,
+    }
+
+    record text {
+        text: string,
+        size: option<f32>,
+        line-height: option<line-height>,
+        width: option<length>,
+        height: option<length>,
+        center: option<bool>,
+        align-x: option<alignment>,
+        align-y: option<vertical>,
+        shaping: option<shaping>,
+        wrapping: option<wrapping>,
+        color: option<color>,
+    }
+
+    // resource text {
+    //     constructor(text: string);
+    //     size: func(size: f32);
+    //     line-height: func(line-height: line-height);
+    //     width: func(width: length);
+    //     height: func(height: length);
+    //     align-x: func(alignment: horizontal);
+    //     align-y: func(alignment: vertical);
+    // }
+}

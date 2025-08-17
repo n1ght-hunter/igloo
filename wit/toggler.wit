@@ -1,0 +1,26 @@
+interface toggler {
+    use shared.{element, pixels};
+    use message.{message-id};
+    use padding.{padding};
+    use text.{line-height, shaping, wrapping};
+    use alignment.{horizontal};
+    use length.{length};
+
+    /// A widget representing a setting that can be toggled on or off.
+    record toggler {
+        /// Whether the [`Toggler`] is currently toggled.
+        is-toggled: bool,
+        /// The optional label of the [`Toggler`].
+        label: option<string>,
+        /// The message produced when the [`Toggler`] is toggled.
+        on-toggle: option<message-id>,
+        size: option<pixels>,
+        width: option<length>,
+        text-size: option<pixels>,
+        text-line-height: option<line-height>,
+        text-alignment: option<horizontal>,
+        text-shaping: option<shaping>,
+        text-wrapping: option<wrapping>,
+        spacing: option<pixels>,
+    }
+}

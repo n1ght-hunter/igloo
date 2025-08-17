@@ -1,0 +1,97 @@
+interface shared {
+    type pixels = f32;
+    resource element;
+
+    /// A color in the sRGB color space.
+    record color {
+        /// Red component, 0.0 - 1.0
+        r: f32,
+        /// Green component, 0.0 - 1.0
+        g: f32,
+        /// Blue component, 0.0 - 1.0
+        b: f32,
+        /// Alpha component, 0.0 - 1.0
+        a: f32,
+    }
+
+    enum content-fit {
+        contain,
+        cover,
+        fill,
+        none,
+        scale-down
+    }
+
+    enum filter-method {
+        linear,
+        nearest,
+    }
+
+    variant rotation {
+        floating(f32),
+        solid(f32),
+    }
+
+}
+
+interface element {
+    use shared.{element};
+    use text.{text};
+    use column.{column};
+    use row.{row};
+    use container.{container};
+    use tooltip.{tooltip};
+    use button.{button};
+    use rule.{rule};
+    use checkbox.{checkbox};
+    use combo-box.{combo-box};
+    use float.{float};
+    use grid.{grid};
+    use progress-bar.{progress-bar};
+    use toggler.{toggler};
+    use radio.{radio};
+    use image.{image};
+    use keyed.{keyed-column};
+    use markdown.{markdown};
+    use pane-grid.{pane-grid};
+    use pick-list.{pick-list};
+    use slider.{slider};
+    use vertical-slider.{vertical-slider};
+    use svg.{svg};
+    use table.{table};
+    // use text-editor.{text-editor};
+    use text-input.{text-input};
+    use space.{space};
+    use scrollable.{scrollable};
+    use shared.{color};
+
+    explain: func(element: element, color: color) -> element;
+
+    text-to-element: func(text: text) -> element;
+    column-to-element: func(column: column) -> element;
+    button-to-element: func(button: button) -> element;
+    row-to-element: func(row: row) -> element;
+    container-to-element: func(container: container) -> element;
+    tooltip-to-element: func(tooltip: tooltip) -> element;
+    rule-to-element: func(rule: rule) -> element;
+    checkbox-to-element: func(checkbox: checkbox) -> element;
+    combo-box-to-element: func(combo-box: combo-box) -> element;
+    float-to-element: func(float: float) -> element;
+    grid-to-element: func(grid: grid) -> element;
+    progress-bar-to-element: func(progress-bar: progress-bar) -> element;
+    toggler-to-element: func(toggler: toggler) -> element;
+    radio-to-element: func(radio: radio) -> element;
+    image-to-element: func(image: image) -> element;
+    keyed-column-to-element: func(keyed-column: keyed-column) -> element;
+    markdown-to-element: func(markdown: markdown) -> element;
+    pane-grid-to-element: func(pane-grid: pane-grid) -> element;
+    pick-list-to-element: func(pick-list: pick-list) -> element;
+    slider-to-element: func(slider: slider) -> element;
+    vertical-slider-to-element: func(vertical-slider: vertical-slider) -> element;
+    svg-to-element: func(svg: svg) -> element;
+    table-to-element: func(table: table) -> element;
+    // text-editor-to-element: func(text-editor: text-editor) -> element;
+    text-input-to-element: func(text-input: text-input) -> element;
+    space-to-element: func(space: space) -> element;
+    scrollable-to-element: func(scrollable: scrollable) -> element;
+}

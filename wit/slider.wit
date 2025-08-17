@@ -1,0 +1,23 @@
+interface slider {
+    use message.{message-id};
+    use shared.{pixels};
+    use length.{length};
+
+    /// A horizontal bar for selecting a value from a range of floats.
+    record slider {
+        /// Start value of the range of possible values.
+        range-start: f32,
+        /// End value of the range of possible values.
+        range-end: f32,
+        /// The current value of the [`Slider`].
+        value: f32,
+        on-change: message-id,
+        default: option<f32>,
+        /// The message produced when the [`Slider`] is released.
+        on-release: option<message-id>,
+        width: option<length>,
+        height: option<pixels>,
+        step: option<f32>,
+        shift-step: option<f32>,
+    }
+}

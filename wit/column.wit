@@ -1,0 +1,17 @@
+interface column {
+    use shared.{pixels,element};
+    use length.{length};
+    use padding.{padding};
+    use alignment.{horizontal};
+
+    record column {
+        elements: list<element>,
+        spacing: option<pixels>,
+        padding: option<padding>,
+        height: option<length>,
+        width: option<length>,
+        max-width: option<pixels>,
+        align-x: option<horizontal>,
+        clip: option<bool>,
+    }
+}

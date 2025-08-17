@@ -1,0 +1,18 @@
+[package]
+name = "igloo"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+anyhow = "1"
+tokio = { version = "1", features = ["full"] }
+wasmtime = { workspace = true, features = ["async"] }
+wasmtime-wasi = { workspace = true }
+
+iced.workspace = true
+tracing.workspace = true
+thiserror.workspace = true
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+
+[lints]
+workspace = true

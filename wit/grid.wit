@@ -1,0 +1,18 @@
+interface grid {
+    use shared.{element, pixels};
+
+    /// A container that arranges its contents in a grid.
+    record grid {
+        /// The elements of the [`Grid`].
+        elements: list<element>,
+        /// Spacing between cells in the [`Grid`].
+        spacing: option<pixels>,
+        /// Width of the [`Grid`].
+        width: option<pixels>,
+        /// Height of the [`Grid`].
+        height: option<pixels>,
+        /// Number of columns in the [`Grid`].
+        columns: option<u64>,
+        fluid: option<pixels>,
+    }
+}

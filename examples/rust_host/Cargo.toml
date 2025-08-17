@@ -1,0 +1,20 @@
+[package]
+name = "rust_host"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+anyhow.workspace = true
+tokio = { workspace = true, features = ["full"] }
+wasmtime = { workspace = true, features = ["async"] }
+wasmtime-wasi = { workspace = true }
+
+tracing-subscriber.workspace = true
+iced.workspace = true
+igloo.workspace = true
+tracing.workspace = true
+
+
+[lints]
+workspace = true

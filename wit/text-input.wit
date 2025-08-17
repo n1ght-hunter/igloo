@@ -1,0 +1,28 @@
+interface text-input {
+    use message.{message-id};
+    use shared.{pixels};
+    use padding.{padding};
+    use text.{line-height};
+    use alignment.{horizontal};
+    use length.{length};
+
+    /// A field that can be filled with text.
+    record text-input {
+        /// The placeholder text of the [`TextInput`].
+        placeholder: string,
+        /// The current value of the [`TextInput`].
+        value: string,
+        /// Whether the [`TextInput`] is secure (e.g. password field).
+        secure: option<bool>,
+        /// The message produced when the [`TextInput`] changes.
+        on-input: option<message-id>,
+        /// The message produced when the [`TextInput`] is submitted.
+        on-submit: option<message-id>,
+        on-paste: option<message-id>,
+        width: option<length>,
+        padding: option<padding>,
+        size: option<pixels>,
+        line-height: option<line-height>,
+        align-x: option<horizontal>,
+    }
+}

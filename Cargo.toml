@@ -1,0 +1,70 @@
+[workspace.package]
+edition = "2024"
+
+[workspace]
+resolver = "3"
+members = [
+    "crates/igloo_guest",
+    "crates/igloo",
+    "examples/*",
+    "examples/rust_host/guest",
+]
+
+
+[workspace.dependencies]
+igloo_guest = { path = "crates/igloo_guest" }
+igloo = { path = "crates/igloo" }
+
+anyhow = "1"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tokio = { version = "1" }
+
+iced = { version = "0.14.0-dev", features = [
+    "advanced",
+    "tokio",
+    "image",
+    "markdown",
+    "svg",
+] }
+iced_core = { version = "0.14.0-dev" }
+iced_widget = { version = "0.14.0-dev", default-features = false }
+wit-bindgen = "0.43"
+wasmtime = "35.0.0"
+wasmtime-wasi = "35.0.0"
+tracing = "0.1.41"
+thiserror = "2.0.14"
+
+[patch.crates-io]
+iced = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b488cc08b7365fb1839ed47ef92f3ff0fa36" }
+iced_core = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b488cc08b7365fb1839ed47ef92f3ff0fa36" }
+iced_widget = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b488cc08b7365fb1839ed47ef92f3ff0fa36" }
+
+# wasmtime = {git = "https://github.com/bytecodealliance/wasmtime.git", rev = "cf88a7c"}
+# wasmtime-wasi = {git = "https://github.com/bytecodealliance/wasmtime.git", rev = "cf88a7c"}
+# wit-bindgen = {git = "https://github.com/bytecodealliance/wit-bindgen.git", rev = "63649c7"}
+[workspace.lints.rust]
+missing_debug_implementations = "deny"
+missing_docs = "allow"
+rust_2018_idioms = { level = "deny", priority = -1 }
+unsafe_code = "deny"
+# unused_results = "deny"
+
+
+[workspace.lints.clippy]
+default_trait_access = "deny"
+filter_map_next = "deny"
+from_over_into = "deny"
+manual_let_else = "deny"
+match-wildcard-for-single-variants = "deny"
+needless_borrow = "deny"
+new_without_default = "deny"
+redundant-closure-for-method-calls = "deny"
+semicolon_if_nothing_returned = "deny"
+trivially-copy-pass-by-ref = "deny"
+type-complexity = "allow"
+unused_async = "deny"
+useless_conversion = "deny"
+upper_case_acronyms = "allow"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "forbid"

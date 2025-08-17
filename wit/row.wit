@@ -1,0 +1,18 @@
+interface row {
+    use shared.{pixels, element};
+    use length.{length};
+    use padding.{padding};
+    use alignment.{vertical};
+
+    record row {
+        elements: list<element>,
+        spacing: option<pixels>,
+        padding: option<padding>,
+        width: option<length>,
+        height: option<length>,
+        align-y: option<vertical>,
+        clip: option<bool>,
+        wrap: option<bool>,
+    }
+}
+

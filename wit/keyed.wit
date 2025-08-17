@@ -1,0 +1,20 @@
+interface keyed {
+    use shared.{element, pixels};
+    use alignment.{alignment};
+    use padding.{padding};
+    use length.{length};
+
+    type key = u64;
+
+    /// A container that keeps the state of its children using keys.
+    record keyed-column {
+        keys: list<key>,
+        children: list<element>,
+        spacing: option<pixels>,
+        padding: option<padding>,
+        width: option<length>,
+        height: option<length>,
+        max-width: option<pixels>,
+        align-items: option<alignment>,
+    }
+}

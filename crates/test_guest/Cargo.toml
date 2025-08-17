@@ -1,0 +1,12 @@
+[package]
+name = "igloo_guest"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+iced_core.workspace = true
+wit-bindgen.workspace = true
+
+
+[lints]
+workspace = true

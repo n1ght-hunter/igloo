@@ -1,0 +1,19 @@
+interface table {
+    use shared.{element, pixels};
+    use length.{length};
+
+    /// A grid-like visual representation of data distributed in columns and rows.
+    record table {
+        /// Header cells of the [`Table`].
+        columns: list<element>,
+        /// Rows of cells for the [`Table`].
+        rows: list<element>,
+        width: option<length>,
+        padding: option<pixels>,
+        padding-x: option<pixels>,
+        padding-y: option<pixels>,
+        separator: option<pixels>,
+        separator-x: option<pixels>,
+        separator-y: option<pixels>,
+    }
+}

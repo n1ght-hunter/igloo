@@ -1,0 +1,15 @@
+[package]
+name = "rust_guest"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+igloo_guest.workspace = true
+
+
+[lints]
+workspace = true

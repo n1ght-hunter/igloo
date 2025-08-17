@@ -1,0 +1,114 @@
+interface message {
+    use message-types.{rectangle, pane, drag-event, resize-event, viewport, size};
+    // resource message {
+    //     /// clone the message
+    //     clone: func() -> message;
+    // }
+    type message-id = u64;
+
+    variant message {
+        empty,
+        bool-type(bool),
+        string-type(string),
+        translate-type(tuple<rectangle, rectangle>),
+        pane-type(pane),
+        drag-event(drag-event),
+        resize-event(resize-event),
+        viewport(viewport),
+        size(size),
+        f64-type(f64),
+        f32-type(f32),
+        u64-type(u64),
+    }
+
+    clone-message: func(message: message-id) -> message-id;
+}
+
+interface message-types {
+
+    type pane = u64;
+    type split = u64;
+
+    record size {
+        width: f32,
+        height: f32,
+    }
+
+    record rectangle {
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    }
+
+    record picked {
+        pane: pane,
+    }
+
+    record dropped {
+        pane: pane,
+        target: target,
+    }
+
+    record canceled {
+        pane: pane,
+    }
+
+    enum edge {
+        top,
+        left,
+        right,
+        bottom,
+    }
+
+    variant region {
+        center,
+        edge(edge)
+    }
+
+
+    variant target {
+        edge(edge),
+        pane(tuple<pane, region>),
+    }
+
+    /// An event produced during a drag and drop interaction of a PaneGrid.
+    variant drag-event {
+        /// A Pane was picked for dragging.
+        picked(picked),
+        /// A Pane was dropped on top of another Pane.
+        dropped(dropped),
+        /// A Pane was picked and then dropped outside of other Pane boundaries.
+        canceled(canceled),
+    }
+
+    record resize-event {
+        split: split,
+        ratio: f32,
+    }
+
+    record absolute-offset {
+        x: f32,
+        y: f32,
+    }
+
+    record relative-offset {
+        x: f32,
+        y: f32,
+    }
+
+    /// The current Viewport of the Scrollable.
+    record viewport {
+        /// Returns the AbsoluteOffset of the current Viewport.
+        absolute-offset: absolute-offset,
+        /// Returns the AbsoluteOffset of the current Viewport, but with its alignment reversed.
+        /// This method can be useful to switch the alignment of a Scrollable while maintaining its scrolling position.
+        absolute-offset-reversed: absolute-offset,
+        /// Returns the RelativeOffset of the current Viewport.
+        relative-offset: relative-offset,
+        /// Returns the bounds of the current Viewport.
+        bounds: rectangle,
+        /// Returns the content bounds of the current Viewport.
+        content-bounds: rectangle,
+    }
+}

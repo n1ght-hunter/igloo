@@ -1,0 +1,10 @@
+# enable mise settings experimental=true
+
+
+[tools]
+just = "1.42"
+"github:bytecodealliance/wit-bindgen" = "0.43"
+wasmtime = "35"
+"ubi:bytecodealliance/wasm-pkg-tools" = { version = "0.11.0", rename_exe = "wkg" }
+node = "22"
+"npm:@bytecodealliance/jco" = "latest"

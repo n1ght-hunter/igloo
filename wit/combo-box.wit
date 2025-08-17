@@ -1,0 +1,26 @@
+interface combo-box {
+    use message.{message-id};
+    use text.{line-height};
+    use length.{length};
+    use padding.{padding};
+
+    /// A widget allowing selection from a list of options.
+    record combo-box {
+        /// The options displayed in the [`ComboBox`].
+        options: list<string>,
+        /// The placeholder to display when no option is selected.
+        placeholder: string,
+        /// The index of the currently selected option.
+        selected: option<string>,
+        /// The message produced when an option is selected.
+        on-selected: message-id,
+        on-input: option<message-id>,
+        on-option-hovered: option<message-id>,
+        on-open: option<message-id>,
+        on-close: option<message-id>,
+        padding: option<padding>,
+        size: option<f32>,
+        line-height: option<line-height>,
+        width: option<length>,
+    }
+}

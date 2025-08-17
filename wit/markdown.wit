@@ -1,0 +1,7 @@
+interface markdown {
+    /// A widget that can parse and display Markdown.
+    record markdown {
+        /// The Markdown source to render.
+        content: string,
+    }
+}

@@ -1,0 +1,16 @@
+interface progress-bar {
+    use length.{length};
+
+    /// A bar that displays progress.
+    record progress-bar {
+        /// Start value of the range of possible values.
+        range-start: f32,
+        /// End value of the range of possible values.
+        range-end: f32,
+        /// Current value of the [`ProgressBar`].
+        value: f32,
+        length: option<length>,
+        girth: option<length>,
+        vertical: option<bool>,
+    }
+}

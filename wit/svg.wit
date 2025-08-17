@@ -1,0 +1,7 @@
+interface svg {
+    /// A vector graphics image.
+    record svg {
+        /// Path to the SVG file.
+        path: string,
+    }
+}

@@ -1,0 +1,26 @@
+interface container {
+    use shared.{pixels, element};
+    use length.{length};
+    use padding.{padding};
+    use alignment.{horizontal, vertical};
+
+    record container {
+        content: element,
+        padding: option<padding>,
+        width: option<length>,
+        height: option<length>,
+        max-width: option<pixels>,
+        max-height: option<pixels>,
+        center-x: option<length>,
+        center-y: option<length>,
+        center: option<length>,
+        align-left: option<length>,
+        align-right: option<length>,
+        align-top: option<length>,
+        align-bottom: option<length>,
+        align-x: option<horizontal>,
+        align-y: option<vertical>,
+        clip: option<bool>,
+    }
+}
+
