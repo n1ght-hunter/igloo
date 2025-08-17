@@ -1,3 +1,8 @@
+
+<p align="center">
+    <img src="assets/igloo.png" alt="Igloo Logo" width="120" style="border-radius: 15px;" />
+</p>
+
 # WASM-Test: WebAssembly GUI Plugin System
 
 A proof-of-concept WebAssembly plugin system for GUI applications using Rust, Iced, and the WebAssembly Component Model.
