@@ -1,15 +1,12 @@
 use iced_core::{Length, Pixels, alignment, text};
 
-use crate::{
-    bindings::iced::app::element::toggler_to_element,
-    element::Widget, Element,
-};
+use crate::{Element, bindings::iced::app::element::toggler_to_element, element::Widget};
 
 /// Togglers let users make binary choices by toggling a switch.
 pub struct Toggler<Message> {
     is_toggled: bool,
     label: Option<String>,
-    on_toggle: Option<Box<dyn Fn(bool) -> Message>>,
+    on_toggle: Option<Box<dyn Fn(bool) -> Message + Send + Sync>>,
     size: Option<Pixels>,
     width: Option<Length>,
     text_size: Option<Pixels>,
@@ -45,7 +42,7 @@ impl<Message> Toggler<Message> {
     }
 
     /// Sets the message to produce when the [`Toggler`] is toggled.
-    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + 'static) -> Self {
+    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + Send + Sync + 'static) -> Self {
         self.on_toggle = Some(Box::new(message));
         self
     }

@@ -12,7 +12,7 @@ use crate::{
 pub struct Slider<Message> {
     range: RangeInclusive<f32>,
     value: f32,
-    on_change: Box<dyn Fn(f32) -> Message>,
+    on_change: Box<dyn Fn(f32) -> Message+ Send + Sync>,
     default: Option<f32>,
     on_release: Option<Message>,
     width: Option<Length>,
@@ -26,7 +26,7 @@ impl<Message> Slider<Message> {
     pub fn new(
         range: RangeInclusive<f32>,
         value: f32,
-        on_change: impl Fn(f32) -> Message + 'static,
+        on_change: impl Fn(f32) -> Message + Send + Sync+ 'static,
     ) -> Self {
         Self {
             range,

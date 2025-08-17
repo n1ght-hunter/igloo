@@ -1,14 +1,9 @@
-
 use iced_core::{
     Length, Padding,
     text::{self, LineHeight},
 };
 
-use crate::{
-    Element,
-    bindings::iced::app::element::combo_box_to_element,
-    element::Widget,
-};
+use crate::{Element, bindings::iced::app::element::combo_box_to_element, element::Widget};
 
 #[derive(Debug, Clone)]
 pub struct State<T> {
@@ -41,9 +36,9 @@ pub struct ComboBox<T, Message> {
     options: State<T>,
     placeholder: String,
     selection: Option<T>,
-    on_selected: Box<dyn Fn(T) -> Message>,
-    on_input: Option<Box<dyn Fn(String) -> Message>>,
-    on_option_hovered: Option<Box<dyn Fn(T) -> Message>>,
+    on_selected: Box<dyn Fn(T) -> Message + Send + Sync>,
+    on_input: Option<Box<dyn Fn(String) -> Message + Send + Sync>>,
+    on_option_hovered: Option<Box<dyn Fn(T) -> Message + Send + Sync>>,
     on_open: Option<Message>,
     on_close: Option<Message>,
     padding: Option<Padding>,
@@ -61,7 +56,7 @@ where
         options: &State<T>,
         placeholder: String,
         selection: Option<T>,
-        on_selected: impl Fn(T) -> Message + 'static,
+        on_selected: impl Fn(T) -> Message + Send + Sync + 'static,
     ) -> Self {
         Self {
             options: options.clone(),
@@ -79,12 +74,15 @@ where
         }
     }
 
-    pub fn on_input(mut self, message: impl Fn(String) -> Message + 'static) -> Self {
+    pub fn on_input(mut self, message: impl Fn(String) -> Message + Send + Sync + 'static) -> Self {
         self.on_input = Some(Box::new(message));
         self
     }
 
-    pub fn on_option_hovered(mut self, message: impl Fn(T) -> Message + 'static) -> Self {
+    pub fn on_option_hovered(
+        mut self,
+        message: impl Fn(T) -> Message + Send + Sync + 'static,
+    ) -> Self {
         self.on_option_hovered = Some(Box::new(message));
         self
     }
@@ -122,7 +120,7 @@ where
 
 impl<T, Message: Clone + 'static> Widget<Message> for ComboBox<T, Message>
 where
-    T: std::fmt::Display + Clone + 'static,
+    T: std::fmt::Display + Clone + Send + Sync + 'static,
 {
     fn as_element(
         self: Box<Self>,
@@ -176,8 +174,8 @@ where
     }
 }
 
-impl<T: std::fmt::Display + Clone + 'static, Message: Clone + 'static> From<ComboBox<T, Message>>
-    for Element<Message>
+impl<T: std::fmt::Display + Clone + Send + Sync + 'static, Message: Clone + 'static>
+    From<ComboBox<T, Message>> for Element<Message>
 {
     fn from(combo_box: ComboBox<T, Message>) -> Self {
         Element::new(Box::new(combo_box))

@@ -5,7 +5,7 @@ use iced_core::Color;
 use crate::bindings::{MessageId, iced::app::element::explain};
 
 pub type MessageFunction<Message> =
-    Box<dyn Fn(crate::bindings::iced::app::message::Message) -> Option<Message>>;
+    Box<dyn Fn(crate::bindings::iced::app::message::Message) -> Option<Message> + Send + Sync>;
 
 pub trait CreateMessage<Message> {
     fn add_message_func(&self, message: MessageFunction<Message>) -> MessageId;
@@ -54,7 +54,7 @@ impl<Message> Element<Message> {
 }
 
 impl<Message: 'static> Element<Message> {
-    pub fn map<B: 'static>(self, f: impl Fn(Message) -> B + 'static) -> Element<B> {
+    pub fn map<B: 'static>(self, f: impl Fn(Message) -> B + Send + Sync + 'static) -> Element<B> {
         Element::new(Box::new(Mapper::new(self.widget, f)))
     }
 }
@@ -75,13 +75,13 @@ impl<Message> Widget<Message> for Explain<Message> {
 
 struct Mapper<MessageA, MessageB> {
     widget: Box<dyn Widget<MessageA>>,
-    mapper: Arc<dyn Fn(MessageA) -> MessageB>,
+    mapper: Arc<dyn Fn(MessageA) -> MessageB + Send + Sync>,
 }
 
 impl<MessageA, MessageB> Mapper<MessageA, MessageB> {
     pub fn new<F>(widget: Box<dyn Widget<MessageA>>, mapper: F) -> Self
     where
-        F: Fn(MessageA) -> MessageB + 'static,
+        F: Fn(MessageA) -> MessageB + Send + Sync + 'static,
     {
         Self {
             widget,
@@ -101,13 +101,13 @@ impl<MessageA: 'static, MessageB: 'static> Widget<MessageB> for Mapper<MessageA,
 }
 
 struct MapperMessageCreator<'a, MessageA, MessageB> {
-    mapper: Arc<dyn Fn(MessageA) -> MessageB>,
+    mapper: Arc<dyn Fn(MessageA) -> MessageB + Send + Sync>,
     create_message: &'a dyn CreateMessage<MessageB>,
 }
 
 impl<'a, MessageA, MessageB> MapperMessageCreator<'a, MessageA, MessageB> {
     pub fn new(
-        mapper: Arc<dyn Fn(MessageA) -> MessageB>,
+        mapper: Arc<dyn Fn(MessageA) -> MessageB + Send + Sync>,
         create_message: &'a dyn CreateMessage<MessageB>,
     ) -> Self {
         Self {

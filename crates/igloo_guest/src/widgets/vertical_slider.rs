@@ -2,17 +2,13 @@ use std::ops::RangeInclusive;
 
 use iced_core::{Length, Pixels};
 
-use crate::{
-    Element,
-    bindings::iced::app::element::vertical_slider_to_element,
-    element::Widget,
-};
+use crate::{Element, bindings::iced::app::element::vertical_slider_to_element, element::Widget};
 
 /// An interactive vertical bar for selecting a value from a range.
 pub struct VerticalSlider<Message> {
     range: RangeInclusive<f32>,
     value: f32,
-    on_change: Box<dyn Fn(f32) -> Message>,
+    on_change: Box<dyn Fn(f32) -> Message + Send + Sync>,
     default: Option<f32>,
     on_release: Option<Message>,
     width: Option<Pixels>,
@@ -26,7 +22,7 @@ impl<Message> VerticalSlider<Message> {
     pub fn new(
         range: RangeInclusive<f32>,
         value: f32,
-        on_change: impl Fn(f32) -> Message + 'static,
+        on_change: impl Fn(f32) -> Message + Send + Sync + 'static,
     ) -> Self {
         Self {
             range,

@@ -30,18 +30,11 @@ impl<State, Message> StateManager<State, Message>
 where
     State: Application<State, Message>,
 {
-    pub fn new() -> u64 {
-        let built = Self {
+    pub fn new() -> Self {
+        Self {
             message_manager: MessageManager::new(),
             state: RefCell::new(State::new()),
-        };
-
-        Box::leak(Box::new(built)) as *const _ as u64
-    }
-
-    #[allow(unsafe_code)]
-    pub unsafe fn from_u64(id: u64) -> &'static Self {
-        unsafe { &*(id as *const Self) }
+        }
     }
 
     pub fn view(&self) -> bindings::Element {
@@ -131,6 +124,9 @@ macro_rules! export_guest {
         $state:ident,
         $message:ident
     ) => {
+
+        #[doc(hidden)]
+        #[allow(missing_debug_implementations, unsafe_code)]
         mod guest_impl {
             type State = super::$state;
             type Message = super::$message;
@@ -148,26 +144,19 @@ macro_rules! export_guest {
                 }
             }
 
-            impl igloo_guest::bindings::Guest for GuestComponent {
-                fn new() -> u64 {
-                    igloo_guest::StateManager::<State, Message>::new()
-                }
+            static STATE: std::cell::LazyCell<igloo_guest::StateManager<State, Message>> = std::cell::LazyCell::new(|| igloo_guest::StateManager::<State, Message>::new());
 
-                fn view(state: u64) -> igloo_guest::bindings::Element {
-                    #[allow(unsafe_code)]
-                    let state = unsafe { igloo_guest::StateManager::<State, Message>::from_u64(state) };
-                    state.view()
+            impl igloo_guest::bindings::Guest for GuestComponent {
+                fn view() -> igloo_guest::bindings::Element {
+                     STATE.view()
                 }
 
                 #[allow(async_fn_in_trait)]
                 fn update(
-                    state: u64,
                     message_id: u64,
                     message: igloo_guest::bindings::iced::app::message::Message,
                 ) {
-                    #[allow(unsafe_code)]
-                    let state = unsafe { igloo_guest::StateManager::<State, Message>::from_u64(state) };
-                    state.update(message_id, message);
+                    STATE.update(message_id, message);
                 }
             }
 

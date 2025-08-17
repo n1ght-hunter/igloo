@@ -1,18 +1,15 @@
 use iced_core::{Length, Padding, Pixels, alignment, text};
 
-use crate::{
-    bindings::iced::app::element::text_input_to_element,
-    element::Widget, Element,
-};
+use crate::{Element, bindings::iced::app::element::text_input_to_element, element::Widget};
 
 /// A field that can be filled with text.
 pub struct TextInput<Message> {
     placeholder: String,
     value: String,
     secure: Option<bool>,
-    on_input: Option<Box<dyn Fn(String) -> Message>>,
+    on_input: Option<Box<dyn Fn(String) -> Message + Send + Sync>>,
     on_submit: Option<Message>,
-    on_paste: Option<Box<dyn Fn(String) -> Message>>,
+    on_paste: Option<Box<dyn Fn(String) -> Message + Send + Sync>>,
     width: Option<Length>,
     padding: Option<Padding>,
     size: Option<Pixels>,
@@ -45,7 +42,7 @@ impl<Message> TextInput<Message> {
     }
 
     /// Sets the message produced when the [`TextInput`] changes.
-    pub fn on_input(mut self, message: impl Fn(String) -> Message + 'static) -> Self {
+    pub fn on_input(mut self, message: impl Fn(String) -> Message + Send + Sync + 'static) -> Self {
         self.on_input = Some(Box::new(message));
         self
     }
@@ -57,7 +54,7 @@ impl<Message> TextInput<Message> {
     }
 
     /// Sets the message produced when text is pasted into the [`TextInput`].
-    pub fn on_paste(mut self, message: impl Fn(String) -> Message + 'static) -> Self {
+    pub fn on_paste(mut self, message: impl Fn(String) -> Message + Send + Sync + 'static) -> Self {
         self.on_paste = Some(Box::new(message));
         self
     }
@@ -124,7 +121,6 @@ impl<Message: Clone + 'static> Widget<Message> for TextInput<Message> {
         })
     }
 }
-
 
 impl<Message: Clone + 'static> From<TextInput<Message>> for Element<Message> {
     fn from(text_input: TextInput<Message>) -> Self {

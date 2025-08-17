@@ -10,7 +10,7 @@ use crate::{
 pub struct Checkbox<Message> {
     label: String,
     is_checked: bool,
-    on_toggle: Option<Box<dyn Fn(bool) -> Message>>,
+    on_toggle: Option<Box<dyn Fn(bool) -> Message + Send + Sync>>,
     size: Option<Pixels>,
     width: Option<Length>,
     height: Option<Length>,
@@ -40,7 +40,7 @@ impl<Message> Checkbox<Message> {
     }
 
     /// Sets the message to produce when the [`Checkbox`] is toggled.
-    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + 'static) -> Self {
+    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + Send + Sync + 'static) -> Self {
         self.on_toggle = Some(Box::new(message));
         self
     }

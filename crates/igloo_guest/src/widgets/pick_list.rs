@@ -16,7 +16,7 @@ where
     V: Borrow<T>,
 {
     options: L,
-    on_select: Box<dyn Fn(T) -> Message>,
+    on_select: Box<dyn Fn(T) -> Message + Send + Sync>,
     on_open: Option<Message>,
     on_close: Option<Message>,
     placeholder: Option<String>,
@@ -39,7 +39,7 @@ where
     pub fn new(
         options: L,
         selected: Option<V>,
-        on_select: impl Fn(T) -> Message + 'static,
+        on_select: impl Fn(T) -> Message + Send + Sync + 'static,
     ) -> Self {
         Self {
             options,
@@ -102,7 +102,7 @@ where
 
 impl<T, L, V, Message> Widget<Message> for PickList<T, L, V, Message>
 where
-    T: ToString + PartialEq + Clone + 'static,
+    T: ToString + PartialEq + Clone + Send + Sync + 'static,
     L: Borrow<[T]>,
     V: Borrow<T>,
     Message: Clone + 'static,
@@ -147,7 +147,7 @@ where
 
 impl<T, L, V, Message> From<PickList<T, L, V, Message>> for Element<Message>
 where
-    T: ToString + PartialEq + Clone + 'static,
+    T: ToString + PartialEq + Clone + Send + Sync+ 'static,
     L: Borrow<[T]> + 'static,
     V: Borrow<T> + 'static,
     Message: Clone + 'static,

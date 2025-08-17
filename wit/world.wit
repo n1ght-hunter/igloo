@@ -8,10 +8,8 @@ world app {
     import element;
     export message;
 
-    export new: func() -> u64;
-
-    export update: func(state: u64, message-id: message-id, message: message);
+    export update: func(message-id: message-id, message: message);
 
     /// Exported function for creating a view
-    export view: func(state: u64) -> element;
+    export view: func() -> element;
 }

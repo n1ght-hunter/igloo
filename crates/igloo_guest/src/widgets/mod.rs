@@ -140,7 +140,7 @@ pub fn combo_box<T, Message>(
     options: &combo_box::State<T>,
     placeholder: String,
     selection: Option<T>,
-    on_selected: impl Fn(T) -> Message + 'static,
+    on_selected: impl Fn(T) -> Message + Send + Sync + 'static,
 ) -> ComboBox<T, Message>
 where
     T: std::fmt::Display + Clone,
@@ -185,10 +185,10 @@ pub fn pane_grid<Message>(
 pub fn pick_list<T, L, V, Message>(
     options: L,
     selected: Option<V>,
-    on_select: impl Fn(T) -> Message + 'static,
+    on_select: impl Fn(T) -> Message + Send + Sync + 'static,
 ) -> PickList<T, L, V, Message>
 where
-    T: ToString + PartialEq + Clone,
+    T: ToString + PartialEq + Send + Sync + Clone,
     L: Borrow<[T]> + 'static,
     V: Borrow<T> + 'static,
     Message: Clone,
@@ -200,7 +200,7 @@ where
 pub fn slider<Message>(
     range: RangeInclusive<f32>,
     value: f32,
-    on_change: impl Fn(f32) -> Message + 'static,
+    on_change: impl Fn(f32) -> Message + Send + Sync + 'static,
 ) -> Slider<Message> {
     Slider::new(range, value, on_change)
 }
@@ -209,7 +209,7 @@ pub fn slider<Message>(
 pub fn vertical_slider<Message>(
     range: RangeInclusive<f32>,
     value: f32,
-    on_change: impl Fn(f32) -> Message + 'static,
+    on_change: impl Fn(f32) -> Message + Send + Sync + 'static,
 ) -> VerticalSlider<Message> {
     VerticalSlider::new(range, value, on_change)
 }

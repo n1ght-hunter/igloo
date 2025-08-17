@@ -56,7 +56,7 @@ pub struct PluginManager {
     store: std::cell::RefCell<Store<MyState>>,
     engine: Engine,
     linker: Linker<MyState>,
-    plugins: HashMap<String, (u64, App)>,
+    plugins: HashMap<String, App>,
 }
 
 impl std::fmt::Debug for PluginManager {
@@ -117,10 +117,10 @@ impl PluginManager {
     }
 
     pub fn plugin_update(&mut self, id: &str, msg: Message) -> Result<()> {
-        if let Some((state, plugin)) = self.plugins.get_mut(id) {
+        if let Some(plugin) = self.plugins.get_mut(id) {
             let mut store = self.store.borrow_mut();
             let Message { id, content } = msg;
-            Ok(plugin.call_update(store.deref_mut(), *state, id, &content)?)
+            Ok(plugin.call_update(store.deref_mut(), id, &content)?)
         } else {
             Err(PluginError::NotFound(id.into()))
         }
@@ -134,11 +134,11 @@ impl PluginManager {
         Theme: WrapperTheme + 'a,
         Renderer: WrapperRenderer + 'a,
     {
-        let (state, plugin) = self.plugins.get(id)?;
+        let plugin = self.plugins.get(id)?;
 
         let mut store = self.store.borrow_mut();
         let result = plugin
-            .call_view(store.deref_mut(), *state)
+            .call_view(store.deref_mut())
             .inspect_err(|e| {
                 tracing::error!("Failed to call view for plugin {}: {}", id, e);
             })
@@ -162,8 +162,7 @@ impl PluginManager {
     ) -> Result<()> {
         let component = component(&self.engine)?;
         let app = App::instantiate(self.store.get_mut(), &component, &self.linker)?;
-        let state = app.call_new(self.store.get_mut())?;
-        if self.plugins.insert(id.clone(), (state, app)).is_some() {
+        if self.plugins.insert(id.clone(), app).is_some() {
             info!("Replaced existing plugin: {}", id);
         }
 

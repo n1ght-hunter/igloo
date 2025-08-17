@@ -15,7 +15,7 @@ pub struct Scrollable<Message> {
     content: Element<Message>,
     width: Option<Length>,
     height: Option<Length>,
-    on_scroll: Option<Box<dyn Fn(Viewport) -> Message>>,
+    on_scroll: Option<Box<dyn Fn(Viewport) -> Message + Send + Sync>>,
     direction: Option<Direction>,
 }
 
@@ -77,7 +77,7 @@ impl<Message> Scrollable<Message> {
     /// Sets a function to call when the [`Scrollable`] is scrolled.
     ///
     /// The function takes the [`Viewport`] of the [`Scrollable`]
-    pub fn on_scroll(mut self, f: impl Fn(Viewport) -> Message + 'static) -> Self {
+    pub fn on_scroll(mut self, f: impl Fn(Viewport) -> Message + Send + Sync + 'static) -> Self {
         self.on_scroll = Some(Box::new(f));
         self
     }
