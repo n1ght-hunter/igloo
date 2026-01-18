@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::DerefMut, path::Path};
+use std::{collections::HashMap, ops::DerefMut, path::{Path, PathBuf}, sync::Arc};
 
 use crate::{
     bindings::App,
@@ -148,6 +148,30 @@ impl PluginManager {
         Some(element.to_element(&mut store.data_mut().table))
     }
 
+    /// Adds a plugin from pre-loaded bytes.
+    pub fn add_plugin_from_bytes(&mut self, name: &str, bytes: &[u8]) -> Result<()> {
+        let component = Component::from_binary(&self.engine, bytes)?;
+        let app = App::instantiate(self.store.get_mut(), &component, &self.linker)?;
+        if self.plugins.insert(name.to_string(), app).is_some() {
+            info!("Replaced existing plugin: {}", name);
+        }
+        Ok(())
+    }
+
+    /// Adds a pre-compiled plugin component.
+    pub fn add_compiled_plugin(&mut self, plugin: CompiledPlugin) -> Result<()> {
+        let app = App::instantiate(self.store.get_mut(), &plugin.component, &self.linker)?;
+        if self.plugins.insert(plugin.name.clone(), app).is_some() {
+            info!("Replaced existing plugin: {}", plugin.name);
+        }
+        Ok(())
+    }
+
+    /// Returns a clone of the engine for use in async plugin compilation.
+    pub fn engine(&self) -> Engine {
+        self.engine.clone()
+    }
+
     #[doc(hidden)]
     pub fn raw_add<F: FnOnce(&Engine) -> Result<Component>>(
         &mut self,
@@ -162,4 +186,42 @@ impl PluginManager {
 
         Ok(())
     }
+}
+
+/// A compiled plugin ready to be instantiated.
+#[derive(Clone)]
+pub struct CompiledPlugin {
+    pub name: String,
+    pub component: Arc<Component>,
+}
+
+impl std::fmt::Debug for CompiledPlugin {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CompiledPlugin")
+            .field("name", &self.name)
+            .finish_non_exhaustive()
+    }
+}
+
+/// Asynchronously load and compile a plugin from a file.
+/// File reading and compilation are done in parallel background tasks.
+pub async fn load_and_compile_plugin_async(
+    engine: Engine,
+    name: String,
+    path: PathBuf,
+) -> std::result::Result<CompiledPlugin, String> {
+    let bytes = tokio::fs::read(&path)
+        .await
+        .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+
+    // Compile in a blocking task to not block the async runtime
+    let component = tokio::task::spawn_blocking(move || Component::from_binary(&engine, &bytes))
+        .await
+        .map_err(|e| format!("Task join error for {}: {}", name, e))?
+        .map_err(|e| format!("Compilation error for {}: {}", name, e))?;
+
+    Ok(CompiledPlugin {
+        name,
+        component: Arc::new(component),
+    })
 }

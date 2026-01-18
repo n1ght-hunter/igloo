@@ -3,10 +3,13 @@ use iced::{
     Task,
     widget::{self, Row, button, text},
 };
-use igloo::plugin_manager::PluginManager;
+use igloo::plugin_manager::{CompiledPlugin, PluginManager, load_and_compile_plugin_async};
+use std::path::PathBuf;
 
 fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
+        .init();
 
     iced::application(IcedApp::new, IcedApp::update, IcedApp::view).run()?;
     Ok(())
@@ -15,29 +18,50 @@ fn main() -> Result<()> {
 struct IcedApp {
     plugin_manager: PluginManager,
     current_page: String,
+    plugins_loading: usize,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     PluginMessage(String, igloo::Message),
     ChangePage(String),
+    PluginLoaded(std::result::Result<CompiledPlugin, String>),
 }
 
 impl IcedApp {
-    pub fn new() -> Self {
-        let mut plugin_manager = PluginManager::new().unwrap();
+    pub fn new() -> (Self, Task<Message>) {
+        let plugin_manager = PluginManager::new().unwrap();
+        let engine = plugin_manager.engine();
 
-        plugin_manager
-            .add_plugin_from_file("rust-plugin", "../../target/wasm32-wasip2/release/rust_guest.wasm")
-            .unwrap();
-        plugin_manager
-            .add_plugin_from_file("js-plugin", "../../plugins/js/js-app.wasm")
-            .unwrap();
+        let plugins_to_load = vec![
+            ("rust-plugin".to_string(), PathBuf::from("../../target/wasm32-wasip2/release/rust_guest.wasm")),
+            ("js-plugin".to_string(), PathBuf::from("../../plugins/js/js-app.wasm")),
+        ];
 
-        Self {
-            plugin_manager,
-            current_page: "Home".to_string(),
-        }
+        let plugins_loading = plugins_to_load.len();
+
+        // Create a task for each plugin that loads and compiles in parallel
+        let tasks: Vec<_> = plugins_to_load
+            .into_iter()
+            .map(|(name, path)| {
+                let engine = engine.clone();
+                Task::future(async move {
+                    Message::PluginLoaded(load_and_compile_plugin_async(engine, name, path).await)
+                })
+            })
+            .collect();
+
+        // Batch all tasks together
+        let load_task = Task::batch(tasks);
+
+        (
+            Self {
+                plugin_manager,
+                current_page: "Home".to_string(),
+                plugins_loading,
+            },
+            load_task,
+        )
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
@@ -49,6 +73,19 @@ impl IcedApp {
             }
             Message::ChangePage(page) => {
                 self.current_page = page;
+            }
+            Message::PluginLoaded(result) => {
+                self.plugins_loading = self.plugins_loading.saturating_sub(1);
+                match result {
+                    Ok(plugin) => {
+                        if let Err(e) = self.plugin_manager.add_compiled_plugin(plugin) {
+                            tracing::error!("Failed to add plugin: {}", e);
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to load plugin: {}", e);
+                    }
+                }
             }
         };
         Task::none()
@@ -67,12 +104,18 @@ impl IcedApp {
         }));
 
         let page: iced::Element<'_, Message> = match self.current_page.as_str() {
-            "Home" => iced::widget::Text::new("Home").into(),
+            "Home" => {
+                if self.plugins_loading > 0 {
+                    widget::Text::new(format!("Loading {} plugin(s)...", self.plugins_loading)).into()
+                } else {
+                    widget::Text::new("Home").into()
+                }
+            }
             id => self
                 .plugin_manager
                 .plugin_view(id)
                 .map(|e| e.map(|m| Message::PluginMessage(id.to_string(), m)))
-                .unwrap_or_else(|| iced::widget::Text::new("Unknown Plugin").into()),
+                .unwrap_or_else(|| widget::Text::new("Unknown Plugin").into()),
         };
 
         widget::Column::new().push(pages).push(page).into()

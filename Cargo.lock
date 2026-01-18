@@ -2222,6 +2222,7 @@ name = "igloo"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
  "iced",
  "thiserror 2.0.17",
  "tokio",
