@@ -100,6 +100,11 @@ impl app::shared::HostElement for MyState {
         self.table.delete(rep)?;
         Ok(())
     }
+
+    fn noop(&mut self, _rep: wasmtime::component::Resource<Element>) {
+        // Dummy function required for jco componentize to generate the Element class.
+        // See: https://github.com/bytecodealliance/ComponentizeJS/issues/221
+    }
 }
 
 #[derive(Debug)]

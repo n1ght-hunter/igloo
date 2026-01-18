@@ -10,7 +10,9 @@ build:
         --wit ../../wit/ \
         --world-name app \
         --out js-app.wasm \
-        --disable all  
+        --disable all \
+        --enable stdio \
+        --debug-starlingmonkey-build
 
 gen:
     jco guest-types ../../wit \

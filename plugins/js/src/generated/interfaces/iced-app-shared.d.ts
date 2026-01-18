@@ -58,6 +58,10 @@ declare module 'iced:app/shared@0.1.0' {
      * This type does not have a public constructor.
      */
     private constructor();
+    /**
+    * Dummy function to trigger class generation in jco componentize.
+    */
+    noop(): void;
     [Symbol.dispose](): void;
   }
 }

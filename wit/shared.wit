@@ -1,6 +1,12 @@
 interface shared {
     type pixels = f32;
-    resource element;
+    /// The base element resource for UI widgets.
+    /// Note: The dummy function is required for jco componentize to generate the class.
+    /// See: https://github.com/bytecodealliance/ComponentizeJS/issues/221
+    resource element {
+        /// Dummy function to trigger class generation in jco componentize.
+        noop: func();
+    }
 
     /// A color in the sRGB color space.
     record color {

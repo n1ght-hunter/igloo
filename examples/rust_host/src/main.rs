@@ -30,9 +30,9 @@ impl IcedApp {
         plugin_manager
             .add_plugin_from_file("rust-plugin", "../../target/wasm32-wasip2/release/rust_guest.wasm")
             .unwrap();
-        // plugin_manager
-        //     .add_plugin_from_file("js-plugin", "plugins/js/js-app.wasm")
-        //     .unwrap();
+        plugin_manager
+            .add_plugin_from_file("js-plugin", "../../plugins/js/js-app.wasm")
+            .unwrap();
 
         Self {
             plugin_manager,
