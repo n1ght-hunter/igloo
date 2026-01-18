@@ -9,10 +9,7 @@ use wasmtime::{
     Config, Engine, Store,
     component::{Component, HasSelf, Linker},
 };
-use wasmtime_wasi::{
-    ResourceTable,
-    p2::{IoView, WasiCtx, WasiCtxBuilder, WasiView, add_to_linker_sync},
-};
+use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView, p2::add_to_linker_sync};
 
 pub struct MyState {
     wasi: WasiCtx,
@@ -28,15 +25,12 @@ impl std::fmt::Debug for MyState {
     }
 }
 
-impl IoView for MyState {
-    fn table(&mut self) -> &mut ResourceTable {
-        &mut self.table
-    }
-}
-
 impl WasiView for MyState {
-    fn ctx(&mut self) -> &mut wasmtime_wasi::p2::WasiCtx {
-        &mut self.wasi
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView {
+            ctx: &mut self.wasi,
+            table: &mut self.table,
+        }
     }
 }
 
