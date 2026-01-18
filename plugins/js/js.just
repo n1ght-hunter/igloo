@@ -13,7 +13,3 @@ build:
         --disable all \
         --enable stdio \
         --debug-starlingmonkey-build
-
-gen:
-    jco guest-types ../../wit \
-        --out-dir ./src/generated/ \

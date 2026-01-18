@@ -1,8 +1,11 @@
 {
-  "name": "js",
+  "name": "js-plugin",
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "dependencies": {
+    "igloo-ts": "file:../../packages/igloo-ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
