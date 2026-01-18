@@ -1,4 +1,6 @@
+/// <reference path="./iced-app-length.d.ts" />
 declare module 'iced:app/progress-bar@0.1.0' {
+  export type Length = import('iced:app/length@0.1.0').Length;
   /**
    * A bar that displays progress.
    */
@@ -15,5 +17,8 @@ declare module 'iced:app/progress-bar@0.1.0' {
      * Current value of the [`ProgressBar`].
      */
     value: number,
+    length?: Length,
+    girth?: Length,
+    vertical?: boolean,
   }
 }

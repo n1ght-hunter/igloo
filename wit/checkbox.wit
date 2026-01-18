@@ -1,5 +1,5 @@
 interface checkbox {
-    use shared.{element, pixels};
+    use shared.{pixels};
     use message.{message-id};
     use text.{line-height, shaping, wrapping};
     use length.{length};

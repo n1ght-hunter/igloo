@@ -1,5 +1,5 @@
 interface image {
-    use shared.{element, rotation, content-fit, filter-method};
+    use shared.{rotation, content-fit, filter-method};
     use length.{length};
 
     /// A frame that displays an image.

@@ -1,5 +1,5 @@
 interface column {
-    use shared.{pixels,element};
+    use shared.{pixels, element};
     use length.{length};
     use padding.{padding};
     use alignment.{horizontal};

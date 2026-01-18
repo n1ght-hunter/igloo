@@ -1,5 +1,5 @@
 interface table {
-    use shared.{element, pixels};
+    use shared.{pixels, element};
     use length.{length};
 
     /// A grid-like visual representation of data distributed in columns and rows.

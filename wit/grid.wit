@@ -1,5 +1,5 @@
 interface grid {
-    use shared.{element, pixels};
+    use shared.{pixels, element};
 
     /// A container that arranges its contents in a grid.
     record grid {

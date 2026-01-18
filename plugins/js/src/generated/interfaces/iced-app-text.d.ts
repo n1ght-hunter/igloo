@@ -5,6 +5,7 @@ declare module 'iced:app/text@0.1.0' {
   export type Length = import('iced:app/length@0.1.0').Length;
   export type Vertical = import('iced:app/alignment@0.1.0').Vertical;
   export type Pixels = import('iced:app/shared@0.1.0').Pixels;
+  export type Color = import('iced:app/shared@0.1.0').Color;
   /**
    * The horizontal alignment of some text.
    */
@@ -73,8 +74,6 @@ declare module 'iced:app/text@0.1.0' {
    * 
    * You should use this strategy when you have complete control of the text
    * and the font you are displaying in your application.
-   * 
-   * This is the default.
    * ## `"advanced"`
    * 
    * Advanced text shaping and font fallback.
@@ -84,8 +83,13 @@ declare module 'iced:app/text@0.1.0' {
    * may be needed to display all of the glyphs.
    * 
    * Advanced shaping is expensive! You should only enable it when necessary.
+   * ## `"auto"`
+   * 
+   * Automatically detect the shaping strategy based on the text contents.
+   * 
+   * This is the default.
    */
-  export type Shaping = 'basic' | 'advanced';
+  export type Shaping = 'basic' | 'advanced' | 'auto';
   /**
    * The wrapping strategy of some text.
    * # Variants
@@ -117,5 +121,6 @@ declare module 'iced:app/text@0.1.0' {
     alignY?: Vertical,
     shaping?: Shaping,
     wrapping?: Wrapping,
+    color?: Color,
   }
 }

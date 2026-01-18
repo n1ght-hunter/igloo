@@ -1,46 +1,47 @@
 declare module 'iced:app/alignment@0.1.0' {
   /**
    * The vertical [`alignment`] of some resource.
-   */
-  export type Vertical = VerticalTop | VerticalCenter | VerticalBottom;
-  /**
+   * # Variants
+   * 
+   * ## `"top"`
+   * 
    * Align top
-   */
-  export interface VerticalTop {
-    tag: 'top',
-  }
-  /**
+   * ## `"center"`
+   * 
    * Vertically centered
-   */
-  export interface VerticalCenter {
-    tag: 'center',
-  }
-  /**
+   * ## `"bottom"`
+   * 
    * Align bottom
    */
-  export interface VerticalBottom {
-    tag: 'bottom',
-  }
+  export type Vertical = 'top' | 'center' | 'bottom';
   /**
    * The horizontal [`alignment`] of some resource.
-   */
-  export type Horizontal = HorizontalLeft | HorizontalCenter | HorizontalRight;
-  /**
+   * # Variants
+   * 
+   * ## `"left"`
+   * 
    * Align left
-   */
-  export interface HorizontalLeft {
-    tag: 'left',
-  }
-  /**
+   * ## `"center"`
+   * 
    * Horizontally centered
-   */
-  export interface HorizontalCenter {
-    tag: 'center',
-  }
-  /**
+   * ## `"right"`
+   * 
    * Align right
    */
-  export interface HorizontalRight {
-    tag: 'right',
-  }
+  export type Horizontal = 'left' | 'center' | 'right';
+  /**
+   * The alignment of some resource.
+   * # Variants
+   * 
+   * ## `"start"`
+   * 
+   * Align start
+   * ## `"center"`
+   * 
+   * Vertically centered
+   * ## `"end"`
+   * 
+   * Align end
+   */
+  export type Alignment = 'start' | 'center' | 'end';
 }
