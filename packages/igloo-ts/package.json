@@ -1,0 +1,29 @@
+{
+  "name": "igloo-ts",
+  "version": "0.1.0",
+  "description": "TypeScript bindings library for Igloo - builder pattern APIs for WASM component UI widgets",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "gen": "jco guest-types ../../wit --out-dir ./src/generated/"
+  },
+  "devDependencies": {
+    "@bytecodealliance/jco": "^1",
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
