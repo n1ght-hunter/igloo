@@ -10,4 +10,4 @@ build-guest:
 run: build run-host
 
 run-host:
-    cargo run -p rust_host
+    cargo run -p rust_host -r
