@@ -21,36 +21,6 @@ Igloo lets you:
 - **WIT (WebAssembly Interface Types)**: For type-safe communication between host and guest
 - **Component Model**: For secure, sandboxed plugin execution
 
-## Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Host App       │    │  WIT Definitions │    │  Guest Plugin   │
-│  (Iced)         │◄──►│  (Interface)     │◄──►│  (WASM)         │
-│                 │    │                  │    │                 │
-│ PluginManager   │    │ • Elements       │    │ • State         │
-│ MessageManager  │    │ • Messages       │    │ • View Logic    │
-│ Resource Tables │    │ • Components     │    │ • Event Handlers│
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
-
-
-## Project Structure
-
-```
-igloo/
-├── crates/
-│   ├── igloo_host/        # Host library for managing WASM plugins
-│   └── igloo_guest/       # Guest library for creating WASM plugins (plugin authors)
-├── plugins/
-│   └── js/                # JavaScript plugin support (experimental)
-├── examples/
-│   └── rust_host/         # Example host application
-├── wit/                   # WebAssembly Interface Type definitions
-└── justfile               # Build automation
-```
-
-
 ## Features
 
 - **Type-Safe Plugin Communication**: WIT-based interfaces for host/guest messaging
@@ -72,7 +42,7 @@ igloo/
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/n1ght-hunter/igloo.git
 cd igloo
 ```
 
