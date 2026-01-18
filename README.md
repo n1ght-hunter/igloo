@@ -149,6 +149,25 @@ let plugin_view = plugin_manager.plugin_view("my-plugin")?;
 - Run example: `just run`
 - Generate bindings: `just gen`
 
+Warning: Loading plugins can be slow during development due to Wasmtime compilation. 
+Consider adding this to your `Cargo.toml` for faster builds:
+
+```toml
+# Optimize wasmtime/cranelift in dev builds for faster WASM compilation
+[profile.dev.package.wasmtime]
+opt-level = 3
+
+[profile.dev.package.cranelift-codegen]
+opt-level = 3
+
+[profile.dev.package.regalloc2]
+opt-level = 3
+```
+or precompile your plugins using `wasmtime compile` like so:
+```bash
+wasmtime compile --target wasm32-wasip2 path/to/plugin.wasm -o path/to/plugin.cwasm
+```
+
 ## Acknowledgments
 
 - [Iced](https://github.com/iced-rs/iced) - GUI framework
