@@ -2,9 +2,9 @@ interface space {
     use message.{message-id};
     use length.{length};
 
-    /// A horizontal bar for selecting a value from a range of floats.
+    /// An amount of empty space.
     record space {
-        width: length,
-        height: length,
+        width: option<length>,
+        height: option<length>,
     }
 }

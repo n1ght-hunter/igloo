@@ -13,11 +13,18 @@ impl ToElement for Space {
         Theme: WrapperTheme + 'a,
         Renderer: WrapperRenderer + 'a,
     {
-        let Space {
-            width,
-            height,
-        } = self;
+        let Space { width, height } = self;
 
-       iced::widget::Space::new(width, height).into()
+        let mut space = iced::widget::Space::new();
+
+        if let Some(width) = width {
+            space = space.width(width);
+        }
+
+        if let Some(height) = height {
+            space = space.height(height);
+        }
+
+        space.into()
     }
 }

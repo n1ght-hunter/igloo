@@ -96,9 +96,9 @@ pub fn button<Message: Clone>(element: impl Into<Element<Message>>) -> button::B
     button::Button::new(element)
 }
 
-/// Creates a [`Checkbox`] with the given label and state.
-pub fn checkbox<Message>(label: impl Into<String>, is_checked: bool) -> Checkbox<Message> {
-    Checkbox::new(label, is_checked)
+/// Creates a [`Checkbox`] with the given checked state.
+pub fn checkbox<Message>(is_checked: bool) -> Checkbox<Message> {
+    Checkbox::new(is_checked)
 }
 
 /// Creates a horizontal [`Rule`] with the given thickness.

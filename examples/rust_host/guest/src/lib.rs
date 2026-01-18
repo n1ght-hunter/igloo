@@ -410,11 +410,9 @@ impl Tour {
                     .align_x(Alignment::Center),
             )
             .push(
-                checkbox(
-                    "Use nearest interpolation",
-                    filter_method == FilterMethod::Nearest,
-                )
-                .on_toggle(Message::ImageUseNearestToggled),
+                checkbox(filter_method == FilterMethod::Nearest)
+                    .label("Use nearest interpolation")
+                    .on_toggle(Message::ImageUseNearestToggled),
             )
             .align_x(Horizontal::Center)
     }
@@ -466,8 +464,8 @@ impl Tour {
         Self::container("Text input")
             .push("Use a text input to ask for different kinds of information.")
             .push(text_input.secure(is_secure))
-            .push(checkbox("Enable password mode", is_secure).on_toggle(Message::ToggleSecureInput))
-            .push(checkbox("Show icon", is_showing_icon).on_toggle(Message::ToggleTextInputIcon))
+            .push(checkbox(is_secure).label("Enable password mode").on_toggle(Message::ToggleSecureInput))
+            .push(checkbox(is_showing_icon).label("Show icon").on_toggle(Message::ToggleTextInputIcon))
             .push(
                 "A text input produces a message every time it changes. It is \
                  very easy to keep track of its contents:",
@@ -493,7 +491,7 @@ impl Tour {
                 "Give it a shot! Check the following checkbox to be able to \
                  see element boundaries.",
             )
-            .push(checkbox("Explain layout", self.debug).on_toggle(Message::DebugToggled))
+            .push(checkbox(self.debug).label("Explain layout").on_toggle(Message::DebugToggled))
             .push("Feel free to go back and take a look.")
     }
 

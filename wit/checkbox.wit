@@ -8,10 +8,10 @@ interface checkbox {
 
     /// A box that can be checked.
     record checkbox {
-        /// The label of the [`Checkbox`].
-        label: string,
         /// Whether the [`Checkbox`] is currently checked.
         is-checked: bool,
+        /// The label of the [`Checkbox`].
+        label: option<string>,
         /// The message produced when the [`Checkbox`] is toggled.
         on-toggle: option<message-id>,
         size: option<pixels>,

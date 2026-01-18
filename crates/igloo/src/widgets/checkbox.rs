@@ -15,8 +15,8 @@ impl ToElement for Checkbox {
         Renderer: WrapperRenderer + 'a,
     {
         let Checkbox {
-            label,
             is_checked,
+            label,
             on_toggle,
             size,
             width,
@@ -28,7 +28,11 @@ impl ToElement for Checkbox {
             text_shaping,
         } = self;
 
-        let mut checkbox = iced::widget::Checkbox::new(label, is_checked);
+        let mut checkbox = iced::widget::Checkbox::new(is_checked);
+
+        if let Some(label) = label {
+            checkbox = checkbox.label(label);
+        }
 
         if let Some(message) = on_toggle {
             checkbox = checkbox.on_toggle(move |v| Message {

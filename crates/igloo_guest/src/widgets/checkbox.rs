@@ -8,8 +8,8 @@ use crate::{
 
 /// A box that can be checked.
 pub struct Checkbox<Message> {
-    label: String,
     is_checked: bool,
+    label: Option<String>,
     on_toggle: Option<Box<dyn Fn(bool) -> Message + Send + Sync>>,
     size: Option<Pixels>,
     width: Option<Length>,
@@ -22,11 +22,11 @@ pub struct Checkbox<Message> {
 }
 
 impl<Message> Checkbox<Message> {
-    /// Creates a new [`Checkbox`] with the given label and state.
-    pub fn new(label: impl Into<String>, is_checked: bool) -> Self {
+    /// Creates a new [`Checkbox`] with the given checked state.
+    pub fn new(is_checked: bool) -> Self {
         Self {
-            label: label.into(),
             is_checked,
+            label: None,
             on_toggle: None,
             size: None,
             width: None,
@@ -37,6 +37,12 @@ impl<Message> Checkbox<Message> {
             text_wrapping: None,
             text_shaping: None,
         }
+    }
+
+    /// Sets the label of the [`Checkbox`].
+    pub fn label(mut self, label: impl Into<String>) -> Self {
+        self.label = Some(label.into());
+        self
     }
 
     /// Sets the message to produce when the [`Checkbox`] is toggled.
@@ -92,8 +98,8 @@ impl<Message: 'static> Widget<Message> for Checkbox<Message> {
         create_message: &dyn CreateMessage<Message>,
     ) -> crate::bindings::Element {
         checkbox_to_element(&crate::bindings::iced::app::element::Checkbox {
-            label: self.label,
             is_checked: self.is_checked,
+            label: self.label,
             on_toggle: self.on_toggle.map(|f| {
                 create_message.add_message_func(Box::new(move |msg| {
                     if let crate::bindings::Message::BoolType(value) = msg {

@@ -19,9 +19,9 @@ impl ToElement for Rule {
             thickness,
         } = self;
         if is_horizontal {
-            iced::widget::horizontal_rule(thickness).into()
+            iced::widget::rule::horizontal(thickness).into()
         } else {
-            iced::widget::vertical_rule(thickness).into()
+            iced::widget::rule::vertical(thickness).into()
         }
     }
 }
