@@ -1,6 +1,6 @@
 import type { view as ViewType, update as UpdateType, MessageId, Message } from "iced:app/app@0.1.0"
 import type { cloneMessage as CloneMessageType } from "iced:app/message@0.1.0"
-import { createApp, Text, Column, Button, Row } from "igloo-ts"
+import { createApp, Text, Column, Button, Row, Container, Length } from "igloo-ts"
 
 interface MessageExport {
     cloneMessage: typeof CloneMessageType;
@@ -28,21 +28,23 @@ const app = createApp<State, Msg>({
     },
 
     view: (state, messages) => {
-        return Column.new()
-            .spacing(10)
-            .push(Text.new(`Count: ${state.count}`).size(24))
-            .push(
-                Row.new()
-                    .spacing(10)
-                    .push(
-                        Button.new(Text.new('+'))
-                            .onPress(messages, () => ({ type: 'increment' }))
-                    )
-                    .push(
-                        Button.new(Text.new('-'))
-                            .onPress(messages, () => ({ type: 'decrement' }))
-                    )
-            )
+        return Container.new(
+            Column.new()
+                .spacing(10)
+                .push(Text.new(`Count: ${state.count}`).size(24))
+                .push(
+                    Row.new()
+                        .spacing(10)
+                        .push(
+                            Button.new(Text.new('+'))
+                                .onPress(messages, () => ({ type: 'increment' }))
+                        )
+                        .push(
+                            Button.new(Text.new('-'))
+                                .onPress(messages, () => ({ type: 'decrement' }))
+                        )
+                )
+        ).center(Length.fill())
     }
 })
 

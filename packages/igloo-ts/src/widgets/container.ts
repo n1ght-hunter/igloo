@@ -4,7 +4,7 @@ import type { Padding } from 'iced:app/padding@0.1.0';
 import type { Horizontal, Vertical } from 'iced:app/alignment@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import { containerToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating Container widgets.
@@ -13,20 +13,19 @@ import { Element } from '../element.js';
  *
  * @example
  * ```typescript
- * const centered = Container.new(Text.new('Centered').build())
- *   .center(Length.fill())
- *   .build();
+ * const centered = Container.new(Text.new('Centered'))
+ *   .center(Length.fill());
  * ```
  */
-export class Container {
+export class Container implements IntoElement {
   private record: WitContainer;
 
-  private constructor(content: Element) {
-    this.record = { content: content.inner };
+  private constructor(content: ElementLike) {
+    this.record = { content: toElement(content).inner };
   }
 
   /** Create a new Container builder with the given content element */
-  static new(content: Element): Container {
+  static new(content: ElementLike): Container {
     return new Container(content);
   }
 
@@ -120,8 +119,8 @@ export class Container {
     return this;
   }
 
-  /** Build the Container widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(containerToElement(this.record));
   }
 }
