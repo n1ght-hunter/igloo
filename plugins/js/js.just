@@ -1,11 +1,11 @@
 
-
 default:
     @just --list js
 
-
-build:
+bundle:
     bun build ./src/index.ts --outdir ./dist --external='iced:app'
+
+componentize:
     jco componentize ./dist/index.js \
         --wit ../../wit/ \
         --world-name app \
@@ -13,3 +13,5 @@ build:
         --disable all \
         --enable stdio \
         --debug-starlingmonkey-build
+
+build: bundle componentize

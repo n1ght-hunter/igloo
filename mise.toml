@@ -8,3 +8,38 @@ wasmtime = "40"
 "ubi:bytecodealliance/wasm-pkg-tools" = { version = "0.13.0", rename_exe = "wkg" }
 node = "22"
 "npm:@bytecodealliance/jco" = "latest"
+
+# Generate WIT types for igloo-ts library
+[tasks."igloo-ts:gen"]
+description = "Generate WIT types for igloo-ts"
+sources = ["wit/**/*.wit"]
+outputs = ["packages/igloo-ts/src/generated/**/*"]
+run = "just igloo-ts gen"
+
+# Bundle JS plugin source
+[tasks."js:bundle"]
+description = "Bundle JS plugin with bun"
+depends = ["igloo-ts:gen"]
+sources = [
+    "plugins/js/src/**/*.ts",
+    "plugins/js/package.json",
+    "packages/igloo-ts/src/**/*.ts",
+]
+outputs = ["plugins/js/dist/index.js"]
+run = "just js bundle"
+
+# Componentize JS bundle to WASM
+[tasks."js:componentize"]
+description = "Componentize JS bundle to WASM"
+depends = ["js:bundle"]
+sources = [
+    "plugins/js/dist/index.js",
+    "wit/**/*.wit",
+]
+outputs = ["plugins/js/js-app.wasm"]
+run = "just js componentize"
+
+# Build everything for JS plugin
+[tasks."js:build"]
+description = "Build JS plugin (gen + bundle + componentize)"
+depends = ["js:componentize"]
