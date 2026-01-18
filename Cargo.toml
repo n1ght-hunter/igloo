@@ -16,32 +16,24 @@ igloo_guest = { path = "crates/igloo_guest" }
 igloo = { path = "crates/igloo" }
 
 anyhow = "1"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 tokio = { version = "1" }
 
-iced = { version = "0.14.0-dev", features = [
+iced = { version = "0.14.0", features = [
     "advanced",
     "tokio",
     "image",
     "markdown",
     "svg",
 ] }
-iced_core = { version = "0.14.0-dev" }
-iced_widget = { version = "0.14.0-dev", default-features = false }
-wit-bindgen = "0.43"
-wasmtime = "35.0.0"
-wasmtime-wasi = "35.0.0"
-tracing = "0.1.41"
-thiserror = "2.0.14"
+iced_core = { version = "0.14.0" }
+iced_widget = { version = "0.14.2", default-features = false }
+wit-bindgen = "0.51.0"
+wasmtime = "40.0.2"
+wasmtime-wasi = "40.0.2"
+tracing = "0.1.44"
+thiserror = "2.0.17"
 
-[patch.crates-io]
-iced = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b488cc08b7365fb1839ed47ef92f3ff0fa36" }
-iced_core = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b488cc08b7365fb1839ed47ef92f3ff0fa36" }
-iced_widget = { git = "https://github.com/iced-rs/iced.git", rev = "9d56b488cc08b7365fb1839ed47ef92f3ff0fa36" }
-
-# wasmtime = {git = "https://github.com/bytecodealliance/wasmtime.git", rev = "cf88a7c"}
-# wasmtime-wasi = {git = "https://github.com/bytecodealliance/wasmtime.git", rev = "cf88a7c"}
-# wit-bindgen = {git = "https://github.com/bytecodealliance/wit-bindgen.git", rev = "63649c7"}
 [workspace.lints.rust]
 missing_debug_implementations = "deny"
 missing_docs = "allow"
