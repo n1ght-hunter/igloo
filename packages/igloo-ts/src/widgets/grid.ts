@@ -1,7 +1,7 @@
 import type { Grid as WitGrid } from 'iced:app/grid@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import { gridToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating Grid layout widgets.
@@ -19,7 +19,7 @@ import { Element } from '../element.js';
  *   .build();
  * ```
  */
-export class Grid {
+export class Grid implements IntoElement {
   private record: WitGrid;
 
   private constructor() {
@@ -32,22 +32,22 @@ export class Grid {
   }
 
   /** Create a Grid with the given elements */
-  static with(elements: Element[]): Grid {
+  static with(elements: ElementLike[]): Grid {
     const grid = new Grid();
-    grid.record.elements = elements.map((e) => e.inner);
+    grid.record.elements = elements.map((e) => toElement(e).inner);
     return grid;
   }
 
   /** Add an element to the grid */
-  push(element: Element): this {
-    this.record.elements.push(element.inner);
+  push(element: ElementLike): this {
+    this.record.elements.push(toElement(element).inner);
     return this;
   }
 
   /** Add multiple elements */
-  extend(elements: Element[]): this {
+  extend(elements: ElementLike[]): this {
     for (const element of elements) {
-      this.record.elements.push(element.inner);
+      this.record.elements.push(toElement(element).inner);
     }
     return this;
   }
@@ -82,8 +82,8 @@ export class Grid {
     return this;
   }
 
-  /** Build the Grid widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(gridToElement(this.record));
   }
 }

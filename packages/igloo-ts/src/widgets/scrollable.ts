@@ -3,7 +3,7 @@ import type { Length } from 'iced:app/length@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import type { Message } from 'iced:app/message@0.1.0';
 import { scrollableToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 import { MessageManager } from '../message.js';
 
 export type { Direction, Scrollbar, Anchor } from 'iced:app/scrollable@0.1.0';
@@ -27,15 +27,15 @@ export type { Direction, Scrollbar, Anchor } from 'iced:app/scrollable@0.1.0';
  *
  * @typeParam Msg - The application message type
  */
-export class Scrollable<Msg> {
+export class Scrollable<Msg> implements IntoElement {
   private record: WitScrollable;
 
-  private constructor(content: Element) {
-    this.record = { content: content.inner };
+  private constructor(content: ElementLike) {
+    this.record = { content: toElement(content).inner };
   }
 
   /** Create a new Scrollable builder with the given content */
-  static new<Msg>(content: Element): Scrollable<Msg> {
+  static new<Msg>(content: ElementLike): Scrollable<Msg> {
     return new Scrollable(content);
   }
 
@@ -84,8 +84,8 @@ export class Scrollable<Msg> {
     return this;
   }
 
-  /** Build the Scrollable widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(scrollableToElement(this.record));
   }
 }

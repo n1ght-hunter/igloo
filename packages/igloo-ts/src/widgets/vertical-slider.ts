@@ -3,7 +3,7 @@ import type { Length } from 'iced:app/length@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import type { Message } from 'iced:app/message@0.1.0';
 import { verticalSliderToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 import { MessageManager } from '../message.js';
 
 /**
@@ -25,7 +25,7 @@ import { MessageManager } from '../message.js';
  *
  * @typeParam Msg - The application message type
  */
-export class VerticalSlider<Msg> {
+export class VerticalSlider<Msg> implements IntoElement {
   private record: WitVerticalSlider;
 
   private constructor(rangeStart: number, rangeEnd: number, value: number, onChange: bigint) {
@@ -88,8 +88,8 @@ export class VerticalSlider<Msg> {
     return this;
   }
 
-  /** Build the VerticalSlider widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(verticalSliderToElement(this.record));
   }
 }

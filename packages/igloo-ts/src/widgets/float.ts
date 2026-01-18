@@ -1,6 +1,6 @@
 import type { Float as WitFloat, Translation } from 'iced:app/float@0.1.0';
 import { floatToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 export type { Translation } from 'iced:app/float@0.1.0';
 
@@ -16,15 +16,15 @@ export type { Translation } from 'iced:app/float@0.1.0';
  *   .build();
  * ```
  */
-export class Float {
+export class Float implements IntoElement {
   private record: WitFloat;
 
-  private constructor(content: Element) {
-    this.record = { content: content.inner };
+  private constructor(content: ElementLike) {
+    this.record = { content: toElement(content).inner };
   }
 
   /** Create a new Float builder with the given content */
-  static new(content: Element): Float {
+  static new(content: ElementLike): Float {
     return new Float(content);
   }
 
@@ -46,8 +46,8 @@ export class Float {
     return this;
   }
 
-  /** Build the Float widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(floatToElement(this.record));
   }
 }

@@ -2,7 +2,7 @@ import type { Table as WitTable } from 'iced:app/table@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import { tableToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating Table widgets.
@@ -26,7 +26,7 @@ import { Element } from '../element.js';
  *   .build();
  * ```
  */
-export class Table {
+export class Table implements IntoElement {
   private record: WitTable;
 
   private constructor() {
@@ -39,23 +39,23 @@ export class Table {
   }
 
   /** Set the header columns */
-  columns(columns: Element[]): this {
-    this.record.columns = columns.map((e) => e.inner);
+  columns(columns: ElementLike[]): this {
+    this.record.columns = columns.map((e) => toElement(e).inner);
     return this;
   }
 
   /** Add a row of cells */
-  pushRow(cells: Element[]): this {
+  pushRow(cells: ElementLike[]): this {
     // Rows are flattened - each cell is added sequentially
     for (const cell of cells) {
-      this.record.rows.push(cell.inner);
+      this.record.rows.push(toElement(cell).inner);
     }
     return this;
   }
 
   /** Set all rows at once (flattened array of cells) */
-  rows(rows: Element[]): this {
-    this.record.rows = rows.map((e) => e.inner);
+  rows(rows: ElementLike[]): this {
+    this.record.rows = rows.map((e) => toElement(e).inner);
     return this;
   }
 
@@ -101,8 +101,8 @@ export class Table {
     return this;
   }
 
-  /** Build the Table widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(tableToElement(this.record));
   }
 }

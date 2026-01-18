@@ -4,7 +4,7 @@ import type { LineHeight, Shaping, Wrapping } from 'iced:app/text@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import type { Message } from 'iced:app/message@0.1.0';
 import { radioToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 import { MessageManager } from '../message.js';
 
 /**
@@ -20,7 +20,7 @@ import { MessageManager } from '../message.js';
  *
  * @typeParam Msg - The application message type
  */
-export class Radio<Msg> {
+export class Radio<Msg> implements IntoElement {
   private record: WitRadio;
 
   private constructor(label: string, isSelected: boolean, onSelect: bigint) {
@@ -85,8 +85,8 @@ export class Radio<Msg> {
     return this;
   }
 
-  /** Build the Radio widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(radioToElement(this.record));
   }
 }

@@ -1,7 +1,7 @@
 import type { ProgressBar as WitProgressBar } from 'iced:app/progress-bar@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
 import { progressBarToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating ProgressBar widgets.
@@ -14,7 +14,7 @@ import { Element } from '../element.js';
  *   .build();
  * ```
  */
-export class ProgressBar {
+export class ProgressBar implements IntoElement {
   private record: WitProgressBar;
 
   private constructor(rangeStart: number, rangeEnd: number, value: number) {
@@ -49,8 +49,8 @@ export class ProgressBar {
     return this;
   }
 
-  /** Build the ProgressBar widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(progressBarToElement(this.record));
   }
 }

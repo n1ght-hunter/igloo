@@ -1,7 +1,7 @@
 import type { Rule as WitRule } from 'iced:app/rule@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import { ruleToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating Rule widgets.
@@ -16,7 +16,7 @@ import { Element } from '../element.js';
  * const vr = Rule.vertical(2).build();
  * ```
  */
-export class Rule {
+export class Rule implements IntoElement {
   private record: WitRule;
 
   private constructor(isHorizontal: boolean, thickness: Pixels) {
@@ -33,8 +33,8 @@ export class Rule {
     return new Rule(false, thickness);
   }
 
-  /** Build the Rule widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(ruleToElement(this.record));
   }
 }

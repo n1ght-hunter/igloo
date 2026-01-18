@@ -1,7 +1,7 @@
 import type { Tooltip as WitTooltip, Position } from 'iced:app/tooltip@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import { tooltipToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 export type { Position } from 'iced:app/tooltip@0.1.0';
 
@@ -18,11 +18,11 @@ export type { Position } from 'iced:app/tooltip@0.1.0';
  * ).build();
  * ```
  */
-export class Tooltip {
+export class Tooltip implements IntoElement {
   private record: WitTooltip;
 
-  private constructor(content: Element, tooltip: Element, position: Position) {
-    this.record = { content: content.inner, tooltip: tooltip.inner, position };
+  private constructor(content: ElementLike, tooltip: ElementLike, position: Position) {
+    this.record = { content: toElement(content).inner, tooltip: toElement(tooltip).inner, position };
   }
 
   /**
@@ -31,7 +31,7 @@ export class Tooltip {
    * @param tooltip - The tooltip content to display on hover
    * @param position - Where to position the tooltip relative to content
    */
-  static new(content: Element, tooltip: Element, position: Position): Tooltip {
+  static new(content: ElementLike, tooltip: ElementLike, position: Position): Tooltip {
     return new Tooltip(content, tooltip, position);
   }
 
@@ -53,8 +53,8 @@ export class Tooltip {
     return this;
   }
 
-  /** Build the Tooltip widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(tooltipToElement(this.record));
   }
 }

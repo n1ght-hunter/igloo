@@ -1,6 +1,6 @@
 import type { PaneGrid as WitPaneGrid } from 'iced:app/pane-grid@0.1.0';
 import { paneGridToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating PaneGrid widgets.
@@ -14,7 +14,7 @@ import { Element } from '../element.js';
  *   .build();
  * ```
  */
-export class PaneGrid {
+export class PaneGrid implements IntoElement {
   private record: WitPaneGrid;
 
   private constructor() {
@@ -27,28 +27,28 @@ export class PaneGrid {
   }
 
   /** Create a PaneGrid with the given elements */
-  static with(children: Element[]): PaneGrid {
+  static with(children: ElementLike[]): PaneGrid {
     const grid = new PaneGrid();
-    grid.record.children = children.map((e) => e.inner);
+    grid.record.children = children.map((e) => toElement(e).inner);
     return grid;
   }
 
   /** Add a pane to the grid */
-  push(element: Element): this {
-    this.record.children.push(element.inner);
+  push(element: ElementLike): this {
+    this.record.children.push(toElement(element).inner);
     return this;
   }
 
   /** Add multiple panes */
-  extend(elements: Element[]): this {
+  extend(elements: ElementLike[]): this {
     for (const element of elements) {
-      this.record.children.push(element.inner);
+      this.record.children.push(toElement(element).inner);
     }
     return this;
   }
 
-  /** Build the PaneGrid widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(paneGridToElement(this.record));
   }
 }

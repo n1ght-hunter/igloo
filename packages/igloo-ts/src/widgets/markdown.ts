@@ -1,6 +1,6 @@
 import type { Markdown as WitMarkdown } from 'iced:app/markdown@0.1.0';
 import { markdownToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating Markdown widgets.
@@ -11,7 +11,7 @@ import { Element } from '../element.js';
  * const md = Markdown.new('# Hello\n\nThis is **bold** text.').build();
  * ```
  */
-export class Markdown {
+export class Markdown implements IntoElement {
   private record: WitMarkdown;
 
   private constructor(content: string) {
@@ -23,8 +23,8 @@ export class Markdown {
     return new Markdown(content);
   }
 
-  /** Build the Markdown widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(markdownToElement(this.record));
   }
 }

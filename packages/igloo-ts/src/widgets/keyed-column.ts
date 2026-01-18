@@ -4,7 +4,7 @@ import type { Padding } from 'iced:app/padding@0.1.0';
 import type { Alignment } from 'iced:app/alignment@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import { keyedColumnToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 export type { Key } from 'iced:app/keyed@0.1.0';
 
@@ -23,7 +23,7 @@ export type { Key } from 'iced:app/keyed@0.1.0';
  *   .build();
  * ```
  */
-export class KeyedColumn {
+export class KeyedColumn implements IntoElement {
   private keys: bigint[] = [];
   private children: Element[] = [];
   private _spacing?: Pixels;
@@ -41,17 +41,17 @@ export class KeyedColumn {
   }
 
   /** Add a keyed element to the column */
-  pushKeyed(key: Key, element: Element): this {
+  pushKeyed(key: Key, element: ElementLike): this {
     this.keys.push(key);
-    this.children.push(element);
+    this.children.push(toElement(element));
     return this;
   }
 
   /** Add multiple keyed elements */
-  extendKeyed(items: Array<[Key, Element]>): this {
+  extendKeyed(items: Array<[Key, ElementLike]>): this {
     for (const [key, element] of items) {
       this.keys.push(key);
-      this.children.push(element);
+      this.children.push(toElement(element));
     }
     return this;
   }
@@ -92,8 +92,8 @@ export class KeyedColumn {
     return this;
   }
 
-  /** Build the KeyedColumn widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     const record: WitKeyedColumn = {
       keys: new BigUint64Array(this.keys),
       children: this.children.map((e) => e.inner),

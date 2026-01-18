@@ -4,7 +4,7 @@ import type { LineHeight, Shaping, Wrapping } from 'iced:app/text@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import type { Message } from 'iced:app/message@0.1.0';
 import { checkboxToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 import { MessageManager } from '../message.js';
 
 /**
@@ -26,7 +26,7 @@ import { MessageManager } from '../message.js';
  *
  * @typeParam Msg - The application message type
  */
-export class Checkbox<Msg> {
+export class Checkbox<Msg> implements IntoElement {
   private record: WitCheckbox;
 
   private constructor(isChecked: boolean) {
@@ -101,8 +101,8 @@ export class Checkbox<Msg> {
     return this;
   }
 
-  /** Build the Checkbox widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(checkboxToElement(this.record));
   }
 }

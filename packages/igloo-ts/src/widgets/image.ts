@@ -2,7 +2,7 @@ import type { Image as WitImage } from 'iced:app/image@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
 import type { ContentFit, FilterMethod, Rotation } from 'iced:app/shared@0.1.0';
 import { imageToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 
 export type { ContentFit, FilterMethod, Rotation } from 'iced:app/shared@0.1.0';
 
@@ -18,7 +18,7 @@ export type { ContentFit, FilterMethod, Rotation } from 'iced:app/shared@0.1.0';
  *   .build();
  * ```
  */
-export class Image {
+export class Image implements IntoElement {
   private record: WitImage;
 
   private constructor(handle: string) {
@@ -78,8 +78,8 @@ export class Image {
     return this;
   }
 
-  /** Build the Image widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(imageToElement(this.record));
   }
 }

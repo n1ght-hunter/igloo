@@ -5,7 +5,7 @@ import type { Horizontal } from 'iced:app/alignment@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import type { Message } from 'iced:app/message@0.1.0';
 import { togglerToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 import { MessageManager } from '../message.js';
 
 /**
@@ -27,7 +27,7 @@ import { MessageManager } from '../message.js';
  *
  * @typeParam Msg - The application message type
  */
-export class Toggler<Msg> {
+export class Toggler<Msg> implements IntoElement {
   private record: WitToggler;
 
   private constructor(isToggled: boolean) {
@@ -102,8 +102,8 @@ export class Toggler<Msg> {
     return this;
   }
 
-  /** Build the Toggler widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(togglerToElement(this.record));
   }
 }

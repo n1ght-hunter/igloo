@@ -4,7 +4,7 @@ import type { Padding } from 'iced:app/padding@0.1.0';
 import type { LineHeight } from 'iced:app/text@0.1.0';
 import type { Message } from 'iced:app/message@0.1.0';
 import { comboBoxToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 import { MessageManager } from '../message.js';
 
 /**
@@ -26,7 +26,7 @@ import { MessageManager } from '../message.js';
  *
  * @typeParam Msg - The application message type
  */
-export class ComboBox<Msg> {
+export class ComboBox<Msg> implements IntoElement {
   private record: WitComboBox;
 
   private constructor(options: string[], placeholder: string, onSelected: bigint) {
@@ -103,8 +103,8 @@ export class ComboBox<Msg> {
     return this;
   }
 
-  /** Build the ComboBox widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(comboBoxToElement(this.record));
   }
 }

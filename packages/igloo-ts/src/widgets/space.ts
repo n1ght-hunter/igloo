@@ -1,7 +1,7 @@
 import type { Space as WitSpace } from 'iced:app/space@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
 import { spaceToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating Space widgets.
@@ -21,7 +21,7 @@ import { Element } from '../element.js';
  *   .build();
  * ```
  */
-export class Space {
+export class Space implements IntoElement {
   private record: WitSpace;
 
   private constructor() {
@@ -53,8 +53,8 @@ export class Space {
     return this;
   }
 
-  /** Build the Space widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(spaceToElement(this.record));
   }
 }

@@ -1,6 +1,6 @@
 import type { Svg as WitSvg } from 'iced:app/svg@0.1.0';
 import { svgToElement } from 'iced:app/element@0.1.0';
-import { Element } from '../element.js';
+import { Element, type IntoElement } from '../element.js';
 
 /**
  * Builder for creating SVG widgets.
@@ -11,7 +11,7 @@ import { Element } from '../element.js';
  * const icon = Svg.new('/path/to/icon.svg').build();
  * ```
  */
-export class Svg {
+export class Svg implements IntoElement {
   private record: WitSvg;
 
   private constructor(path: string) {
@@ -23,8 +23,8 @@ export class Svg {
     return new Svg(path);
   }
 
-  /** Build the SVG widget into an Element */
-  build(): Element {
+  /** Convert to Element */
+  intoElement(): Element {
     return new Element(svgToElement(this.record));
   }
 }
