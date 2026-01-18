@@ -2,9 +2,9 @@
 
 
 [tools]
-just = "1.42"
-"github:bytecodealliance/wit-bindgen" = "0.43"
-wasmtime = "35"
-"ubi:bytecodealliance/wasm-pkg-tools" = { version = "0.11.0", rename_exe = "wkg" }
+just = "1.46.0"
+"github:bytecodealliance/wit-bindgen" = "0.51.0"
+wasmtime = "40"
+"ubi:bytecodealliance/wasm-pkg-tools" = { version = "0.13.0", rename_exe = "wkg" }
 node = "22"
 "npm:@bytecodealliance/jco" = "latest"
