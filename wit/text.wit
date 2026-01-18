@@ -38,8 +38,6 @@ interface text {
         ///
         /// You should use this strategy when you have complete control of the text
         /// and the font you are displaying in your application.
-        ///
-        /// This is the default.
         basic,
         /// Advanced text shaping and font fallback.
         ///
@@ -49,6 +47,10 @@ interface text {
         ///
         /// Advanced shaping is expensive! You should only enable it when necessary.
         advanced,
+        /// Automatically detect the shaping strategy based on the text contents.
+        ///
+        /// This is the default.
+        auto,
     }
 
     /// The wrapping strategy of some text.

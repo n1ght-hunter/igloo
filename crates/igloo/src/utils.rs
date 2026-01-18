@@ -122,6 +122,7 @@ impl From<Shaping> for iced::widget::text::Shaping {
         match value {
             Shaping::Basic => iced::widget::text::Shaping::Basic,
             Shaping::Advanced => iced::widget::text::Shaping::Advanced,
+            Shaping::Auto => iced::widget::text::Shaping::Auto,
         }
     }
 }

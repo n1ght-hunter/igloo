@@ -67,6 +67,7 @@ impl From<iced_core::text::Shaping> for text::Shaping {
         match shaping {
             iced_core::text::Shaping::Basic => text::Shaping::Basic,
             iced_core::text::Shaping::Advanced => text::Shaping::Advanced,
+            iced_core::text::Shaping::Auto => text::Shaping::Auto,
         }
     }
 }
