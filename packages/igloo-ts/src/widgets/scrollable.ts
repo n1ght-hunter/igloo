@@ -1,12 +1,13 @@
-import type { Scrollable as WitScrollable, Direction, Scrollbar, Anchor } from 'iced:app/scrollable@0.1.0';
+import type { Scrollable as WitScrollable, Direction, Scrollbar } from 'iced:app/scrollable@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import type { Message } from 'iced:app/message@0.1.0';
 import { scrollableToElement } from 'iced:app/element@0.1.0';
 import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 import { MessageManager } from '../message.js';
+import { Anchor } from '../types/enums.js';
 
-export type { Direction, Scrollbar, Anchor } from 'iced:app/scrollable@0.1.0';
+export type { Direction, Scrollbar } from 'iced:app/scrollable@0.1.0';
 
 /**
  * Builder for creating Scrollable widgets.

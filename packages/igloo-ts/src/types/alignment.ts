@@ -8,26 +8,26 @@ export type {
 /**
  * Horizontal alignment values.
  */
-export const Horizontal = {
-  left: 'left' as const,
-  center: 'center' as const,
-  right: 'right' as const,
-} as const;
+export enum Horizontal {
+  Left = 'left',
+  Center = 'center',
+  Right = 'right',
+}
 
 /**
  * Vertical alignment values.
  */
-export const Vertical = {
-  top: 'top' as const,
-  center: 'center' as const,
-  bottom: 'bottom' as const,
-} as const;
+export enum Vertical {
+  Top = 'top',
+  Center = 'center',
+  Bottom = 'bottom',
+}
 
 /**
  * Generic alignment values.
  */
-export const Alignment = {
-  start: 'start' as const,
-  center: 'center' as const,
-  end: 'end' as const,
-} as const;
+export enum Alignment {
+  Start = 'start',
+  Center = 'center',
+  End = 'end',
+}

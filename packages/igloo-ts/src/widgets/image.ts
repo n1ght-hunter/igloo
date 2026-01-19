@@ -1,10 +1,11 @@
 import type { Image as WitImage } from 'iced:app/image@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
-import type { ContentFit, FilterMethod, Rotation } from 'iced:app/shared@0.1.0';
+import type { Rotation } from 'iced:app/shared@0.1.0';
 import { imageToElement } from 'iced:app/element@0.1.0';
 import { Element, type IntoElement } from '../element.js';
+import { ContentFit, FilterMethod } from '../types/enums.js';
 
-export type { ContentFit, FilterMethod, Rotation } from 'iced:app/shared@0.1.0';
+export type { Rotation } from 'iced:app/shared@0.1.0';
 
 /**
  * Builder for creating Image widgets.

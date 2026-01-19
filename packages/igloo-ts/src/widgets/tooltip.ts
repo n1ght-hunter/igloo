@@ -1,9 +1,8 @@
-import type { Tooltip as WitTooltip, Position } from 'iced:app/tooltip@0.1.0';
+import type { Tooltip as WitTooltip } from 'iced:app/tooltip@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
 import { tooltipToElement } from 'iced:app/element@0.1.0';
 import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
-
-export type { Position } from 'iced:app/tooltip@0.1.0';
+import { Position } from '../types/enums.js';
 
 /**
  * Builder for creating Tooltip widgets.

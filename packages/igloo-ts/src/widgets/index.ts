@@ -17,15 +17,15 @@ export { ComboBox } from './combo-box.js';
 
 // Display widgets
 export { ProgressBar } from './progress-bar.js';
-export { Tooltip, type Position } from './tooltip.js';
+export { Tooltip } from './tooltip.js';
 export { Rule } from './rule.js';
 export { Space } from './space.js';
-export { Image, type ContentFit, type FilterMethod, type Rotation } from './image.js';
+export { Image, type Rotation } from './image.js';
 export { Svg } from './svg.js';
 export { Markdown } from './markdown.js';
 
 // Layout widgets
-export { Scrollable, ScrollbarConfig, type Direction, type Scrollbar, type Anchor } from './scrollable.js';
+export { Scrollable, ScrollbarConfig, type Direction, type Scrollbar } from './scrollable.js';
 export { Grid } from './grid.js';
 export { Float, type Translation } from './float.js';
 export { KeyedColumn, type Key } from './keyed-column.js';
