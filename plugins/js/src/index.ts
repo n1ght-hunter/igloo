@@ -1,6 +1,22 @@
 import type { view as ViewType, update as UpdateType, MessageId, Message } from "iced:app/app@0.1.0"
 import type { cloneMessage as CloneMessageType } from "iced:app/message@0.1.0"
-import { createApp, Text, Column, Button, Row, Container, Length } from "igloo-ts"
+import {
+    createApp,
+    Text,
+    Column,
+    Button,
+    Row,
+    Container,
+    Length,
+    TextInput,
+    Checkbox,
+    ProgressBar,
+    Rule,
+    Space,
+    Padding,
+    Scrollable,
+    type Message as IglooMessage,
+} from "igloo-ts"
 
 interface MessageExport {
     cloneMessage: typeof CloneMessageType;
@@ -12,39 +28,195 @@ export const message: MessageExport = {
     }
 }
 
-// Define app state and messages
-type State = { count: number }
-type Msg = { type: 'increment' } | { type: 'decrement' }
+// Task type
+interface Task {
+    id: number
+    text: string
+    completed: boolean
+}
 
-// Create the app using igloo-ts
+// App state
+interface State {
+    tasks: Task[]
+    inputText: string
+    nextId: number
+    filter: 'all' | 'active' | 'completed'
+}
+
+// Messages
+type Msg =
+    | { type: 'inputChanged', value: string }
+    | { type: 'addTask' }
+    | { type: 'toggleTask', id: number }
+    | { type: 'deleteTask', id: number }
+    | { type: 'setFilter', filter: 'all' | 'active' | 'completed' }
+    | { type: 'clearCompleted' }
+
+// Helper to extract string from message
+const getString = (msg: IglooMessage): string | null => {
+    if (msg.tag === 'string-type') return msg.val
+    return null
+}
+
+// Create the app
 const app = createApp<State, Msg>({
-    init: () => ({ count: 0 }),
+    init: () => ({
+        tasks: [
+            { id: 1, text: 'Learn igloo-ts', completed: true },
+            { id: 2, text: 'Build a cool app', completed: false },
+            { id: 3, text: 'Share with others', completed: false },
+        ],
+        inputText: '',
+        nextId: 4,
+        filter: 'all',
+    }),
 
     update: (state, msg) => {
         switch (msg.type) {
-            case 'increment': return { count: state.count + 1 }
-            case 'decrement': return { count: state.count - 1 }
+            case 'inputChanged':
+                return { ...state, inputText: msg.value }
+
+            case 'addTask':
+                if (state.inputText.trim() === '') return state
+                return {
+                    ...state,
+                    tasks: [...state.tasks, {
+                        id: state.nextId,
+                        text: state.inputText.trim(),
+                        completed: false,
+                    }],
+                    inputText: '',
+                    nextId: state.nextId + 1,
+                }
+
+            case 'toggleTask':
+                return {
+                    ...state,
+                    tasks: state.tasks.map(t =>
+                        t.id === msg.id ? { ...t, completed: !t.completed } : t
+                    ),
+                }
+
+            case 'deleteTask':
+                return {
+                    ...state,
+                    tasks: state.tasks.filter(t => t.id !== msg.id),
+                }
+
+            case 'setFilter':
+                return { ...state, filter: msg.filter }
+
+            case 'clearCompleted':
+                return {
+                    ...state,
+                    tasks: state.tasks.filter(t => !t.completed),
+                }
         }
     },
 
     view: (state, messages) => {
+        const completedCount = state.tasks.filter(t => t.completed).length
+        const totalCount = state.tasks.length
+        const progress = totalCount > 0 ? completedCount / totalCount : 0
+
+        // Filter tasks based on current filter
+        const filteredTasks = state.tasks.filter(t => {
+            if (state.filter === 'active') return !t.completed
+            if (state.filter === 'completed') return t.completed
+            return true
+        })
+
+        // Build task list
+        const taskList = Column.new().spacing(8)
+        for (const task of filteredTasks) {
+            taskList.push(
+                Row.new()
+                    .spacing(10)
+                    .push(
+                        Checkbox.new(task.completed)
+                            .label(task.text)
+                            .onToggle(messages, () => ({ type: 'toggleTask' as const, id: task.id }))
+                    )
+                    .push(Space.new().width(Length.fill()))
+                    .push(
+                        Button.new(Text.new('×').size(16))
+                            .onPress(messages, () => ({ type: 'deleteTask' as const, id: task.id }))
+                    )
+            )
+        }
+
+        // Filter buttons
+        const filterButton = (label: string, filter: 'all' | 'active' | 'completed') => {
+            const isActive = state.filter === filter
+            return Button.new(
+                Text.new(label).size(isActive ? 14 : 12)
+            ).onPress(messages, () => ({ type: 'setFilter' as const, filter }))
+        }
+
         return Container.new(
             Column.new()
-                .spacing(10)
-                .push(Text.new(`Count: ${state.count}`).size(24))
+                .spacing(16)
+                .width(Length.fixed(400))
+                .push(Text.new('Task Manager').size(28))
+                .push(Rule.horizontal(1))
+                // Progress section
+                .push(
+                    Column.new()
+                        .spacing(4)
+                        .push(Text.new(`Progress: ${completedCount}/${totalCount} tasks completed`).size(14))
+                        .push(ProgressBar.new(0, 1, progress).length(Length.fill()))
+                )
+                .push(Rule.horizontal(1))
+                // Input section
                 .push(
                     Row.new()
                         .spacing(10)
                         .push(
-                            Button.new(Text.new('+'))
-                                .onPress(messages, () => ({ type: 'increment' }))
+                            TextInput.new('Add a new task...', state.inputText)
+                                .onInput(messages, (m) => {
+                                    const val = getString(m)
+                                    return { type: 'inputChanged' as const, value: val ?? '' }
+                                })
+                                .onSubmit(messages, () => ({ type: 'addTask' }))
+                                .width(Length.fill())
+                                .padding(Padding.all(8))
                         )
                         .push(
-                            Button.new(Text.new('-'))
-                                .onPress(messages, () => ({ type: 'decrement' }))
+                            Button.new(Text.new('Add'))
+                                .onPress(messages, () => ({ type: 'addTask' }))
+                                .padding(Padding.xy(16, 8))
                         )
                 )
-        ).center(Length.fill())
+                // Filter buttons
+                .push(
+                    Row.new()
+                        .spacing(8)
+                        .push(filterButton('All', 'all'))
+                        .push(filterButton('Active', 'active'))
+                        .push(filterButton('Completed', 'completed'))
+                        .push(Space.new().width(Length.fill()))
+                        .push(
+                            Button.new(Text.new('Clear Completed'))
+                                .onPress(messages, () => ({ type: 'clearCompleted' }))
+                        )
+                )
+                .push(Rule.horizontal(1))
+                // Task list in scrollable container
+                .push(
+                    Scrollable.new(taskList.padding(Padding.all(4)))
+                        .height(Length.fixed(300))
+                )
+                // Empty state message
+                .push(
+                    filteredTasks.length === 0
+                        ? Text.new(
+                            state.filter === 'completed' ? 'No completed tasks'
+                            : state.filter === 'active' ? 'All tasks completed!'
+                            : 'No tasks yet. Add one above!'
+                        ).size(14)
+                        : Space.new()
+                )
+        ).center(Length.fill()).padding(Padding.all(20))
     }
 })
 
