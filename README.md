@@ -30,6 +30,12 @@ Igloo lets you:
 - **Plugin Isolation**: Secure sandboxed execution of plugin code
 - **Multi-Language Support**: Rust, JavaScript (experimental), and more
 
+## Todo
+- Add iced canvas support
+- Add cwasm plugin support and precompilation guide
+- Auto cache plugins by compling then storing compiled version and useing hash to check for changes
+- Figure out how to hook in iced tasks and subscriptions for async operations
+
 ## Getting Started
 
 ### Prerequisites
@@ -51,6 +57,12 @@ cd igloo
 just setup
 # or manually:
 rustup target add wasm32-wasip2
+mise install
+```
+
+2.5 (Optional) Build js plugin:
+```bash
+just build-js
 ```
 
 3. Build and run the example:
@@ -150,7 +162,7 @@ let plugin_view = plugin_manager.plugin_view("my-plugin")?;
 - Generate bindings: `just gen`
 
 Warning: Loading plugins can be slow during development due to Wasmtime compilation. 
-Consider adding this to your `Cargo.toml` for faster builds:
+Consider adding this to your `Cargo.toml` for faster builds or running in release mode:
 
 ```toml
 # Optimize wasmtime/cranelift in dev builds for faster WASM compilation

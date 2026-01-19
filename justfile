@@ -7,6 +7,7 @@ default:
 
 setup:
     rustup target add wasm32-wasip2
+    mise install
 
 run:
     @just rsx run
