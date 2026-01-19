@@ -13,9 +13,12 @@ import { MessageManager } from '../message.js';
  *
  * @example
  * ```typescript
- * const radio = Radio.new('Option A', state.selected === 'a')
- *   .onSelect(messages, () => ({ type: 'selected', value: 'a' }))
- *   .build();
+ * const radio = Radio.new(
+ *   'Option A',
+ *   state.selected === 'a',
+ *   messages,
+ *   () => ({ type: 'selected', value: 'a' })
+ * );
  * ```
  *
  * @typeParam Msg - The application message type

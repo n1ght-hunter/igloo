@@ -15,8 +15,7 @@ export type { Rotation } from 'iced:app/shared@0.1.0';
  * ```typescript
  * const image = Image.new('/path/to/image.png')
  *   .width(Length.fixed(200))
- *   .contentFit('contain')
- *   .build();
+ *   .contentFit(ContentFit.Contain);
  * ```
  */
 export class Image implements IntoElement {

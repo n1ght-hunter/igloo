@@ -9,9 +9,8 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  * @example
  * ```typescript
  * const paneGrid = PaneGrid.new()
- *   .push(Text.new('Pane 1').build())
- *   .push(Text.new('Pane 2').build())
- *   .build();
+ *   .push(Text.new('Pane 1'))
+ *   .push(Text.new('Pane 2'));
  * ```
  */
 export class PaneGrid implements IntoElement {

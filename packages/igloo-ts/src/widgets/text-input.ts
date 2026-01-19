@@ -21,8 +21,7 @@ import { MessageManager } from '../message.js';
  *       return { type: 'nameChanged', value: msg.val };
  *     }
  *     return { type: 'noop' };
- *   })
- *   .build();
+ *   });
  * ```
  *
  * @typeParam Msg - The application message type

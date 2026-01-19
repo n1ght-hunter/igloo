@@ -14,15 +14,17 @@ import { MessageManager } from '../message.js';
  *
  * @example
  * ```typescript
- * const pickList = PickList.new(['Red', 'Green', 'Blue'], state.color)
- *   .onSelect(messages, (msg) => {
+ * const pickList = PickList.new(
+ *   ['Red', 'Green', 'Blue'],
+ *   state.color,
+ *   messages,
+ *   (msg) => {
  *     if (msg.tag === 'string-type') {
  *       return { type: 'colorSelected', color: msg.val };
  *     }
  *     return { type: 'noop' };
- *   })
- *   .placeholder('Select a color')
- *   .build();
+ *   }
+ * ).placeholder('Select a color');
  * ```
  *
  * @typeParam Msg - The application message type

@@ -17,10 +17,9 @@ export type { Key } from 'iced:app/keyed@0.1.0';
  * ```typescript
  * const keyedColumn = KeyedColumn.new()
  *   .spacing(10)
- *   .pushKeyed(1n, Text.new('Item 1').build())
- *   .pushKeyed(2n, Text.new('Item 2').build())
- *   .pushKeyed(3n, Text.new('Item 3').build())
- *   .build();
+ *   .pushKeyed(1n, Text.new('Item 1'))
+ *   .pushKeyed(2n, Text.new('Item 2'))
+ *   .pushKeyed(3n, Text.new('Item 3'));
  * ```
  */
 export class KeyedColumn implements IntoElement {

@@ -8,7 +8,7 @@ import { Element, type IntoElement } from '../element.js';
  *
  * @example
  * ```typescript
- * const icon = Svg.new('/path/to/icon.svg').build();
+ * const icon = Svg.new('/path/to/icon.svg');
  * ```
  */
 export class Svg implements IntoElement {

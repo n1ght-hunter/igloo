@@ -17,13 +17,11 @@ export type { Direction, Scrollbar } from 'iced:app/scrollable@0.1.0';
  * ```typescript
  * const scrollable = Scrollable.new(
  *   Column.new()
- *     .push(Text.new('Item 1').build())
- *     .push(Text.new('Item 2').build())
+ *     .push(Text.new('Item 1'))
+ *     .push(Text.new('Item 2'))
  *     // ... more items
- *     .build()
  * )
- *   .height(Length.fixed(300))
- *   .build();
+ *   .height(Length.fixed(300));
  * ```
  *
  * @typeParam Msg - The application message type

@@ -10,10 +10,10 @@ import { Element, type IntoElement } from '../element.js';
  * @example
  * ```typescript
  * // Horizontal rule
- * const hr = Rule.horizontal(1).build();
+ * const hr = Rule.horizontal(1);
  *
  * // Vertical rule
- * const vr = Rule.vertical(2).build();
+ * const vr = Rule.vertical(2);
  * ```
  */
 export class Rule implements IntoElement {

@@ -13,15 +13,17 @@ import { MessageManager } from '../message.js';
  *
  * @example
  * ```typescript
- * const comboBox = ComboBox.new(['Apple', 'Banana', 'Cherry'], 'Search fruits...')
- *   .selected(state.selectedFruit)
- *   .onSelected(messages, (msg) => {
+ * const comboBox = ComboBox.new(
+ *   ['Apple', 'Banana', 'Cherry'],
+ *   'Search fruits...',
+ *   messages,
+ *   (msg) => {
  *     if (msg.tag === 'string-type') {
  *       return { type: 'fruitSelected', fruit: msg.val };
  *     }
  *     return { type: 'noop' };
- *   })
- *   .build();
+ *   }
+ * ).selected(state.selectedFruit);
  * ```
  *
  * @typeParam Msg - The application message type

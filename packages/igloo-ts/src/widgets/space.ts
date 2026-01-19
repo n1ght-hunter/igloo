@@ -12,13 +12,11 @@ import { Element, type IntoElement } from '../element.js';
  * // Fixed size space
  * const fixedSpace = Space.new()
  *   .width(Length.fixed(20))
- *   .height(Length.fixed(10))
- *   .build();
+ *   .height(Length.fixed(10));
  *
  * // Flexible space that fills remaining width
  * const flexSpace = Space.new()
- *   .width(Length.fill())
- *   .build();
+ *   .width(Length.fill());
  * ```
  */
 export class Space implements IntoElement {

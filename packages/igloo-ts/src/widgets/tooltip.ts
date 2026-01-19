@@ -11,10 +11,10 @@ import { Position } from '../types/enums.js';
  * @example
  * ```typescript
  * const withTooltip = Tooltip.new(
- *   Button.new(Text.new('?').build()).build(),
- *   Text.new('Help information').build(),
- *   'top'
- * ).build();
+ *   Button.new(Text.new('?')),
+ *   Text.new('Help information'),
+ *   Position.Top
+ * );
  * ```
  */
 export class Tooltip implements IntoElement {

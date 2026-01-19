@@ -10,8 +10,7 @@ import { Element, type IntoElement } from '../element.js';
  * @example
  * ```typescript
  * const progressBar = ProgressBar.new(0, 100, state.progress)
- *   .length(Length.fill())
- *   .build();
+ *   .length(Length.fill());
  * ```
  */
 export class ProgressBar implements IntoElement {

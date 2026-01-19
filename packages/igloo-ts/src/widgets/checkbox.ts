@@ -20,8 +20,7 @@ import { MessageManager } from '../message.js';
  *       return { type: 'enabledChanged', value: msg.val };
  *     }
  *     return { type: 'noop' };
- *   })
- *   .build();
+ *   });
  * ```
  *
  * @typeParam Msg - The application message type

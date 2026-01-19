@@ -12,18 +12,17 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  * ```typescript
  * const table = Table.new()
  *   .columns([
- *     Text.new('Name').build(),
- *     Text.new('Age').build(),
+ *     Text.new('Name'),
+ *     Text.new('Age'),
  *   ])
  *   .pushRow([
- *     Text.new('Alice').build(),
- *     Text.new('30').build(),
+ *     Text.new('Alice'),
+ *     Text.new('30'),
  *   ])
  *   .pushRow([
- *     Text.new('Bob').build(),
- *     Text.new('25').build(),
- *   ])
- *   .build();
+ *     Text.new('Bob'),
+ *     Text.new('25'),
+ *   ]);
  * ```
  */
 export class Table implements IntoElement {

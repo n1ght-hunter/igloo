@@ -12,15 +12,16 @@ import { MessageManager } from '../message.js';
  *
  * @example
  * ```typescript
- * const slider = Slider.new(0, 100, state.volume)
- *   .onChange(messages, (msg) => {
+ * const slider = Slider.new(
+ *   0, 100, state.volume,
+ *   messages,
+ *   (msg) => {
  *     if (msg.tag === 'f32-type') {
  *       return { type: 'volumeChanged', value: msg.val };
  *     }
  *     return { type: 'noop' };
- *   })
- *   .step(1)
- *   .build();
+ *   }
+ * ).step(1);
  * ```
  *
  * @typeParam Msg - The application message type

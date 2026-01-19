@@ -10,10 +10,9 @@ export type { Translation } from 'iced:app/float@0.1.0';
  *
  * @example
  * ```typescript
- * const floating = Float.new(Text.new('Floating content').build())
+ * const floating = Float.new(Text.new('Floating content'))
  *   .translation({ x: 100, y: 50 })
- *   .scale(0.8)
- *   .build();
+ *   .scale(0.8);
  * ```
  */
 export class Float implements IntoElement {

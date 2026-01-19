@@ -8,7 +8,7 @@ import { Element, type IntoElement } from '../element.js';
  *
  * @example
  * ```typescript
- * const md = Markdown.new('# Hello\n\nThis is **bold** text.').build();
+ * const md = Markdown.new('# Hello\n\nThis is **bold** text.');
  * ```
  */
 export class Markdown implements IntoElement {

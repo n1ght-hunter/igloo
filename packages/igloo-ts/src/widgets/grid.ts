@@ -12,11 +12,10 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  * const grid = Grid.new()
  *   .columns(3)
  *   .spacing(10)
- *   .push(Text.new('Cell 1').build())
- *   .push(Text.new('Cell 2').build())
- *   .push(Text.new('Cell 3').build())
- *   .push(Text.new('Cell 4').build())
- *   .build();
+ *   .push(Text.new('Cell 1'))
+ *   .push(Text.new('Cell 2'))
+ *   .push(Text.new('Cell 3'))
+ *   .push(Text.new('Cell 4'));
  * ```
  */
 export class Grid implements IntoElement {
