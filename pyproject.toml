@@ -1,0 +1,17 @@
+[project]
+name = "igloo-workspace"
+version = "0.1.0"
+description = "Igloo - Modular WebAssembly Plugin System"
+requires-python = ">=3.11"
+# This is a virtual workspace package (no dependencies)
+dependencies = []
+
+[tool.uv]
+dev-dependencies = [
+    "componentize-py>=0.16",
+]
+
+[tool.uv.workspace]
+members = [
+    "packages/igloo-py",
+]

@@ -28,6 +28,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .eslintcache
 .cache
 *.tsbuildinfo
+__pycache__/
+*.py[cod]
+.venv/
+*.wasm
 
 # IntelliJ based IDEs
 .idea

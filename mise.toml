@@ -8,6 +8,7 @@ wasmtime = "40"
 "ubi:bytecodealliance/wasm-pkg-tools" = { version = "0.13.0", rename_exe = "wkg" }
 node = "22"
 "npm:@bytecodealliance/jco" = "latest"
+uv = "latest"
 
 # Generate WIT types for igloo-ts library
 [tasks."igloo-ts:gen"]
@@ -43,3 +44,10 @@ run = "just js componentize"
 [tasks."js:build"]
 description = "Build JS plugin (gen + bundle + componentize)"
 depends = ["js:componentize"]
+
+# Generate Python bindings for igloo-py library
+[tasks."igloo-py:gen"]
+description = "Generate WIT bindings for igloo-py"
+sources = ["wit/**/*.wit"]
+outputs = ["packages/igloo-py/src/igloo_py/generated/**/*"]
+run = "just igloo-py gen"

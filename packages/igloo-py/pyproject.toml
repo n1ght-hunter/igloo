@@ -1,0 +1,37 @@
+[project]
+name = "igloo-py"
+version = "0.1.0"
+description = "Python bindings for Igloo - builder pattern APIs for WASM component UI widgets"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/igloo_py"]
+
+[tool.uv]
+dev-dependencies = [
+    "componentize-py>=0.16",
+    "pyrefly",
+    "ruff>=0.2",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pyrefly]
+project_includes = ["src/igloo_py"]
+project_excludes = ["**/generated/**"]
+replace_imports_with_any = [
+    "componentize_py_runtime",
+    "componentize_py_types",
+    "igloo_py.generated",
+]
