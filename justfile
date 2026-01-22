@@ -1,5 +1,6 @@
 mod js "plugins/js/js.just"
 mod py "plugins/python/py.just"
+mod rust "plugins/rust/rust.just"
 mod rsx "examples/rust_host/rsx.just"
 mod igloo-ts "packages/igloo-ts/igloo-ts.just"
 mod igloo-py "packages/igloo-py/igloo-py.just"
@@ -26,3 +27,4 @@ build-py:
 build-plugins:
     @just js build
     @just py build
+    @just rust build

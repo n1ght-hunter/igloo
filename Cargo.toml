@@ -7,7 +7,7 @@ members = [
     "crates/igloo_guest",
     "crates/igloo",
     "examples/*",
-    "examples/rust_host/guest",
+    "plugins/rust",
 ]
 
 
