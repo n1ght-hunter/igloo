@@ -28,7 +28,7 @@ Igloo lets you:
 - **Message Passing**: Bidirectional communication between host and plugins
 - **Resource Management**: Efficient handling of UI elements across WASM boundary
 - **Plugin Isolation**: Secure sandboxed execution of plugin code
-- **Multi-Language Support**: Rust, JavaScript (experimental), and more
+- **Multi-Language Support**: Rust, TypeScript/JavaScript, and Python
 
 ## Todo
 - Add iced canvas support
@@ -60,17 +60,29 @@ rustup target add wasm32-wasip2
 mise install
 ```
 
-2.5 (Optional) Build js plugin:
+3. Build plugins and run the example:
 ```bash
-just build-js
-```
-
-3. Build and run the example:
-```bash
+# Build all plugins (Rust, TypeScript, Python) and run
+just build-plugins
 just run
+
+# Or build individual plugins:
+just build-rust    # Build Rust plugin
+just build-js      # Build TypeScript/JavaScript plugin
+just build-py      # Build Python plugin
 ```
 
-### Creating a Plugin
+### Language SDKs
+
+Igloo supports plugins written in multiple languages:
+
+| Language | SDK | Status |
+|----------|-----|--------|
+| Rust | `igloo_guest` | Handwritten |
+| TypeScript/JavaScript | `igloo-ts` | Generated with Claude code, manually tested |
+| Python | `igloo_py` | Generated with Claude code, works but not checked much |
+
+### Creating a Rust Plugin
 
 1. Create a new Rust library with `crate-type = ["cdylib"]`
 2. Add `igloo_guest` as a dependency
@@ -130,12 +142,71 @@ impl igloo_guest::Application<MyPlugin, MyMessage> for MyPlugin {
 igloo_guest::export_guest!(MyPlugin, MyMessage);
 ```
 
-
 4. Compile to WASM:
 ```bash
 cargo build --target wasm32-wasip2 --release
 ```
 
+### Creating a TypeScript Plugin
+
+```typescript
+import { App, Text, Column, Button, MessageManager, ElementLike } from "igloo-ts";
+
+type State = { count: number };
+type Msg = "increment" | "decrement";
+
+class CounterApp implements App<State, Msg> {
+  init(): State {
+    return { count: 0 };
+  }
+
+  update(state: State, msg: Msg): State {
+    switch (msg) {
+      case "increment": return { count: state.count + 1 };
+      case "decrement": return { count: state.count - 1 };
+    }
+  }
+
+  view(state: State, messages: MessageManager<Msg>): ElementLike {
+    return Column.new()
+      .push(Text.new(`Count: ${state.count}`))
+      .push(Button.new(Text.new("+")).onPress(messages, () => "increment"))
+      .push(Button.new(Text.new("-")).onPress(messages, () => "decrement"));
+  }
+}
+
+export const { update, view } = createApp(new CounterApp());
+```
+
+### Creating a Python Plugin
+
+```python
+from igloo_py import App, Text, Column, Button, MessageManager, ElementLike, create_app
+
+class CounterApp(App[int, str]):
+    def init(self) -> int:
+        return 0
+
+    def update(self, state: int, msg: str) -> int:
+        if msg == "increment":
+            return state + 1
+        elif msg == "decrement":
+            return state - 1
+        return state
+
+    def view(self, state: int, messages: MessageManager[str]) -> ElementLike:
+        return Column.new().push(
+            Text.new(f"Count: {state}")
+        ).push(
+            Button.new(Text.new("+")).on_press(messages, lambda: "increment")
+        ).push(
+            Button.new(Text.new("-")).on_press(messages, lambda: "decrement")
+        )
+
+app_exports = create_app(CounterApp())
+update = app_exports.update
+view = app_exports.view
+```
 
 ### Loading Plugins in Host
 
