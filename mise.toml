@@ -51,3 +51,21 @@ description = "Generate WIT bindings for igloo-py"
 sources = ["wit/**/*.wit"]
 outputs = ["packages/igloo-py/src/igloo_py/generated/**/*"]
 run = "just igloo-py gen"
+
+# Componentize Python plugin to WASM
+[tasks."python:componentize"]
+description = "Componentize Python plugin to WASM"
+depends = ["igloo-py:gen"]
+sources = [
+    "plugins/python/src/**/*.py",
+    "plugins/python/pyproject.toml",
+    "packages/igloo-py/src/**/*.py",
+    "wit/**/*.wit",
+]
+outputs = ["plugins/python/python-app.wasm"]
+run = "just py componentize"
+
+# Build everything for Python plugin
+[tasks."python:build"]
+description = "Build Python plugin (gen + componentize)"
+depends = ["python:componentize"]
