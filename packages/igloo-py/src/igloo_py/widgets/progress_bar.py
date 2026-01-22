@@ -3,6 +3,8 @@
 from typing import Any, Optional, TYPE_CHECKING
 
 from ..element import Element, IntoElement
+from wit_world.imports.progress_bar import ProgressBar as WitProgressBar
+from wit_world.imports.element import progress_bar_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -54,18 +56,12 @@ class ProgressBar(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        try:
-            from ..generated.wit_world.imports.progress_bar import ProgressBar as WitProgressBar
-            from ..generated.wit_world.imports.element import progress_bar_to_element
-
-            record = WitProgressBar(
-                range_start=self._range_start,
-                range_end=self._range_end,
-                value=self._value,
-                length=self._length,
-                girth=self._girth,
-                vertical=self._vertical,
-            )
-            return Element(progress_bar_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitProgressBar(
+            range_start=self._range_start,
+            range_end=self._range_end,
+            value=self._value,
+            length=self._length,
+            girth=self._girth,
+            vertical=self._vertical,
+        )
+        return Element(progress_bar_to_element(record))

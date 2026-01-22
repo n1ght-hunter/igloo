@@ -10,24 +10,23 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import text
 from ..imports import length
-from ..imports import padding
+from ..imports import alignment
 
 @dataclass
-class ComboBox:
+class Toggler:
     """
-    A widget allowing selection from a list of options.
+    A widget representing a setting that can be toggled on or off.
     """
-    options: List[str]
-    placeholder: str
-    selected: Optional[str]
-    on_selected: int
-    on_input: Optional[int]
-    on_option_hovered: Optional[int]
-    on_open: Optional[int]
-    on_close: Optional[int]
-    padding: Optional[padding.Padding]
+    is_toggled: bool
+    label: Optional[str]
+    on_toggle: Optional[int]
     size: Optional[float]
-    line_height: Optional[text.LineHeight]
     width: Optional[length.Length]
+    text_size: Optional[float]
+    text_line_height: Optional[text.LineHeight]
+    text_alignment: Optional[alignment.Horizontal]
+    text_shaping: Optional[text.Shaping]
+    text_wrapping: Optional[text.Wrapping]
+    spacing: Optional[float]
 
 

@@ -9,24 +9,22 @@ import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import text
-from ..imports import alignment
 from ..imports import length
 
 @dataclass
-class Toggler:
+class Radio:
     """
-    A widget representing a setting that can be toggled on or off.
+    A circular button representing an alternative.
     """
-    is_toggled: bool
-    label: Optional[str]
-    on_toggle: Optional[int]
+    label: str
+    is_selected: bool
+    on_select: int
     size: Optional[float]
     width: Optional[length.Length]
+    spacing: Optional[float]
     text_size: Optional[float]
     text_line_height: Optional[text.LineHeight]
-    text_alignment: Optional[alignment.Horizontal]
-    text_shaping: Optional[text.Shaping]
     text_wrapping: Optional[text.Wrapping]
-    spacing: Optional[float]
+    text_shaping: Optional[text.Shaping]
 
 

@@ -17,6 +17,6 @@ run:
 
 # Build all plugins with caching
 build-plugins:
-    @mist run js:build
+    @mise run js:build
     @mise run python:build
     @just rust build

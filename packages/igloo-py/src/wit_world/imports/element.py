@@ -8,33 +8,33 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
+from ..imports import shared
 from ..imports import button
 from ..imports import scrollable
-from ..imports import table
+from ..imports import tooltip
+from ..imports import pane_grid
+from ..imports import pick_list
+from ..imports import row
+from ..imports import combo_box
+from ..imports import column
+from ..imports import rule
 from ..imports import slider
 from ..imports import progress_bar
-from ..imports import svg
+from ..imports import table
 from ..imports import grid
-from ..imports import markdown
-from ..imports import checkbox
 from ..imports import keyed
-from ..imports import text_input
-from ..imports import rule
-from ..imports import shared
-from ..imports import space
-from ..imports import pick_list
-from ..imports import combo_box
-from ..imports import radio
-from ..imports import column
-from ..imports import row
-from ..imports import tooltip
-from ..imports import image
-from ..imports import pane_grid
-from ..imports import text
-from ..imports import vertical_slider
 from ..imports import container
+from ..imports import image
+from ..imports import radio
+from ..imports import vertical_slider
+from ..imports import space
 from ..imports import toggler
+from ..imports import markdown
+from ..imports import text
+from ..imports import svg
+from ..imports import text_input
 from ..imports import float
+from ..imports import checkbox
 
 
 def explain(element: shared.Element, color: shared.Color) -> shared.Element:

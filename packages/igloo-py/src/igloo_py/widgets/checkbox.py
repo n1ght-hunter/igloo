@@ -4,6 +4,8 @@ from typing import Any, TypeVar, Callable, Optional, TYPE_CHECKING
 
 from ..element import Element, IntoElement
 from ..message import MessageManager, Message
+from wit_world.imports.checkbox import Checkbox as WitCheckbox
+from wit_world.imports.element import checkbox_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -106,23 +108,17 @@ class Checkbox(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        try:
-            from ..generated.wit_world.imports.checkbox import Checkbox as WitCheckbox
-            from ..generated.wit_world.imports.element import checkbox_to_element
-
-            record = WitCheckbox(
-                is_checked=self._is_checked,
-                label=self._label,
-                on_toggle=self._on_toggle,
-                size=self._size,
-                width=self._width,
-                height=self._height,
-                spacing=self._spacing,
-                text_size=self._text_size,
-                text_line_height=self._text_line_height,
-                text_wrapping=self._text_wrapping,
-                text_shaping=self._text_shaping,
-            )
-            return Element(checkbox_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitCheckbox(
+            is_checked=self._is_checked,
+            label=self._label,
+            on_toggle=self._on_toggle,
+            size=self._size,
+            width=self._width,
+            height=self._height,
+            spacing=self._spacing,
+            text_size=self._text_size,
+            text_line_height=self._text_line_height,
+            text_wrapping=self._text_wrapping,
+            text_shaping=self._text_shaping,
+        )
+        return Element(checkbox_to_element(record))

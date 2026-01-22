@@ -4,6 +4,14 @@ from typing import Any, TypeVar, Callable, Optional, TYPE_CHECKING
 
 from ..element import Element, ElementLike, to_element, IntoElement
 from ..message import MessageManager, Message
+from wit_world.imports.scrollable import (
+    Scrollable as WitScrollable,
+    Direction_Vertical,
+    Direction_Horizontal,
+    Direction_Both,
+    Scrollbar,
+)
+from wit_world.imports.element import scrollable_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -64,36 +72,26 @@ class Scrollable(IntoElement):
 
     def vertical(self, scrollbar: dict[str, Any] | None = None) -> "Scrollable":
         """Configure for vertical scrolling only."""
-        try:
-            from ..generated.wit_world.imports.scrollable import Direction_Vertical, Scrollbar
-
-            sb = Scrollbar(
-                width=scrollbar.get("width") if scrollbar else None,
-                margin=scrollbar.get("margin") if scrollbar else None,
-                scroller_width=scrollbar.get("scroller_width") if scrollbar else None,
-                alignment=scrollbar.get("alignment") if scrollbar else None,
-                spacing=scrollbar.get("spacing") if scrollbar else None,
-            )
-            self._direction = Direction_Vertical(sb)
-        except ImportError:
-            self._direction = {"tag": "vertical", "val": scrollbar or {}}
+        sb = Scrollbar(
+            width=scrollbar.get("width") if scrollbar else None,
+            margin=scrollbar.get("margin") if scrollbar else None,
+            scroller_width=scrollbar.get("scroller_width") if scrollbar else None,
+            alignment=scrollbar.get("alignment") if scrollbar else None,
+            spacing=scrollbar.get("spacing") if scrollbar else None,
+        )
+        self._direction = Direction_Vertical(sb)
         return self
 
     def horizontal(self, scrollbar: dict[str, Any] | None = None) -> "Scrollable":
         """Configure for horizontal scrolling only."""
-        try:
-            from ..generated.wit_world.imports.scrollable import Direction_Horizontal, Scrollbar
-
-            sb = Scrollbar(
-                width=scrollbar.get("width") if scrollbar else None,
-                margin=scrollbar.get("margin") if scrollbar else None,
-                scroller_width=scrollbar.get("scroller_width") if scrollbar else None,
-                alignment=scrollbar.get("alignment") if scrollbar else None,
-                spacing=scrollbar.get("spacing") if scrollbar else None,
-            )
-            self._direction = Direction_Horizontal(sb)
-        except ImportError:
-            self._direction = {"tag": "horizontal", "val": scrollbar or {}}
+        sb = Scrollbar(
+            width=scrollbar.get("width") if scrollbar else None,
+            margin=scrollbar.get("margin") if scrollbar else None,
+            scroller_width=scrollbar.get("scroller_width") if scrollbar else None,
+            alignment=scrollbar.get("alignment") if scrollbar else None,
+            spacing=scrollbar.get("spacing") if scrollbar else None,
+        )
+        self._direction = Direction_Horizontal(sb)
         return self
 
     def both(
@@ -102,44 +100,30 @@ class Scrollable(IntoElement):
         horizontal_scrollbar: dict[str, Any] | None = None,
     ) -> "Scrollable":
         """Configure for both vertical and horizontal scrolling."""
-        try:
-            from ..generated.wit_world.imports.scrollable import Direction_Both, Scrollbar
-
-            vsb = Scrollbar(
-                width=vertical_scrollbar.get("width") if vertical_scrollbar else None,
-                margin=vertical_scrollbar.get("margin") if vertical_scrollbar else None,
-                scroller_width=vertical_scrollbar.get("scroller_width") if vertical_scrollbar else None,
-                alignment=vertical_scrollbar.get("alignment") if vertical_scrollbar else None,
-                spacing=vertical_scrollbar.get("spacing") if vertical_scrollbar else None,
-            )
-            hsb = Scrollbar(
-                width=horizontal_scrollbar.get("width") if horizontal_scrollbar else None,
-                margin=horizontal_scrollbar.get("margin") if horizontal_scrollbar else None,
-                scroller_width=horizontal_scrollbar.get("scroller_width") if horizontal_scrollbar else None,
-                alignment=horizontal_scrollbar.get("alignment") if horizontal_scrollbar else None,
-                spacing=horizontal_scrollbar.get("spacing") if horizontal_scrollbar else None,
-            )
-            self._direction = Direction_Both((vsb, hsb))
-        except ImportError:
-            self._direction = {
-                "tag": "both",
-                "val": [vertical_scrollbar or {}, horizontal_scrollbar or {}],
-            }
+        vsb = Scrollbar(
+            width=vertical_scrollbar.get("width") if vertical_scrollbar else None,
+            margin=vertical_scrollbar.get("margin") if vertical_scrollbar else None,
+            scroller_width=vertical_scrollbar.get("scroller_width") if vertical_scrollbar else None,
+            alignment=vertical_scrollbar.get("alignment") if vertical_scrollbar else None,
+            spacing=vertical_scrollbar.get("spacing") if vertical_scrollbar else None,
+        )
+        hsb = Scrollbar(
+            width=horizontal_scrollbar.get("width") if horizontal_scrollbar else None,
+            margin=horizontal_scrollbar.get("margin") if horizontal_scrollbar else None,
+            scroller_width=horizontal_scrollbar.get("scroller_width") if horizontal_scrollbar else None,
+            alignment=horizontal_scrollbar.get("alignment") if horizontal_scrollbar else None,
+            spacing=horizontal_scrollbar.get("spacing") if horizontal_scrollbar else None,
+        )
+        self._direction = Direction_Both((vsb, hsb))
         return self
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        try:
-            from ..generated.wit_world.imports.scrollable import Scrollable as WitScrollable
-            from ..generated.wit_world.imports.element import scrollable_to_element
-
-            record = WitScrollable(
-                content=self._content,
-                width=self._width,
-                height=self._height,
-                on_scroll=self._on_scroll,
-                direction=self._direction,
-            )
-            return Element(scrollable_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitScrollable(
+            content=self._content,
+            width=self._width,
+            height=self._height,
+            on_scroll=self._on_scroll,
+            direction=self._direction,
+        )
+        return Element(scrollable_to_element(record))

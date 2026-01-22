@@ -4,6 +4,8 @@ from typing import Any, TypeVar, Callable, Optional, TYPE_CHECKING
 
 from ..element import Element, ElementLike, to_element, IntoElement
 from ..message import MessageManager, Message
+from wit_world.imports.button import Button as WitButton
+from wit_world.imports.element import button_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -79,18 +81,12 @@ class Button(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element (implements IntoElement)."""
-        try:
-            from ..generated.wit_world.imports.button import Button as WitButton
-            from ..generated.wit_world.imports.element import button_to_element
-
-            record = WitButton(
-                content=self._content,
-                width=self._width,
-                height=self._height,
-                padding=self._padding,
-                on_press=self._on_press,
-                clip=self._clip,
-            )
-            return Element(button_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitButton(
+            content=self._content,
+            width=self._width,
+            height=self._height,
+            padding=self._padding,
+            on_press=self._on_press,
+            clip=self._clip,
+        )
+        return Element(button_to_element(record))

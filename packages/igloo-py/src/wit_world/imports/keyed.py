@@ -10,24 +10,21 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import alignment
 from ..imports import padding
-from ..imports import text
 from ..imports import length
+from ..imports import shared
 
 @dataclass
-class TextInput:
+class KeyedColumn:
     """
-    A field that can be filled with text.
+    A container that keeps the state of its children using keys.
     """
-    placeholder: str
-    value: str
-    secure: Optional[bool]
-    on_input: Optional[int]
-    on_submit: Optional[int]
-    on_paste: Optional[int]
-    width: Optional[length.Length]
+    keys: List[int]
+    children: List[shared.Element]
+    spacing: Optional[float]
     padding: Optional[padding.Padding]
-    size: Optional[float]
-    line_height: Optional[text.LineHeight]
-    align_x: Optional[alignment.Horizontal]
+    width: Optional[length.Length]
+    height: Optional[length.Length]
+    max_width: Optional[float]
+    align_items: Optional[alignment.Alignment]
 
 

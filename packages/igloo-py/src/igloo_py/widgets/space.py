@@ -3,6 +3,8 @@
 from typing import Any, TYPE_CHECKING
 
 from ..element import Element, IntoElement
+from wit_world.imports.space import Space as WitSpace
+from wit_world.imports.element import space_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -50,14 +52,8 @@ class Space(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        try:
-            from ..generated.wit_world.imports.space import Space as WitSpace
-            from ..generated.wit_world.imports.element import space_to_element
-
-            record = WitSpace(
-                width=self._width,
-                height=self._height,
-            )
-            return Element(space_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitSpace(
+            width=self._width,
+            height=self._height,
+        )
+        return Element(space_to_element(record))

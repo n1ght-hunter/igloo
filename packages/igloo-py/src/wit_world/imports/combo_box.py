@@ -8,23 +8,26 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import length
+from ..imports import padding
 from ..imports import text
+from ..imports import length
 
 @dataclass
-class Radio:
+class ComboBox:
     """
-    A circular button representing an alternative.
+    A widget allowing selection from a list of options.
     """
-    label: str
-    is_selected: bool
-    on_select: int
+    options: List[str]
+    placeholder: str
+    selected: Optional[str]
+    on_selected: int
+    on_input: Optional[int]
+    on_option_hovered: Optional[int]
+    on_open: Optional[int]
+    on_close: Optional[int]
+    padding: Optional[padding.Padding]
     size: Optional[float]
+    line_height: Optional[text.LineHeight]
     width: Optional[length.Length]
-    spacing: Optional[float]
-    text_size: Optional[float]
-    text_line_height: Optional[text.LineHeight]
-    text_wrapping: Optional[text.Wrapping]
-    text_shaping: Optional[text.Shaping]
 
 

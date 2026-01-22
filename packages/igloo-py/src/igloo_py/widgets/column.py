@@ -3,6 +3,8 @@
 from typing import Any, Callable, Optional, List, TYPE_CHECKING
 
 from ..element import Element, ElementLike, to_element, IntoElement
+from wit_world.imports.column import Column as WitColumn
+from wit_world.imports.element import column_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -100,20 +102,14 @@ class Column(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element (implements IntoElement)."""
-        try:
-            from ..generated.wit_world.imports.column import Column as WitColumn
-            from ..generated.wit_world.imports.element import column_to_element
-
-            record = WitColumn(
-                elements=self._elements,
-                spacing=self._spacing,
-                padding=self._padding,
-                height=self._height,
-                width=self._width,
-                max_width=self._max_width,
-                align_x=self._align_x,
-                clip=self._clip,
-            )
-            return Element(column_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitColumn(
+            elements=self._elements,
+            spacing=self._spacing,
+            padding=self._padding,
+            height=self._height,
+            width=self._width,
+            max_width=self._max_width,
+            align_x=self._align_x,
+            clip=self._clip,
+        )
+        return Element(column_to_element(record))

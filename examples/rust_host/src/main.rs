@@ -44,6 +44,7 @@ impl IcedApp {
             .filter_map(|(name, path)| {
                 let path = PathBuf::from(path);
                 if path.exists() {
+                    tracing::info!("Plugin found, will load: {} from {}", name, path.display());
                     Some((name.to_string(), path))
                 } else {
                     tracing::info!("Plugin not found, skipping: {}", path.display());
@@ -92,6 +93,7 @@ impl IcedApp {
                 self.plugins_loading = self.plugins_loading.saturating_sub(1);
                 match result {
                     Ok(plugin) => {
+                        tracing::info!("Plugin loaded successfully: {}", plugin.name);
                         if let Err(e) = self.plugin_manager.add_compiled_plugin(plugin) {
                             tracing::error!("Failed to add plugin: {}", e);
                         }

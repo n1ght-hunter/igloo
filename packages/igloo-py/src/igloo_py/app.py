@@ -1,6 +1,7 @@
 """Application framework following the Elm architecture."""
 
-from typing import TypeVar, Generic, Protocol, Callable, Any
+from abc import ABC, abstractmethod
+from typing import TypeVar, Generic, Callable, Any
 from dataclasses import dataclass
 
 from .element import Element, ElementLike, to_element, WitElement
@@ -10,17 +11,20 @@ State = TypeVar("State")
 Msg = TypeVar("Msg")
 
 
-class AppProtocol(Protocol[State, Msg]):
-    """Protocol defining the Elm architecture interface."""
+class App(ABC, Generic[State, Msg]):
+    """Abstract base class defining the Elm architecture interface."""
 
+    @abstractmethod
     def init(self) -> State:
         """Initialize the application state."""
         ...
 
+    @abstractmethod
     def update(self, state: State, msg: Msg) -> State:
         """Update the state based on a message."""
         ...
 
+    @abstractmethod
     def view(self, state: State, messages: MessageManager[Msg]) -> ElementLike:
         """Render the current state as an ElementLike (widget or Element)."""
         ...
@@ -34,7 +38,7 @@ class AppExports:
     view: Callable[[], WitElement]
 
 
-def create_app(app: AppProtocol[State, Msg]) -> AppExports:
+def create_app(app: App[State, Msg]) -> AppExports:
     """
     Create an Igloo application from an App definition.
     Returns the exports required by the WIT interface.

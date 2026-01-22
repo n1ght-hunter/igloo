@@ -3,6 +3,8 @@
 from typing import Any, Callable, Optional, List, TYPE_CHECKING
 
 from ..element import Element, ElementLike, to_element, IntoElement
+from wit_world.imports.row import Row as WitRow
+from wit_world.imports.element import row_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -98,20 +100,14 @@ class Row(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element (implements IntoElement)."""
-        try:
-            from ..generated.wit_world.imports.row import Row as WitRow
-            from ..generated.wit_world.imports.element import row_to_element
-
-            record = WitRow(
-                elements=self._elements,
-                spacing=self._spacing,
-                padding=self._padding,
-                width=self._width,
-                height=self._height,
-                align_y=self._align_y,
-                clip=self._clip,
-                wrap=self._wrap,
-            )
-            return Element(row_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitRow(
+            elements=self._elements,
+            spacing=self._spacing,
+            padding=self._padding,
+            width=self._width,
+            height=self._height,
+            align_y=self._align_y,
+            clip=self._clip,
+            wrap=self._wrap,
+        )
+        return Element(row_to_element(record))

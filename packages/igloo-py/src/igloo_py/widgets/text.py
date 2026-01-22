@@ -3,6 +3,8 @@
 from typing import Any, Optional, TYPE_CHECKING
 
 from ..element import Element, IntoElement
+from wit_world.imports.text import Text as WitText
+from wit_world.imports.element import text_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -91,24 +93,17 @@ class Text(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element (implements IntoElement)."""
-        try:
-            from ..generated.wit_world.imports.text import Text as WitText
-            from ..generated.wit_world.imports.element import text_to_element
-
-            record = WitText(
-                text=self._text,
-                size=self._size,
-                line_height=self._line_height,
-                width=self._width,
-                height=self._height,
-                center=self._center,
-                align_x=self._align_x,
-                align_y=self._align_y,
-                shaping=self._shaping,
-                wrapping=self._wrapping,
-                color=self._color,
-            )
-            return Element(text_to_element(record))
-        except ImportError:
-            # If bindings not generated yet, return a placeholder
-            return Element(None)
+        record = WitText(
+            text=self._text,
+            size=self._size,
+            line_height=self._line_height,
+            width=self._width,
+            height=self._height,
+            center=self._center,
+            align_x=self._align_x,
+            align_y=self._align_y,
+            shaping=self._shaping,
+            wrapping=self._wrapping,
+            color=self._color,
+        )
+        return Element(text_to_element(record))

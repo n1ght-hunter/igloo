@@ -8,8 +8,8 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import length
 from ..imports import shared
+from ..imports import length
 
 class Anchor(Enum):
     START = 0

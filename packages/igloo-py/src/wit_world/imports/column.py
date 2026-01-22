@@ -8,10 +8,10 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import shared
-from ..imports import padding
 from ..imports import alignment
 from ..imports import length
+from ..imports import shared
+from ..imports import padding
 
 @dataclass
 class Column:

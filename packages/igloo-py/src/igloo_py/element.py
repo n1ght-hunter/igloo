@@ -1,18 +1,20 @@
-"""Element wrapper and IntoElement protocol."""
+"""Element wrapper and IntoElement abstract base class."""
 
-from typing import Protocol, Union, Any, TYPE_CHECKING
+from abc import ABC, abstractmethod
+from typing import Union, Any
 
-if TYPE_CHECKING:
-    from .types.color import Color
+from wit_world.imports.element import explain as wit_explain
+from wit_world.imports.shared import Color
 
 # WitElement is the raw element type from WIT bindings
 # After generation, this will be properly typed
 WitElement = Any
 
 
-class IntoElement(Protocol):
-    """Protocol for types that can be converted to an Element."""
+class IntoElement(ABC):
+    """Abstract base class for types that can be converted to an Element."""
 
+    @abstractmethod
     def into_element(self) -> "Element":
         """Convert this widget into an Element."""
         ...
@@ -31,19 +33,12 @@ class Element:
         """Returns itself (Element already is an Element)."""
         return self
 
-    def explain(self, color: "Color") -> "Element":
+    def explain(self, color: Color) -> "Element":
         """
         Debug helper that draws a colored overlay on the element.
         Useful for visualizing element bounds during development.
         """
-        # Import here to avoid circular imports
-        try:
-            from .generated.element import explain  # pyrefly: ignore
-
-            return Element(explain(self.inner, color))
-        except ImportError:
-            # If bindings not generated yet, return self
-            return self
+        return Element(wit_explain(self.inner, color))
 
 
 # Type that can be used where an Element is expected

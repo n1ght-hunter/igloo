@@ -5,6 +5,7 @@ This SDK allows you to build Igloo plugins in Python following the Elm architect
 
 Example:
     from igloo_py import (
+        App,
         create_app,
         Text,
         Column,
@@ -15,7 +16,7 @@ Example:
         ElementLike,
     )
 
-    class CounterApp:
+    class CounterApp(App[int, str]):
         def init(self) -> int:
             return 0
 
@@ -45,7 +46,7 @@ Example:
 # Core
 from .element import Element, to_element, IntoElement, ElementLike
 from .message import MessageManager, Message, MessageId
-from .app import create_app, AppProtocol, AppExports
+from .app import create_app, App, AppExports
 
 # Types
 from .types import Length, Padding, Color, Horizontal, Vertical
@@ -76,7 +77,7 @@ __all__ = [
     "Message",
     "MessageId",
     "create_app",
-    "AppProtocol",
+    "App",
     "AppExports",
     # Types
     "Length",

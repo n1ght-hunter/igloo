@@ -8,20 +8,26 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
 from ..imports import alignment
-from ..imports import shared
+from ..imports import text
+from ..imports import padding
 from ..imports import length
 
 @dataclass
-class Row:
-    elements: List[shared.Element]
-    spacing: Optional[float]
-    padding: Optional[padding.Padding]
+class TextInput:
+    """
+    A field that can be filled with text.
+    """
+    placeholder: str
+    value: str
+    secure: Optional[bool]
+    on_input: Optional[int]
+    on_submit: Optional[int]
+    on_paste: Optional[int]
     width: Optional[length.Length]
-    height: Optional[length.Length]
-    align_y: Optional[alignment.Vertical]
-    clip: Optional[bool]
-    wrap: Optional[bool]
+    padding: Optional[padding.Padding]
+    size: Optional[float]
+    line_height: Optional[text.LineHeight]
+    align_x: Optional[alignment.Horizontal]
 
 

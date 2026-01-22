@@ -3,6 +3,8 @@
 from typing import Any, Optional, TYPE_CHECKING
 
 from ..element import Element, ElementLike, to_element, IntoElement
+from wit_world.imports.container import Container as WitContainer
+from wit_world.imports.element import container_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -120,28 +122,22 @@ class Container(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        try:
-            from ..generated.wit_world.imports.container import Container as WitContainer
-            from ..generated.wit_world.imports.element import container_to_element
-
-            record = WitContainer(
-                content=self._content,
-                padding=self._padding,
-                width=self._width,
-                height=self._height,
-                max_width=self._max_width,
-                max_height=self._max_height,
-                center_x=self._center_x,
-                center_y=self._center_y,
-                center=self._center,
-                align_left=self._align_left,
-                align_right=self._align_right,
-                align_top=self._align_top,
-                align_bottom=self._align_bottom,
-                align_x=self._align_x,
-                align_y=self._align_y,
-                clip=self._clip,
-            )
-            return Element(container_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitContainer(
+            content=self._content,
+            padding=self._padding,
+            width=self._width,
+            height=self._height,
+            max_width=self._max_width,
+            max_height=self._max_height,
+            center_x=self._center_x,
+            center_y=self._center_y,
+            center=self._center,
+            align_left=self._align_left,
+            align_right=self._align_right,
+            align_top=self._align_top,
+            align_bottom=self._align_bottom,
+            align_x=self._align_x,
+            align_y=self._align_y,
+            clip=self._clip,
+        )
+        return Element(container_to_element(record))

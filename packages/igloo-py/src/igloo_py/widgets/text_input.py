@@ -4,6 +4,8 @@ from typing import Any, TypeVar, Callable, Optional, TYPE_CHECKING
 
 from ..element import Element, IntoElement
 from ..message import MessageManager, Message
+from wit_world.imports.text_input import TextInput as WitTextInput
+from wit_world.imports.element import text_input_to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -98,23 +100,17 @@ class TextInput(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        try:
-            from ..generated.wit_world.imports.text_input import TextInput as WitTextInput
-            from ..generated.wit_world.imports.element import text_input_to_element
-
-            record = WitTextInput(
-                placeholder=self._placeholder,
-                value=self._value,
-                secure=self._secure,
-                on_input=self._on_input,
-                on_submit=self._on_submit,
-                on_paste=self._on_paste,
-                width=self._width,
-                padding=self._padding,
-                size=self._size,
-                line_height=self._line_height,
-                align_x=self._align_x,
-            )
-            return Element(text_input_to_element(record))
-        except ImportError:
-            return Element(None)
+        record = WitTextInput(
+            placeholder=self._placeholder,
+            value=self._value,
+            secure=self._secure,
+            on_input=self._on_input,
+            on_submit=self._on_submit,
+            on_paste=self._on_paste,
+            width=self._width,
+            padding=self._padding,
+            size=self._size,
+            line_height=self._line_height,
+            align_x=self._align_x,
+        )
+        return Element(text_input_to_element(record))

@@ -8,9 +8,9 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
 from ..imports import text
 from ..imports import length
+from ..imports import padding
 
 @dataclass
 class PickList:
