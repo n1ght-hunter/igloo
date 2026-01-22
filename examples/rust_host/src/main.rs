@@ -33,11 +33,24 @@ impl IcedApp {
         let plugin_manager = PluginManager::new().unwrap();
         let engine = plugin_manager.engine();
 
-        let plugins_to_load = vec![
-            ("rust-plugin".to_string(), PathBuf::from("../../target/wasm32-wasip2/release/rust_guest.wasm")),
-            ("js-plugin".to_string(), PathBuf::from("../../plugins/js/js-app.wasm")),
-            ("python-plugin".to_string(), PathBuf::from("../../plugins/python/python-app.wasm")),
+        let available_plugins = [
+            ("rust-plugin", "../../target/wasm32-wasip2/release/rust_guest.wasm"),
+            ("js-plugin", "../../plugins/js/js-app.wasm"),
+            ("python-plugin", "../../plugins/python/python-app.wasm"),
         ];
+
+        let plugins_to_load: Vec<_> = available_plugins
+            .into_iter()
+            .filter_map(|(name, path)| {
+                let path = PathBuf::from(path);
+                if path.exists() {
+                    Some((name.to_string(), path))
+                } else {
+                    tracing::info!("Plugin not found, skipping: {}", path.display());
+                    None
+                }
+            })
+            .collect();
 
         let plugins_loading = plugins_to_load.len();
 
