@@ -6,8 +6,8 @@ requires-python = ">=3.11"
 # This is a virtual workspace package (no dependencies)
 dependencies = []
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "componentize-py>=0.16",
 ]
 
