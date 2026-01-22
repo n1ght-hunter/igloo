@@ -15,16 +15,8 @@ setup:
 run:
     @just rsx run
 
-# Build JS plugin with caching
-build-js:
-    mise run js:build
-
-# Build Python plugin with caching
-build-py:
-    mise run python:build
-
-# Build all plugins
+# Build all plugins with caching
 build-plugins:
-    @just js build
-    @just py build
+    @mist run js:build
+    @mise run python:build
     @just rust build
