@@ -10,16 +10,16 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 
+
 @dataclass
 class Grid:
     """
     A container that arranges its contents in a grid.
     """
+
     elements: List[shared.Element]
     spacing: Optional[float]
     width: Optional[float]
     height: Optional[float]
     columns: Optional[int]
     fluid: Optional[float]
-
-

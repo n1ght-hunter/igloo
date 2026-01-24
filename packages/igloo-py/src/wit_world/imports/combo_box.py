@@ -9,14 +9,16 @@ import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import padding
-from ..imports import text
 from ..imports import length
+from ..imports import text
+
 
 @dataclass
 class ComboBox:
     """
     A widget allowing selection from a list of options.
     """
+
     options: List[str]
     placeholder: str
     selected: Optional[str]
@@ -29,5 +31,3 @@ class ComboBox:
     size: Optional[float]
     line_height: Optional[text.LineHeight]
     width: Optional[length.Length]
-
-

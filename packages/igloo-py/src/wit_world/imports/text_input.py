@@ -8,16 +8,18 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import alignment
-from ..imports import text
 from ..imports import padding
+from ..imports import text
+from ..imports import alignment
 from ..imports import length
+
 
 @dataclass
 class TextInput:
     """
     A field that can be filled with text.
     """
+
     placeholder: str
     value: str
     secure: Optional[bool]
@@ -29,5 +31,3 @@ class TextInput:
     size: Optional[float]
     line_height: Optional[text.LineHeight]
     align_x: Optional[alignment.Horizontal]
-
-

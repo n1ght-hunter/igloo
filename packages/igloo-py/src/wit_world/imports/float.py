@@ -10,21 +10,23 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 
+
 @dataclass
 class Translation:
     """
     A translation applied to content.
     """
+
     x: float
     y: float
+
 
 @dataclass
 class Float:
     """
     Displays floating content on top of the application.
     """
+
     content: shared.Element
     scale: Optional[float]
     translation: Optional[Translation]
-
-

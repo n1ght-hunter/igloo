@@ -10,12 +10,14 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 
+
 class Position(Enum):
     TOP = 0
     BOTTOM = 1
     LEFT = 2
     RIGHT = 3
     FOLLOW_CURSOR = 4
+
 
 @dataclass
 class Tooltip:
@@ -25,5 +27,3 @@ class Tooltip:
     gap: Optional[float]
     padding: Optional[float]
     snap_within_viewport: Optional[bool]
-
-

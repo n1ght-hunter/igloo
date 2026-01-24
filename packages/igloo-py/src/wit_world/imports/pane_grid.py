@@ -10,11 +10,11 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 
+
 @dataclass
 class PaneGrid:
     """
     A layout that can dynamically split its content into panes.
     """
+
     children: List[shared.Element]
-
-

@@ -15,6 +15,7 @@ class Size:
     width: float
     height: float
 
+
 @dataclass
 class Rectangle:
     x: float
@@ -22,13 +23,16 @@ class Rectangle:
     width: float
     height: float
 
+
 @dataclass
 class Picked:
     pane: int
 
+
 @dataclass
 class Canceled:
     pane: int
+
 
 class Edge(Enum):
     TOP = 0
@@ -48,7 +52,6 @@ class Region_Edge:
 
 
 Region = Union[Region_Center, Region_Edge]
-
 
 
 @dataclass
@@ -96,25 +99,27 @@ class ResizeEvent:
     split: int
     ratio: float
 
+
 @dataclass
 class AbsoluteOffset:
     x: float
     y: float
+
 
 @dataclass
 class RelativeOffset:
     x: float
     y: float
 
+
 @dataclass
 class Viewport:
     """
     The current Viewport of the Scrollable.
     """
+
     absolute_offset: AbsoluteOffset
     absolute_offset_reversed: AbsoluteOffset
     relative_offset: RelativeOffset
     bounds: Rectangle
     content_bounds: Rectangle
-
-

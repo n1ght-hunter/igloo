@@ -47,9 +47,7 @@ class Checkbox(IntoElement):
         self._label = label
         return self
 
-    def on_toggle(
-        self, messages: MessageManager[Msg], handler: Callable[[], Msg]
-    ) -> "Checkbox":
+    def on_toggle(self, messages: MessageManager[Msg], handler: Callable[[], Msg]) -> "Checkbox":
         """
         Set the message to emit when the checkbox is toggled.
         """

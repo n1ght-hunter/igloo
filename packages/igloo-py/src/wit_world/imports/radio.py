@@ -11,11 +11,13 @@ from componentize_py_types import Result, Ok, Err, Some
 from ..imports import text
 from ..imports import length
 
+
 @dataclass
 class Radio:
     """
     A circular button representing an alternative.
     """
+
     label: str
     is_selected: bool
     on_select: int
@@ -26,5 +28,3 @@ class Radio:
     text_line_height: Optional[text.LineHeight]
     text_wrapping: Optional[text.Wrapping]
     text_shaping: Optional[text.Shaping]
-
-

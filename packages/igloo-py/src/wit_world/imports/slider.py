@@ -10,11 +10,13 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
 
+
 @dataclass
 class Slider:
     """
     A horizontal bar for selecting a value from a range of floats.
     """
+
     range_start: float
     range_end: float
     value: float
@@ -25,5 +27,3 @@ class Slider:
     height: Optional[float]
     step: Optional[float]
     shift_step: Optional[float]
-
-

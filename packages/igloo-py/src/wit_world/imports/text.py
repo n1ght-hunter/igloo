@@ -8,9 +8,9 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
+from ..imports import shared
 from ..imports import length
 from ..imports import alignment
-from ..imports import shared
 
 
 @dataclass
@@ -38,11 +38,12 @@ class Alignment_Justified:
     pass
 
 
-Alignment = Union[Alignment_Default, Alignment_Left, Alignment_Center, Alignment_Right, Alignment_Justified]
+Alignment = Union[
+    Alignment_Default, Alignment_Left, Alignment_Center, Alignment_Right, Alignment_Justified
+]
 """
 The horizontal alignment of some text.
 """
-
 
 
 @dataclass
@@ -65,18 +66,22 @@ class Shaping(Enum):
     """
     The shaping strategy of some text.
     """
+
     BASIC = 0
     ADVANCED = 1
     AUTO = 2
+
 
 class Wrapping(Enum):
     """
     The wrapping strategy of some text.
     """
+
     NONE = 0
     WORD = 1
     GLYPH = 2
     WORD_OR_GLYPH = 3
+
 
 @dataclass
 class Text:
@@ -91,5 +96,3 @@ class Text:
     shaping: Optional[Shaping]
     wrapping: Optional[Wrapping]
     color: Optional[shared.Color]
-
-

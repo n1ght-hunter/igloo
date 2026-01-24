@@ -10,12 +10,12 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
 
+
 @dataclass
 class Space:
     """
     An amount of empty space.
     """
+
     width: Optional[length.Length]
     height: Optional[length.Length]
-
-

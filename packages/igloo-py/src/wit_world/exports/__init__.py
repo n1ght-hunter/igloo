@@ -11,9 +11,6 @@ from componentize_py_types import Result, Ok, Err, Some
 
 
 class Message(Protocol):
-
     @abstractmethod
     def clone_message(self, message: int) -> int:
         raise NotImplementedError
-
-

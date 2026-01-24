@@ -16,17 +16,23 @@ class Element:
     Note: The dummy function is required for jco componentize to generate the class.
     See: https://github.com/bytecodealliance/ComponentizeJS/issues/221
     """
-    
+
     def noop(self) -> None:
         """
         Dummy function to trigger class generation in jco componentize.
         """
         raise NotImplementedError
+
     def __enter__(self) -> Self:
         """Returns self"""
         return self
-                                
-    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
         """
         Release this resource.
         """
@@ -38,10 +44,12 @@ class Color:
     """
     A color in the sRGB color space.
     """
+
     r: float
     g: float
     b: float
     a: float
+
 
 class ContentFit(Enum):
     CONTAIN = 0
@@ -49,6 +57,7 @@ class ContentFit(Enum):
     FILL = 2
     NONE = 3
     SCALE_DOWN = 4
+
 
 class FilterMethod(Enum):
     LINEAR = 0
@@ -66,6 +75,3 @@ class Rotation_Solid:
 
 
 Rotation = Union[Rotation_Floating, Rotation_Solid]
-
-
-

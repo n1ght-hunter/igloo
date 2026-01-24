@@ -10,11 +10,13 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
 
+
 @dataclass
 class VerticalSlider:
     """
     A vertical bar for selecting a value from a range of floats.
     """
+
     range_start: float
     range_end: float
     value: float
@@ -25,5 +27,3 @@ class VerticalSlider:
     height: Optional[length.Length]
     step: Optional[float]
     shift_step: Optional[float]
-
-

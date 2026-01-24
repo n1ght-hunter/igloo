@@ -11,9 +11,11 @@ from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 from ..imports import length
 
+
 class Anchor(Enum):
     START = 0
     END = 1
+
 
 @dataclass
 class Scrollbar:
@@ -49,5 +51,3 @@ class Scrollable:
     height: Optional[length.Length]
     on_scroll: Optional[int]
     direction: Optional[Direction]
-
-

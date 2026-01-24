@@ -11,11 +11,13 @@ from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
 from ..imports import shared
 
+
 @dataclass
 class Image:
     """
     A frame that displays an image.
     """
+
     handle: str
     width: Optional[length.Length]
     height: Optional[length.Length]
@@ -25,5 +27,3 @@ class Image:
     rotation: Optional[shared.Rotation]
     opacity: Optional[float]
     scale: Optional[float]
-
-

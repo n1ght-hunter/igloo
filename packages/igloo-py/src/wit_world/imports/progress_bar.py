@@ -10,16 +10,16 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
 
+
 @dataclass
 class ProgressBar:
     """
     A bar that displays progress.
     """
+
     range_start: float
     range_end: float
     value: float
     length: Optional[length.Length]
     girth: Optional[length.Length]
     vertical: Optional[bool]
-
-

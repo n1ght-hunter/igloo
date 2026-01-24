@@ -15,7 +15,6 @@ class Rule:
     """
     A horizontal or vertical rule used for dividing content.
     """
+
     is_horizontal: bool
     thickness: float
-
-

@@ -8,15 +8,17 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import text
-from ..imports import length
 from ..imports import padding
+from ..imports import length
+from ..imports import text
+
 
 @dataclass
 class PickList:
     """
     A widget for selecting a value from a set of options.
     """
+
     options: List[str]
     selected: Optional[str]
     on_select: int
@@ -28,5 +30,3 @@ class PickList:
     text_shaping: Optional[text.Shaping]
     on_open: Optional[int]
     on_close: Optional[int]
-
-

@@ -8,10 +8,11 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
 from ..imports import shared
-from ..imports import length
+from ..imports import padding
 from ..imports import alignment
+from ..imports import length
+
 
 @dataclass
 class Row:
@@ -23,5 +24,3 @@ class Row:
     align_y: Optional[alignment.Vertical]
     clip: Optional[bool]
     wrap: Optional[bool]
-
-

@@ -15,6 +15,5 @@ class Svg:
     """
     A vector graphics image.
     """
+
     path: str
-
-

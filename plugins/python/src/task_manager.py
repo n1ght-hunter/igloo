@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Literal
 
 from igloo_py import (
-    create_app,
+    App,
+    igloo_app,
     Text,
     Column,
     Row,
@@ -33,15 +34,6 @@ class Task:
 
 
 FilterType = Literal["all", "active", "completed"]
-
-
-# App state
-@dataclass
-class State:
-    tasks: list[Task]
-    input_text: str
-    next_id: int
-    filter: FilterType
 
 
 # Messages
@@ -85,92 +77,58 @@ def get_string(msg: WitMessage) -> str | None:
     return None
 
 
-class TaskManagerApp:
-    """Task Manager application following the Elm architecture."""
+@igloo_app
+class TaskManagerApp(App[Msg]):
+    """Task Manager application."""
 
-    def init(self) -> State:
-        return State(
-            tasks=[
-                Task(1, "Learn igloo-py", True),
-                Task(2, "Build a cool app", False),
-                Task(3, "Share with others", False),
-            ],
-            input_text="",
-            next_id=4,
-            filter="all",
-        )
+    def __init__(self):
+        self.tasks: list[Task] = [
+            Task(1, "Learn igloo-py", True),
+            Task(2, "Build a cool app", False),
+            Task(3, "Share with others", False),
+        ]
+        self.input_text = ""
+        self.next_id = 4
+        self.filter: FilterType = "all"
 
-    def update(self, state: State, msg: Msg) -> State:
+    def update(self, msg: Msg) -> None:
         match msg:
             case InputChanged(value=value):
-                return State(
-                    tasks=state.tasks,
-                    input_text=value,
-                    next_id=state.next_id,
-                    filter=state.filter,
-                )
+                self.input_text = value
 
             case AddTask():
-                if not state.input_text.strip():
-                    return state
-                new_task = Task(state.next_id, state.input_text.strip(), False)
-                return State(
-                    tasks=[*state.tasks, new_task],
-                    input_text="",
-                    next_id=state.next_id + 1,
-                    filter=state.filter,
-                )
+                if self.input_text.strip():
+                    self.tasks.append(Task(self.next_id, self.input_text.strip(), False))
+                    self.input_text = ""
+                    self.next_id += 1
 
             case ToggleTask(id=task_id):
-                tasks = [
-                    Task(t.id, t.text, not t.completed if t.id == task_id else t.completed)
-                    for t in state.tasks
-                ]
-                return State(
-                    tasks=tasks,
-                    input_text=state.input_text,
-                    next_id=state.next_id,
-                    filter=state.filter,
-                )
+                for task in self.tasks:
+                    if task.id == task_id:
+                        task.completed = not task.completed
+                        break
 
             case DeleteTask(id=task_id):
-                return State(
-                    tasks=[t for t in state.tasks if t.id != task_id],
-                    input_text=state.input_text,
-                    next_id=state.next_id,
-                    filter=state.filter,
-                )
+                self.tasks = [t for t in self.tasks if t.id != task_id]
 
             case SetFilter(filter=f):
-                return State(
-                    tasks=state.tasks,
-                    input_text=state.input_text,
-                    next_id=state.next_id,
-                    filter=f,
-                )
+                self.filter = f
 
             case ClearCompleted():
-                return State(
-                    tasks=[t for t in state.tasks if not t.completed],
-                    input_text=state.input_text,
-                    next_id=state.next_id,
-                    filter=state.filter,
-                )
+                self.tasks = [t for t in self.tasks if not t.completed]
 
-        return state
-
-    def view(self, state: State, messages: MessageManager[Msg]) -> ElementLike:
-        completed_count = sum(1 for t in state.tasks if t.completed)
-        total_count = len(state.tasks)
+    def view(self, messages: MessageManager[Msg]) -> ElementLike:
+        completed_count = sum(1 for t in self.tasks if t.completed)
+        total_count = len(self.tasks)
         progress = completed_count / total_count if total_count > 0 else 0.0
 
         # Filter tasks
-        if state.filter == "active":
-            filtered_tasks = [t for t in state.tasks if not t.completed]
-        elif state.filter == "completed":
-            filtered_tasks = [t for t in state.tasks if t.completed]
+        if self.filter == "active":
+            filtered_tasks = [t for t in self.tasks if not t.completed]
+        elif self.filter == "completed":
+            filtered_tasks = [t for t in self.tasks if t.completed]
         else:
-            filtered_tasks = state.tasks
+            filtered_tasks = self.tasks
 
         # Build task list
         task_list = Column.new().spacing(8)
@@ -194,16 +152,16 @@ class TaskManagerApp:
 
         # Filter buttons helper
         def filter_button(label: str, f: FilterType) -> ElementLike:
-            is_active = state.filter == f
+            is_active = self.filter == f
             return Button.new(Text.new(label).size(14 if is_active else 12)).on_press(
                 messages, lambda filter_val=f: SetFilter(filter_val)
             )
 
         # Empty state message
         if not filtered_tasks:
-            if state.filter == "completed":
+            if self.filter == "completed":
                 empty_msg = "No completed tasks"
-            elif state.filter == "active":
+            elif self.filter == "active":
                 empty_msg = "All tasks completed!"
             else:
                 empty_msg = "No tasks yet. Add one above!"
@@ -235,7 +193,7 @@ class TaskManagerApp:
                     Row.new()
                     .spacing(10)
                     .push(
-                        TextInput.new("Add a new task...", state.input_text)
+                        TextInput.new("Add a new task...", self.input_text)
                         .on_input(messages, lambda m: InputChanged(get_string(m) or ""))
                         .on_submit(messages, lambda: AddTask())
                         .width(Length.fill())
@@ -272,26 +230,4 @@ class TaskManagerApp:
         )
 
 
-# Create the app instance
-_app = create_app(TaskManagerApp())
-
-
-# WitWorld class implementing the WIT world protocol
-class WitWorld:
-    """Implementation of the WIT world interface for the Task Manager app."""
-
-    def update(self, message_id: int, message: WitMessage) -> None:
-        """Handle an update message from the host."""
-        _app.update(message_id, message)
-
-    def view(self):
-        """Render the current view."""
-        return _app.view()
-
-
-# Message export for cloning (required by WIT interface)
-class Message:
-    """Implementation of the WIT message export interface."""
-
-    def clone_message(self, message: int) -> int:
-        return message
+# WitWorld and Message are automatically exported by @igloo_app decorator

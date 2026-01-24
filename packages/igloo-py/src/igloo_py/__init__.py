@@ -4,49 +4,35 @@ Igloo Python SDK - Builder pattern APIs for WASM component UI widgets.
 This SDK allows you to build Igloo plugins in Python following the Elm architecture.
 
 Example:
-    from igloo_py import (
-        App,
-        create_app,
-        Text,
-        Column,
-        Button,
-        Length,
-        Padding,
-        MessageManager,
-        ElementLike,
-    )
+    from igloo_py import App, igloo_app, Text, Column, Button, MessageManager, ElementLike
 
-    class CounterApp(App[int, str]):
-        def init(self) -> int:
-            return 0
+    @igloo_app
+    class CounterApp(App[str]):
+        def __init__(self):
+            self.count = 0
 
-        def update(self, state: int, msg: str) -> int:
+        def update(self, msg: str) -> None:
             if msg == "increment":
-                return state + 1
+                self.count += 1
             elif msg == "decrement":
-                return state - 1
-            return state
+                self.count -= 1
 
-        def view(self, state: int, messages: MessageManager[str]) -> ElementLike:
+        def view(self, messages: MessageManager[str]) -> ElementLike:
             return Column.new().spacing(10).push(
-                Text.new(f"Count: {state}").size(24)
+                Text.new(f"Count: {self.count}").size(24)
             ).push(
                 Button.new(Text.new("+")).on_press(messages, lambda: "increment")
             ).push(
                 Button.new(Text.new("-")).on_press(messages, lambda: "decrement")
             )
 
-    app_exports = create_app(CounterApp())
-
-    # Export for WIT interface
-    update = app_exports.update
-    view = app_exports.view
+    # That's it! WitWorld and Message are automatically exported.
 """
 
 # Core
 from .element import Element, to_element, IntoElement, ElementLike
 from .message import MessageManager, Message, MessageId
-from .app import create_app, App, AppExports
+from .app import create_app, igloo_app, App, AppExports
 
 # Types
 from .types import Length, Padding, Color, Horizontal, Vertical
@@ -77,6 +63,7 @@ __all__ = [
     "Message",
     "MessageId",
     "create_app",
+    "igloo_app",
     "App",
     "AppExports",
     # Types

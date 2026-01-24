@@ -8,15 +8,17 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import text
-from ..imports import length
 from ..imports import alignment
+from ..imports import length
+from ..imports import text
+
 
 @dataclass
 class Toggler:
     """
     A widget representing a setting that can be toggled on or off.
     """
+
     is_toggled: bool
     label: Optional[str]
     on_toggle: Optional[int]
@@ -28,5 +30,3 @@ class Toggler:
     text_shaping: Optional[text.Shaping]
     text_wrapping: Optional[text.Wrapping]
     spacing: Optional[float]
-
-

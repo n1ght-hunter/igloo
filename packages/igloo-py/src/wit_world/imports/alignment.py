@@ -14,24 +14,27 @@ class Vertical(Enum):
     """
     The vertical [`alignment`] of some resource.
     """
+
     TOP = 0
     CENTER = 1
     BOTTOM = 2
+
 
 class Horizontal(Enum):
     """
     The horizontal [`alignment`] of some resource.
     """
+
     LEFT = 0
     CENTER = 1
     RIGHT = 2
+
 
 class Alignment(Enum):
     """
     The alignment of some resource.
     """
+
     START = 0
     CENTER = 1
     END = 2
-
-

@@ -71,8 +71,20 @@ class Message_U64Type:
     value: int
 
 
-Message = Union[Message_Empty, Message_BoolType, Message_StringType, Message_TranslateType, Message_PaneType, Message_DragEvent, Message_ResizeEvent, Message_Viewport, Message_Size, Message_F64Type, Message_F32Type, Message_U64Type]
-
+Message = Union[
+    Message_Empty,
+    Message_BoolType,
+    Message_StringType,
+    Message_TranslateType,
+    Message_PaneType,
+    Message_DragEvent,
+    Message_ResizeEvent,
+    Message_Viewport,
+    Message_Size,
+    Message_F64Type,
+    Message_F32Type,
+    Message_U64Type,
+]
 
 
 def clone_message(message: int) -> int:

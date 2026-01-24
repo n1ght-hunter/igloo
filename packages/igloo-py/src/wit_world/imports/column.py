@@ -8,10 +8,11 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import alignment
 from ..imports import length
-from ..imports import shared
 from ..imports import padding
+from ..imports import alignment
+from ..imports import shared
+
 
 @dataclass
 class Column:
@@ -23,5 +24,3 @@ class Column:
     max_width: Optional[float]
     align_x: Optional[alignment.Horizontal]
     clip: Optional[bool]
-
-

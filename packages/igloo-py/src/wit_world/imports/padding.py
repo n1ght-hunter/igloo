@@ -16,5 +16,3 @@ class Padding:
     right: float
     top: float
     bottom: float
-
-

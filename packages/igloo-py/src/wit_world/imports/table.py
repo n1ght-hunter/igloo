@@ -8,14 +8,16 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import shared
 from ..imports import length
+from ..imports import shared
+
 
 @dataclass
 class Table:
     """
     A grid-like visual representation of data distributed in columns and rows.
     """
+
     columns: List[shared.Element]
     rows: List[shared.Element]
     width: Optional[length.Length]
@@ -25,5 +27,3 @@ class Table:
     separator: Optional[float]
     separator_x: Optional[float]
     separator_y: Optional[float]
-
-

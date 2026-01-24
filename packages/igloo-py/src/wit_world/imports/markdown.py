@@ -15,6 +15,5 @@ class Markdown:
     """
     A widget that can parse and display Markdown.
     """
+
     content: str
-
-

@@ -13,7 +13,6 @@ from .imports import shared
 
 
 class WitWorld(Protocol):
-
     @abstractmethod
     def update(self, message_id: int, message: message.Message) -> None:
         raise NotImplementedError
@@ -24,4 +23,3 @@ class WitWorld(Protocol):
         Exported function for creating a view
         """
         raise NotImplementedError
-

@@ -8,14 +8,16 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import text
 from ..imports import length
+from ..imports import text
+
 
 @dataclass
 class Checkbox:
     """
     A box that can be checked.
     """
+
     is_checked: bool
     label: Optional[str]
     on_toggle: Optional[int]
@@ -27,5 +29,3 @@ class Checkbox:
     text_line_height: Optional[text.LineHeight]
     text_wrapping: Optional[text.Wrapping]
     text_shaping: Optional[text.Shaping]
-
-

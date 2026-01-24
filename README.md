@@ -181,31 +181,28 @@ export const { update, view } = createApp(new CounterApp());
 ### Creating a Python Plugin
 
 ```python
-from igloo_py import App, Text, Column, Button, MessageManager, ElementLike, create_app
+from igloo_py import App, igloo_app, Text, Column, Button, MessageManager, ElementLike
 
-class CounterApp(App[int, str]):
-    def init(self) -> int:
-        return 0
+@igloo_app
+class CounterApp(App[str]):
+    def __init__(self):
+        self.count = 0
 
-    def update(self, state: int, msg: str) -> int:
+    def update(self, msg: str) -> None:
         if msg == "increment":
-            return state + 1
+            self.count += 1
         elif msg == "decrement":
-            return state - 1
-        return state
+            self.count -= 1
 
-    def view(self, state: int, messages: MessageManager[str]) -> ElementLike:
+    def view(self, messages: MessageManager[str]) -> ElementLike:
         return Column.new().push(
-            Text.new(f"Count: {state}")
+            Text.new(f"Count: {self.count}")
         ).push(
             Button.new(Text.new("+")).on_press(messages, lambda: "increment")
         ).push(
             Button.new(Text.new("-")).on_press(messages, lambda: "decrement")
         )
 
-app_exports = create_app(CounterApp())
-update = app_exports.update
-view = app_exports.view
 ```
 
 ### Loading Plugins in Host

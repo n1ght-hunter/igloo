@@ -110,7 +110,9 @@ class Scrollable(IntoElement):
         hsb = Scrollbar(
             width=horizontal_scrollbar.get("width") if horizontal_scrollbar else None,
             margin=horizontal_scrollbar.get("margin") if horizontal_scrollbar else None,
-            scroller_width=horizontal_scrollbar.get("scroller_width") if horizontal_scrollbar else None,
+            scroller_width=horizontal_scrollbar.get("scroller_width")
+            if horizontal_scrollbar
+            else None,
             alignment=horizontal_scrollbar.get("alignment") if horizontal_scrollbar else None,
             spacing=horizontal_scrollbar.get("spacing") if horizontal_scrollbar else None,
         )
