@@ -4,8 +4,13 @@
 [tools]
 just = "1.46.0"
 "github:bytecodealliance/wit-bindgen" = "0.51.0"
-wasmtime = "40"
-"github:bytecodealliance/wasm-pkg-tools" = { version = "latest", bin = "wkg" }
+wasmtime = "43"
+[tools."github:bytecodealliance/wasm-pkg-tools"]
+version = "latest"
+bin = "wkg"
+[tools."github:bytecodealliance/wasm-pkg-tools".platforms]
+windows-x64 = { bin = "wkg.exe" }
+
 node = "22"
 "npm:@bytecodealliance/jco" = "latest"
 uv = "latest"
@@ -13,7 +18,7 @@ uv = "latest"
 # Generate WIT types for igloo-ts library
 [tasks."igloo-ts:gen"]
 description = "Generate WIT types for igloo-ts"
-sources = ["wit/**/*.wit"]
+sources = ["crates/igloo/wit/**/*.wit"]
 outputs = ["packages/igloo-ts/src/generated/**/*"]
 run = "just igloo-ts gen"
 
@@ -35,7 +40,7 @@ description = "Componentize JS bundle to WASM"
 depends = ["js:bundle"]
 sources = [
     "plugins/js/dist/index.js",
-    "wit/**/*.wit",
+    "crates/igloo/wit/**/*.wit",
 ]
 outputs = ["plugins/js/js-app.wasm"]
 run = "just js componentize"
@@ -48,7 +53,7 @@ depends = ["js:componentize"]
 # Generate Python bindings for igloo-py library
 [tasks."igloo-py:gen"]
 description = "Generate WIT bindings for igloo-py"
-sources = ["wit/**/*.wit"]
+sources = ["crates/igloo/wit/**/*.wit"]
 outputs = ["packages/igloo-py/src/igloo_py/generated/**/*"]
 run = "just igloo-py gen"
 
@@ -60,7 +65,7 @@ sources = [
     "plugins/python/src/**/*.py",
     "plugins/python/pyproject.toml",
     "packages/igloo-py/src/**/*.py",
-    "wit/**/*.wit",
+    "crates/igloo/wit/**/*.wit",
 ]
 outputs = ["plugins/python/python-app.wasm"]
 run = "just py componentize"
@@ -69,3 +74,16 @@ run = "just py componentize"
 [tasks."python:build"]
 description = "Build Python plugin (gen + componentize)"
 depends = ["python:componentize"]
+
+# Build WIT package
+[tasks."wit:build"]
+description = "Build WIT package from crates/igloo/wit"
+sources = ["crates/igloo/wit/**/*.wit"]
+outputs = ["iced-app.wasm"]
+run = "wkg wit build --wit-dir crates/igloo/wit -o iced-app.wasm"
+
+# Publish WIT package to ghcr.io
+[tasks."wit:publish"]
+description = "Build and publish WIT package to ghcr.io"
+depends = ["wit:build"]
+run = "wkg publish --package iced:app@0.1.0 iced-app.wasm"
