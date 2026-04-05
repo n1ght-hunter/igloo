@@ -2,6 +2,7 @@
 name = "igloo"
 version = "0.1.0"
 edition.workspace = true
+include = ["src/**/*", "wit/**/*", "README.md", "LICENSE"]
 
 [dependencies]
 anyhow = "1"

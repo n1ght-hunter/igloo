@@ -29,8 +29,8 @@ iced = { version = "0.14.0", features = [
 iced_core = { version = "0.14.0" }
 iced_widget = { version = "0.14.2", default-features = false }
 wit-bindgen = "0.51.0"
-wasmtime = "40.0.2"
-wasmtime-wasi = "40.0.2"
+wasmtime = "43.0.0"
+wasmtime-wasi = "43.0.0"
 tracing = "0.1.44"
 thiserror = "2.0.17"
 

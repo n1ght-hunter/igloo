@@ -1,4 +1,4 @@
 wit_bindgen::generate!({
-    path: "../../wit",
+    path: "wit",
     pub_export_macro: true,
 });
