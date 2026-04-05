@@ -5,7 +5,7 @@
 just = "1.46.0"
 "github:bytecodealliance/wit-bindgen" = "0.51.0"
 wasmtime = "40"
-"ubi:bytecodealliance/wasm-pkg-tools" = { version = "0.13.0", rename_exe = "wkg" }
+"github:bytecodealliance/wasm-pkg-tools" = { version = "latest", bin = "wkg" }
 node = "22"
 "npm:@bytecodealliance/jco" = "latest"
 uv = "latest"
