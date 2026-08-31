@@ -2,57 +2,66 @@ use std::borrow::Borrow;
 
 use iced_core::{Length, Padding, Pixels, text};
 
-use crate::{
-    Element,
-    bindings::iced::app::{self, element::pick_list_to_element},
-    element::Widget,
-};
+use crate::Element;
+use crate::bindings::iced::app::pick_list::PickList as WitPickList;
 
 /// A widget for selecting a value from a set of options.
-pub struct PickList<T, L, V, Message>
-where
-    T: ToString + PartialEq + Clone,
-    L: Borrow<[T]>,
-    V: Borrow<T>,
-{
-    options: L,
-    on_select: Box<dyn Fn(T) -> Message + Send + Sync>,
-    on_open: Option<Message>,
-    on_close: Option<Message>,
+pub struct PickList<Message> {
+    str_options: Vec<String>,
+    selected: Option<String>,
+    on_select: Box<dyn Fn(String) -> Message>,
     placeholder: Option<String>,
-    selected: Option<V>,
     width: Option<Length>,
     padding: Option<Padding>,
-    text_size: Option<Pixels>,
+    text_size: Option<f32>,
     text_line_height: Option<text::LineHeight>,
     text_shaping: Option<text::Shaping>,
+    on_open: Option<Message>,
+    on_close: Option<Message>,
 }
 
-impl<T, L, V, Message> PickList<T, L, V, Message>
-where
-    T: ToString + PartialEq + Clone,
-    L: Borrow<[T]>,
-    V: Borrow<T>,
-    Message: Clone,
-{
+impl<Message: 'static> PickList<Message> {
     /// Creates a new [`PickList`] with the given options.
-    pub fn new(
+    pub fn new<T, L, V>(
         options: L,
         selected: Option<V>,
-        on_select: impl Fn(T) -> Message + Send + Sync + 'static,
-    ) -> Self {
+        on_select: impl Fn(T) -> Message + 'static,
+    ) -> Self
+    where
+        T: ToString + PartialEq + Clone + 'static,
+        L: Borrow<[T]>,
+        V: Borrow<T>,
+    {
+        let str_options: Vec<String> = options
+            .borrow()
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect();
+
+        let options: Vec<T> = options.borrow().to_vec();
+        let selected = selected.map(|s| s.borrow().to_string());
+
+        let on_select = Box::new(move |value: String| {
+            let selected = options
+                .iter()
+                .find(|o| o.to_string() == value)
+                .expect("pick list produced an unknown option")
+                .clone();
+            on_select(selected)
+        });
+
         Self {
-            options,
-            on_select: Box::new(on_select),
+            str_options,
             selected,
-            on_open: None,
-            on_close: None,
+            on_select,
             placeholder: None,
             width: None,
             padding: None,
             text_size: None,
             text_line_height: None,
             text_shaping: None,
+            on_open: None,
+            on_close: None,
         }
     }
 
@@ -73,7 +82,7 @@ where
     }
 
     pub fn text_size(mut self, size: impl Into<Pixels>) -> Self {
-        self.text_size = Some(size.into());
+        self.text_size = Some(size.into().0);
         self
     }
 
@@ -100,59 +109,40 @@ where
     }
 }
 
-impl<T, L, V, Message> Widget<Message> for PickList<T, L, V, Message>
-where
-    T: ToString + PartialEq + Clone + Send + Sync + 'static,
-    L: Borrow<[T]>,
-    V: Borrow<T>,
-    Message: Clone + 'static,
-{
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        let str_options: Vec<String> = self
-            .options
-            .borrow()
-            .into_iter()
-            .map(|o| o.to_string())
-            .collect();
-
-        let options: &[T] = self.options.borrow();
-        let options: Vec<T> = options.to_vec();
-        let on_select = self.on_select;
-
-        pick_list_to_element(&app::element::PickList {
-            options: str_options,
-            selected: self.selected.map(|s| s.borrow().to_string()),
-            on_select: create_message.add_message_func(Box::new(move |v| {
-                if let crate::bindings::Message::StringType(value) = v {
-                    let v = options.iter().find(|o| o.to_string() == value)?;
-                    Some((on_select)(v.clone()))
-                } else {
-                    None
-                }
-            })),
-            on_open: self.on_open.map(|m| create_message.add_message(m)),
-            on_close: self.on_close.map(|m| create_message.add_message(m)),
-            placeholder: self.placeholder.clone(),
-            width: self.width.map(Into::into),
-            padding: self.padding.map(Into::into),
-            text_size: self.text_size.map(Into::into),
-            text_line_height: self.text_line_height.map(Into::into),
-            text_shaping: self.text_shaping.map(Into::into),
+impl<Message: 'static> From<PickList<Message>> for Element<Message> {
+    fn from(pick_list: PickList<Message>) -> Self {
+        Element::new(move |realize| {
+            let mapper = realize.string_mapper(pick_list.on_select);
+            let raw = WitPickList::new(
+                &pick_list.str_options,
+                pick_list.selected.as_deref(),
+                mapper,
+            );
+            if let Some(placeholder) = pick_list.placeholder {
+                raw.placeholder(&placeholder);
+            }
+            if let Some(width) = pick_list.width {
+                raw.width(width.into());
+            }
+            if let Some(padding) = pick_list.padding {
+                raw.padding(padding.into());
+            }
+            if let Some(size) = pick_list.text_size {
+                raw.text_size(size);
+            }
+            if let Some(lh) = pick_list.text_line_height {
+                raw.text_line_height(lh.into());
+            }
+            if let Some(shaping) = pick_list.text_shaping {
+                raw.text_shaping(shaping.into());
+            }
+            if let Some(msg) = pick_list.on_open {
+                raw.on_open(realize.fixed(msg));
+            }
+            if let Some(msg) = pick_list.on_close {
+                raw.on_close(realize.fixed(msg));
+            }
+            WitPickList::into_element(raw)
         })
-    }
-}
-
-impl<T, L, V, Message> From<PickList<T, L, V, Message>> for Element<Message>
-where
-    T: ToString + PartialEq + Clone + Send + Sync+ 'static,
-    L: Borrow<[T]> + 'static,
-    V: Borrow<T> + 'static,
-    Message: Clone + 'static,
-{
-    fn from(value: PickList<T, L, V, Message>) -> Self {
-        Element::new(Box::new(value))
     }
 }

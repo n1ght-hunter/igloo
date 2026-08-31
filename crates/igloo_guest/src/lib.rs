@@ -1,7 +1,8 @@
 //! Wasm bindings for iced client
 
 pub mod element;
-pub(crate) mod utils;
+pub mod mappers;
+mod utils;
 pub mod widgets;
 
 pub use iced_core::*;
@@ -10,157 +11,172 @@ pub use iced_core::*;
 #[allow(unsafe_code)]
 pub mod bindings;
 
-use std::{collections::HashMap, sync::Mutex};
+#[doc(hidden)]
+pub use wit_bindgen;
 
 pub use element::Element;
 
-use crate::{bindings::MessageId, element::MessageFunction};
+use std::cell::RefCell;
 
-#[doc(hidden)]
-#[allow(missing_debug_implementations)]
-pub struct StateManager<State, Message>
-where
-    State: Application<State, Message>,
-{
-    message_manager: MessageManager<Message>,
-    state: Mutex<State>,
-}
+use element::Realize;
+use mappers::Frame;
 
-impl<State, Message> StateManager<State, Message>
-where
-    State: Application<State, Message>,
-{
-    pub fn new() -> Self {
-        Self {
-            message_manager: MessageManager::new(),
-            state: Mutex::new(State::new()),
-        }
-    }
+pub trait Application: 'static {
+    type Message: 'static;
 
-    pub fn view(&self) -> bindings::Element {
-        let state = self.state.lock().unwrap();
-        let view = state.view();
-        let element = view.as_element(&self.message_manager);
-        element
-    }
-
-    pub fn update(&self, message_id: u64, message: bindings::iced::app::message::Message) {
-        let message = self.message_manager.get_message(message_id, message);
-        if let Some(message) = message {
-            self.state.lock().unwrap().update(message);
-        }
-    }
-}
-
-pub trait Application<State, Message>: Send + Sync {
     fn new() -> Self
     where
         Self: Sized;
-    fn view(&self) -> Element<Message>;
-    fn update(&mut self, message: Message);
+    fn view(&self) -> Element<Self::Message>;
+    fn update(&mut self, message: Self::Message);
 }
 
-struct MessageManager<Message>(std::sync::Mutex<MessageManagerInner<Message>>);
-
-enum MessageTypes<Message> {
-    Raw(Message),
-    Function(MessageFunction<Message>),
+/// The [`Realize`] implementation used at the root of a view tree, where the
+/// concrete `Application::Message` is known and every callback can be pushed
+/// into the frame being built.
+struct RootRealize<'a, A: Application> {
+    frame: &'a RefCell<Frame<A::Message>>,
 }
 
-struct MessageManagerInner<Message> {
-    messages: HashMap<u64, MessageTypes<Message>>,
-    id: u64,
-}
-
-impl<Message> MessageManager<Message> {
-    const STARTING_ID: u64 = 1;
-
-    fn new() -> Self {
-        Self(std::sync::Mutex::new(MessageManagerInner {
-            messages: HashMap::new(),
-            id: Self::STARTING_ID,
-        }))
+impl<A: Application + 'static> Realize<A::Message> for RootRealize<'_, A> {
+    fn fixed(&self, msg: A::Message) -> u32 {
+        self.frame.borrow_mut().push_fixed(msg)
     }
 
-    fn new_id(current_id: u64) -> u64 {
-        current_id.checked_add(1).unwrap_or(Self::STARTING_ID)
+    fn bool_mapper(&self, f: Box<dyn Fn(bool) -> A::Message>) -> u32 {
+        self.frame.borrow_mut().push_bool(f)
     }
 
-    fn get_message(
+    fn f32_mapper(&self, f: Box<dyn Fn(f32) -> A::Message>) -> u32 {
+        self.frame.borrow_mut().push_f32(f)
+    }
+
+    fn f64_mapper(&self, f: Box<dyn Fn(f64) -> A::Message>) -> u32 {
+        self.frame.borrow_mut().push_f64(f)
+    }
+
+    fn u64_mapper(&self, f: Box<dyn Fn(u64) -> A::Message>) -> u32 {
+        self.frame.borrow_mut().push_u64(f)
+    }
+
+    fn string_mapper(&self, f: Box<dyn Fn(String) -> A::Message>) -> u32 {
+        self.frame.borrow_mut().push_string(f)
+    }
+
+    fn viewport_mapper(
         &self,
-        id: MessageId,
-        message: bindings::iced::app::message::Message,
-    ) -> Option<Message> {
-        let mut inner = self.0.lock().unwrap();
-        let message_type = inner.messages.remove(&id)?;
-        match message_type {
-            MessageTypes::Raw(msg) => Some(msg),
-            MessageTypes::Function(func) => func(message),
+        f: Box<dyn Fn(bindings::iced::app::message_types::Viewport) -> A::Message>,
+    ) -> u32 {
+        self.frame.borrow_mut().push_viewport(f)
+    }
+}
+
+/// The `application` resource: owns the plugin's state for as long as the
+/// plugin lives, replacing the old process-global `StateManager`.
+///
+/// `current` and `previous` are the last two frames of callbacks minted by
+/// `view()`. Keeping two generations covers a dispatch that races a
+/// re-render; anything older misses instead of resolving to a stale or wrong
+/// callback. Dropping the outgoing `previous` on each rotation is what frees
+/// the closures — the fix for the old design's per-frame leak.
+#[allow(missing_debug_implementations)]
+pub struct ApplicationResource<A: Application> {
+    state: RefCell<A>,
+    current: RefCell<Frame<A::Message>>,
+    previous: RefCell<Frame<A::Message>>,
+}
+
+impl<A: Application + 'static> ApplicationResource<A> {
+    pub(crate) fn new() -> Self {
+        Self {
+            state: RefCell::new(A::new()),
+            current: RefCell::new(Frame::new(0)),
+            previous: RefCell::new(Frame::new(0)),
+        }
+    }
+
+    pub(crate) fn view(&self) -> bindings::iced::app::shared::Element {
+        let next = RefCell::new(Frame::new(self.current.borrow().next_base()));
+        let realize = RootRealize::<A> { frame: &next };
+        let element = self.state.borrow().view().build(&realize);
+        self.previous.replace(self.current.replace(next.into_inner()));
+        element
+    }
+
+    /// Resolves `id` against `current`, then `previous`, and dispatches the
+    /// `Application::Message` it (and `value`) produce, if any. A miss — an id
+    /// from further back than one generation, or a variant/callback kind
+    /// mismatch — is ignored rather than treated as an error.
+    pub(crate) fn update(&self, id: u32, value: bindings::exports::iced::app::app_instance::MessageValue) {
+        let msg = if let Some(cb) = self.current.borrow_mut().get_mut(id) {
+            Self::resolve(cb, value)
+        } else if let Some(cb) = self.previous.borrow_mut().get_mut(id) {
+            Self::resolve(cb, value)
+        } else {
+            None
+        };
+
+        if let Some(msg) = msg {
+            self.state.borrow_mut().update(msg);
+        }
+    }
+
+    /// Matches a callback against the value the interaction produced, calling it
+    /// (or taking it, for `Fixed`) if the kinds line up. A mismatch — which
+    /// should not happen, since the host always pairs an id with the value kind
+    /// the widget that minted it expects — is treated as a miss, not a panic.
+    fn resolve(
+        cb: &mut mappers::Callback<A::Message>,
+        value: bindings::exports::iced::app::app_instance::MessageValue,
+    ) -> Option<A::Message> {
+        use bindings::exports::iced::app::app_instance::MessageValue;
+        use mappers::Callback;
+
+        match (cb, value) {
+            (Callback::Fixed(slot), MessageValue::Fixed) => slot.take(),
+            (Callback::Bool(f), MessageValue::BoolValue(v)) => Some(f(v)),
+            (Callback::F32(f), MessageValue::F32Value(v)) => Some(f(v)),
+            (Callback::F64(f), MessageValue::F64Value(v)) => Some(f(v)),
+            (Callback::U64(f), MessageValue::U64Value(v)) => Some(f(v)),
+            (Callback::Str(f), MessageValue::StringValue(v)) => Some(f(v)),
+            (Callback::Viewport(f), MessageValue::ViewportValue(v)) => Some(f(v)),
+            _ => None,
         }
     }
 }
 
-impl<Message> element::CreateMessage<Message> for MessageManager<Message> {
-    fn add_message_func(&self, message: MessageFunction<Message>) -> MessageId {
-        let mut inner = self.0.lock().unwrap();
-        let id = inner.id;
-        inner.messages.insert(id, MessageTypes::Function(message));
-        inner.id = Self::new_id(inner.id);
-        id
+impl<A: Application + 'static> bindings::exports::iced::app::app_instance::GuestApplication
+    for ApplicationResource<A>
+{
+    fn new() -> Self {
+        ApplicationResource::new()
     }
 
-    fn add_message(&self, message: Message) -> MessageId {
-        let mut inner = self.0.lock().unwrap();
-        let id = inner.id;
-        inner.messages.insert(id, MessageTypes::Raw(message));
-        inner.id = Self::new_id(inner.id);
-        id
+    fn view(&self) -> bindings::iced::app::shared::Element {
+        ApplicationResource::view(self)
+    }
+
+    fn update(&self, id: u32, value: bindings::exports::iced::app::app_instance::MessageValue) {
+        ApplicationResource::update(self, id, value);
     }
 }
 
+/// Export macro — generates the WIT component glue for a guest application.
 #[macro_export]
 macro_rules! export_guest {
-    (
-        $state:ident,
-        $message:ident
-    ) => {
-
+    ($app:ident) => {
         #[doc(hidden)]
         #[allow(missing_debug_implementations, unsafe_code)]
         mod guest_impl {
-            type State = super::$state;
-            type Message = super::$message;
-
             #[doc(hidden)]
             #[allow(missing_debug_implementations)]
             pub struct GuestComponent;
 
-            impl igloo_guest::bindings::exports::iced::app::message::Guest for GuestComponent {
-                #[allow(async_fn_in_trait)]
-                fn clone_message(
-                    message: igloo_guest::bindings::MessageId,
-                ) -> igloo_guest::bindings::MessageId {
-                    message
-                }
-            }
-
-            static STATE: std::sync::LazyLock<igloo_guest::StateManager<State, Message>> = std::sync::LazyLock::new(|| igloo_guest::StateManager::<State, Message>::new());
-
-            impl igloo_guest::bindings::Guest for GuestComponent {
-                fn view() -> igloo_guest::bindings::Element {
-                     STATE.view()
-                }
-
-                #[allow(async_fn_in_trait)]
-                fn update(
-                    message_id: u64,
-                    message: igloo_guest::bindings::iced::app::message::Message,
-                ) {
-                    STATE.update(message_id, message);
-                }
+            impl igloo_guest::bindings::exports::iced::app::app_instance::Guest for GuestComponent {
+                type Application = igloo_guest::ApplicationResource<super::$app>;
             }
 
             igloo_guest::bindings::export!(GuestComponent with_types_in igloo_guest::bindings);
-    }
+        }
     };
 }
