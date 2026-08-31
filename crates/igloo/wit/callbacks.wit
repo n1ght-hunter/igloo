@@ -1,0 +1,5 @@
+/// Ids for guest-owned callbacks. The guest mints one per callback per frame and resolves it
+/// itself; the host only stores the number and hands it back with the widget's value.
+interface callbacks {
+    type callback-id = u32;
+}

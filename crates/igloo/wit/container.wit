@@ -4,23 +4,23 @@ interface container {
     use padding.{padding};
     use alignment.{horizontal, vertical};
 
-    record container {
-        content: element,
-        padding: option<padding>,
-        width: option<length>,
-        height: option<length>,
-        max-width: option<pixels>,
-        max-height: option<pixels>,
-        center-x: option<length>,
-        center-y: option<length>,
-        center: option<length>,
-        align-left: option<length>,
-        align-right: option<length>,
-        align-top: option<length>,
-        align-bottom: option<length>,
-        align-x: option<horizontal>,
-        align-y: option<vertical>,
-        clip: option<bool>,
+    resource container {
+        constructor(content: element);
+        padding: func(p: padding);
+        width: func(w: length);
+        height: func(h: length);
+        max-width: func(max: pixels);
+        max-height: func(max: pixels);
+        center-x: func(w: length);
+        center-y: func(h: length);
+        center: func(l: length);
+        align-left: func(w: length);
+        align-right: func(w: length);
+        align-top: func(h: length);
+        align-bottom: func(h: length);
+        align-x: func(align: horizontal);
+        align-y: func(align: vertical);
+        clip: func(clip: bool);
+        into-element: static func(widget: container) -> element;
     }
 }
-

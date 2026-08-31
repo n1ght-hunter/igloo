@@ -1,7 +1,12 @@
 interface markdown {
+    use shared.{element};
+    use callbacks.{callback-id};
+
     /// A widget that can parse and display Markdown.
-    record markdown {
-        /// The Markdown source to render.
-        content: string,
+    resource markdown {
+        /// Creates a new [`Markdown`] widget from the given source, mapping
+        /// clicked link URLs to a message through `on-link-click`.
+        constructor(content: string, on-link-click: callback-id);
+        into-element: static func(widget: markdown) -> element;
     }
 }

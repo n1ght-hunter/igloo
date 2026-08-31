@@ -1,26 +1,21 @@
 interface checkbox {
-    use shared.{pixels};
-    use message.{message-id};
-    use text.{line-height, shaping, wrapping};
+    use shared.{pixels, element};
     use length.{length};
-
-
+    use text.{line-height, shaping, wrapping};
+    use callbacks.{callback-id};
 
     /// A box that can be checked.
-    record checkbox {
-        /// Whether the [`Checkbox`] is currently checked.
-        is-checked: bool,
-        /// The label of the [`Checkbox`].
-        label: option<string>,
-        /// The message produced when the [`Checkbox`] is toggled.
-        on-toggle: option<message-id>,
-        size: option<pixels>,
-        width: option<length>,
-        height: option<length>,
-        spacing: option<pixels>,
-        text-size: option<pixels>,
-        text-line-height: option<line-height>,
-        text-wrapping: option<wrapping>,
-        text-shaping: option<shaping>
+    resource checkbox {
+        constructor(is-checked: bool);
+        label: func(label: string);
+        on-toggle: func(mapper: callback-id);
+        size: func(s: pixels);
+        width: func(w: length);
+        spacing: func(s: pixels);
+        text-size: func(s: pixels);
+        text-line-height: func(lh: line-height);
+        text-wrapping: func(w: wrapping);
+        text-shaping: func(s: shaping);
+        into-element: static func(widget: checkbox) -> element;
     }
 }

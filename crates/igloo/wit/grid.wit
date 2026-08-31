@@ -2,17 +2,14 @@ interface grid {
     use shared.{pixels, element};
 
     /// A container that arranges its contents in a grid.
-    record grid {
-        /// The elements of the [`Grid`].
-        elements: list<element>,
-        /// Spacing between cells in the [`Grid`].
-        spacing: option<pixels>,
-        /// Width of the [`Grid`].
-        width: option<pixels>,
-        /// Height of the [`Grid`].
-        height: option<pixels>,
-        /// Number of columns in the [`Grid`].
-        columns: option<u64>,
-        fluid: option<pixels>,
+    resource grid {
+        constructor();
+        push: func(child: element);
+        spacing: func(amount: pixels);
+        width: func(w: pixels);
+        height: func(h: pixels);
+        columns: func(columns: u64);
+        fluid: func(amount: pixels);
+        into-element: static func(widget: grid) -> element;
     }
 }

@@ -1,0 +1,26 @@
+interface app-instance {
+    use shared.{element};
+    use callbacks.{callback-id};
+    use message-types.{viewport};
+
+    /// The raw value produced by a widget interaction, if the callback it is being
+    /// dispatched to carries one. All-primitive, so it crosses the boundary as plain
+    /// data like `callback-id` does — no resource involved.
+    variant message-value {
+        fixed,
+        bool-value(bool),
+        f32-value(f32),
+        f64-value(f64),
+        u64-value(u64),
+        string-value(string),
+        viewport-value(viewport),
+    }
+
+    /// A running plugin instance. Owns the plugin's state and every callback it has handed
+    /// to the host for the current frame.
+    resource application {
+        constructor();
+        view: func() -> element;
+        update: func(id: callback-id, value: message-value);
+    }
+}

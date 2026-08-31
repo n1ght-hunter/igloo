@@ -10,12 +10,10 @@ interface float {
     }
 
     /// Displays floating content on top of the application.
-    record float {
-        /// The content of the [`Float`].
-        content: element,
-        /// The optional scale to apply to the content.
-        scale: option<f32>,
-        /// The optional translation applied to the content.
-        translation: option<translation>,
+    resource float {
+        constructor(content: element);
+        scale: func(s: f32);
+        translation: func(t: translation);
+        into-element: static func(widget: float) -> element;
     }
 }

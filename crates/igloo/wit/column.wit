@@ -4,14 +4,16 @@ interface column {
     use padding.{padding};
     use alignment.{horizontal};
 
-    record column {
-        elements: list<element>,
-        spacing: option<pixels>,
-        padding: option<padding>,
-        height: option<length>,
-        width: option<length>,
-        max-width: option<pixels>,
-        align-x: option<horizontal>,
-        clip: option<bool>,
+    resource column {
+        constructor();
+        push: func(child: element);
+        spacing: func(amount: pixels);
+        padding: func(p: padding);
+        width: func(w: length);
+        height: func(h: length);
+        max-width: func(max: pixels);
+        align-x: func(align: horizontal);
+        clip: func(clip: bool);
+        into-element: static func(widget: column) -> element;
     }
 }

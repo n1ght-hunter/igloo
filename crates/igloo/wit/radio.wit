@@ -1,30 +1,19 @@
 interface radio {
-    use shared.{pixels};
+    use shared.{pixels, element};
     use length.{length};
     use text.{line-height, shaping, wrapping};
-    use message.{message-id};
+    use callbacks.{callback-id};
 
     /// A circular button representing an alternative.
-    record radio {
-        /// The label of the radio.
-        label: string,
-        /// Whether the radio is currently selected.
-        is-selected: bool,
-        /// The message produced when the radio is selected.
-        on-select: message-id,
-        /// Sets the size of the radio button
-        size: option<pixels>,
-        /// sets the width of the radio button
-        width: option<length>,
-        /// Sets the spacing between the Radio button and the text.
-        spacing: option<pixels>,
-        /// Sets the text size of the Radio button.
-        text-size: option<pixels>,
-        /// Sets the text line height of the Radio button.
-        text-line-height: option<line-height>,
-        /// Sets the text wrapping of the Radio button.
-        text-wrapping: option<wrapping>,
-        /// Sets the text shaping of the Radio button.
-        text-shaping: option<shaping>,
+    resource radio {
+        constructor(label: string, is-selected: bool, msg: callback-id);
+        size: func(s: pixels);
+        width: func(w: length);
+        spacing: func(s: pixels);
+        text-size: func(s: pixels);
+        text-line-height: func(lh: line-height);
+        text-wrapping: func(w: wrapping);
+        text-shaping: func(s: shaping);
+        into-element: static func(widget: radio) -> element;
     }
 }

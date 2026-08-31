@@ -1,7 +1,7 @@
 interface tooltip {
     use shared.{pixels, element};
 
-     enum position {
+    enum position {
         top,
         bottom,
         left,
@@ -9,12 +9,11 @@ interface tooltip {
         follow-cursor,
     }
 
-    record tooltip {
-        content: element,
-        tooltip: element,
-        position: position,
-        gap: option<pixels>,
-        padding: option<pixels>,
-        snap-within-viewport: option<bool>,
+    resource tooltip {
+        constructor(content: element, tooltip: element, position: position);
+        gap: func(g: pixels);
+        padding: func(p: pixels);
+        snap-within-viewport: func(snap: bool);
+        into-element: static func(widget: tooltip) -> element;
     }
 }

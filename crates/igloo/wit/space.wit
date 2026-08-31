@@ -1,10 +1,12 @@
 interface space {
-    use message.{message-id};
+    use shared.{element};
     use length.{length};
 
     /// An amount of empty space.
-    record space {
-        width: option<length>,
-        height: option<length>,
+    resource space {
+        constructor();
+        width: func(w: length);
+        height: func(h: length);
+        into-element: static func(widget: space) -> element;
     }
 }

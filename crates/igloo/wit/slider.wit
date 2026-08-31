@@ -1,23 +1,17 @@
 interface slider {
-    use message.{message-id};
-    use shared.{pixels};
+    use shared.{pixels, element};
     use length.{length};
+    use callbacks.{callback-id};
 
     /// A horizontal bar for selecting a value from a range of floats.
-    record slider {
-        /// Start value of the range of possible values.
-        range-start: f32,
-        /// End value of the range of possible values.
-        range-end: f32,
-        /// The current value of the [`Slider`].
-        value: f32,
-        on-change: message-id,
-        default: option<f32>,
-        /// The message produced when the [`Slider`] is released.
-        on-release: option<message-id>,
-        width: option<length>,
-        height: option<pixels>,
-        step: option<f32>,
-        shift-step: option<f32>,
+    resource slider {
+        constructor(range-start: f32, range-end: f32, value: f32, on-change: callback-id);
+        default: func(v: f32);
+        on-release: func(msg: callback-id);
+        width: func(w: length);
+        height: func(h: pixels);
+        step: func(s: f32);
+        shift-step: func(s: f32);
+        into-element: static func(widget: slider) -> element;
     }
 }

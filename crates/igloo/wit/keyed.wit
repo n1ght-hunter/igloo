@@ -1,20 +1,18 @@
 interface keyed {
     use shared.{pixels, element};
-    use alignment.{alignment};
-    use padding.{padding};
     use length.{length};
+    use padding.{padding};
+    use alignment.{alignment};
 
-    type key = u64;
-
-    /// A container that keeps the state of its children using keys.
-    record keyed-column {
-        keys: list<key>,
-        children: list<element>,
-        spacing: option<pixels>,
-        padding: option<padding>,
-        width: option<length>,
-        height: option<length>,
-        max-width: option<pixels>,
-        align-items: option<alignment>,
+    resource keyed-column {
+        constructor();
+        push: func(key: u64, child: element);
+        spacing: func(amount: pixels);
+        padding: func(p: padding);
+        width: func(w: length);
+        height: func(h: length);
+        max-width: func(amount: pixels);
+        align-items: func(align: alignment);
+        into-element: static func(widget: keyed-column) -> element;
     }
 }

@@ -1,28 +1,23 @@
 interface text-input {
-    use message.{message-id};
-    use shared.{pixels};
+    use shared.{pixels, element};
     use padding.{padding};
     use text.{line-height};
     use alignment.{horizontal};
     use length.{length};
+    use callbacks.{callback-id};
 
     /// A field that can be filled with text.
-    record text-input {
-        /// The placeholder text of the [`TextInput`].
-        placeholder: string,
-        /// The current value of the [`TextInput`].
-        value: string,
-        /// Whether the [`TextInput`] is secure (e.g. password field).
-        secure: option<bool>,
-        /// The message produced when the [`TextInput`] changes.
-        on-input: option<message-id>,
-        /// The message produced when the [`TextInput`] is submitted.
-        on-submit: option<message-id>,
-        on-paste: option<message-id>,
-        width: option<length>,
-        padding: option<padding>,
-        size: option<pixels>,
-        line-height: option<line-height>,
-        align-x: option<horizontal>,
+    resource text-input {
+        constructor(placeholder: string, value: string);
+        secure: func(secure: bool);
+        on-input: func(mapper: callback-id);
+        on-submit: func(msg: callback-id);
+        on-paste: func(mapper: callback-id);
+        width: func(w: length);
+        padding: func(p: padding);
+        size: func(s: pixels);
+        line-height: func(lh: line-height);
+        align-x: func(a: horizontal);
+        into-element: static func(widget: text-input) -> element;
     }
 }

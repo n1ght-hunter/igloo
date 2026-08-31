@@ -1,10 +1,9 @@
 interface scrollable {
     use shared.{pixels, element};
     use length.{length};
-    use padding.{padding};
-    use alignment.{vertical};
-    use message.{message-id};
+    use callbacks.{callback-id};
 
+    /// The anchor of the scroller of a scrollable relative to its viewport.
     enum anchor {
         start,
         end,
@@ -14,7 +13,7 @@ interface scrollable {
         width: option<pixels>,
         margin: option<pixels>,
         scroller-width: option<pixels>,
-        alignment: option<anchor>,
+        anchor: option<anchor>,
         spacing: option<pixels>,
     }
 
@@ -24,12 +23,12 @@ interface scrollable {
         both(tuple<scrollbar, scrollbar>),
     }
 
-    record scrollable {
-        content: element,
-        width: option<length>,
-        height: option<length>,
-        on-scroll: option<message-id>,
-        direction: option<direction>,
+    resource scrollable {
+        constructor(content: element);
+        width: func(w: length);
+        height: func(h: length);
+        direction: func(d: direction);
+        on-scroll: func(mapper: callback-id);
+        into-element: static func(widget: scrollable) -> element;
     }
 }
-

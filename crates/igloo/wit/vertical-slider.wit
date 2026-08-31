@@ -1,25 +1,17 @@
 interface vertical-slider {
-    use message.{message-id};
-    use shared.{pixels};
+    use shared.{pixels, element};
     use length.{length};
+    use callbacks.{callback-id};
 
     /// A vertical bar for selecting a value from a range of floats.
-    record vertical-slider {
-        /// Start value of the range of possible values.
-        range-start: f32,
-        /// End value of the range of possible values.
-        range-end: f32,
-        /// The current value of the [`VerticalSlider`].
-        value: f32,
-        /// The message produced when the [`VerticalSlider`] is dragged.
-        on-change: message-id,
-        /// The default value of the [`VerticalSlider`].
-        default: option<f32>,
-        /// The message produced when the [`VerticalSlider`] is released.
-        on-release: option<message-id>,
-        width: option<pixels>,
-        height: option<length>,
-        step: option<f32>,
-        shift-step: option<f32>,
+    resource vertical-slider {
+        constructor(range-start: f32, range-end: f32, value: f32, on-change: callback-id);
+        default: func(v: f32);
+        on-release: func(msg: callback-id);
+        width: func(w: pixels);
+        height: func(h: length);
+        step: func(s: f32);
+        shift-step: func(s: f32);
+        into-element: static func(widget: vertical-slider) -> element;
     }
 }
