@@ -23,7 +23,7 @@ struct IcedApp {
 
 #[derive(Debug, Clone)]
 enum Message {
-    PluginMessage(String, igloo::Message),
+    Plugin(String, igloo::Message),
     ChangePage(String),
     PluginLoaded(std::result::Result<CompiledPlugin, String>),
 }
@@ -34,7 +34,10 @@ impl IcedApp {
         let engine = plugin_manager.engine();
 
         let available_plugins = [
-            ("rust-plugin", "../../target/wasm32-wasip2/release/rust_guest.wasm"),
+            (
+                "rust-plugin",
+                "../../target/wasm32-wasip2/release/rust_guest.wasm",
+            ),
             ("js-plugin", "../../plugins/js/js-app.wasm"),
             ("python-plugin", "../../plugins/python/python-app.wasm"),
         ];
@@ -81,7 +84,7 @@ impl IcedApp {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::PluginMessage(id, msg) => {
+            Message::Plugin(id, msg) => {
                 if let Err(e) = self.plugin_manager.plugin_update(&id, msg) {
                     tracing::error!("Failed to update plugin {}: {}", id, e);
                 }
@@ -122,7 +125,8 @@ impl IcedApp {
         let page: iced::Element<'_, Message> = match self.current_page.as_str() {
             "Home" => {
                 if self.plugins_loading > 0 {
-                    widget::Text::new(format!("Loading {} plugin(s)...", self.plugins_loading)).into()
+                    widget::Text::new(format!("Loading {} plugin(s)...", self.plugins_loading))
+                        .into()
                 } else {
                     widget::Text::new("Home").into()
                 }
@@ -130,7 +134,7 @@ impl IcedApp {
             id => self
                 .plugin_manager
                 .plugin_view(id)
-                .map(|e| e.map(|m| Message::PluginMessage(id.to_string(), m)))
+                .map(|e| e.map(|m| Message::Plugin(id.to_string(), m)))
                 .unwrap_or_else(|| widget::Text::new("Unknown Plugin").into()),
         };
 
