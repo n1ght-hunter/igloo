@@ -1,6 +1,5 @@
-import type { Space as WitSpace } from 'iced:app/space@0.1.0';
+import { Space as WitSpace } from 'iced:app/space@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
-import { spaceToElement } from 'iced:app/element@0.1.0';
 import { Element, type IntoElement } from '../element.js';
 
 /**
@@ -9,21 +8,14 @@ import { Element, type IntoElement } from '../element.js';
  *
  * @example
  * ```typescript
- * // Fixed size space
- * const fixedSpace = Space.new()
- *   .width(Length.fixed(20))
- *   .height(Length.fixed(10));
- *
- * // Flexible space that fills remaining width
- * const flexSpace = Space.new()
- *   .width(Length.fill());
+ * const flexSpace = Space.new().width(Length.fill());
  * ```
  */
 export class Space implements IntoElement {
-  private record: WitSpace;
+  private raw: WitSpace;
 
   private constructor() {
-    this.record = {};
+    this.raw = new WitSpace();
   }
 
   /** Create a new Space builder */
@@ -33,26 +25,23 @@ export class Space implements IntoElement {
 
   /** Create a space with the given width and height */
   static with(width: Length, height: Length): Space {
-    const space = new Space();
-    space.record.width = width;
-    space.record.height = height;
-    return space;
+    return new Space().width(width).height(height);
   }
 
   /** Set the width */
   width(width: Length): this {
-    this.record.width = width;
+    this.raw.width(width);
     return this;
   }
 
   /** Set the height */
   height(height: Length): this {
-    this.record.height = height;
+    this.raw.height(height);
     return this;
   }
 
   /** Convert to Element */
   intoElement(): Element {
-    return new Element(spaceToElement(this.record));
+    return new Element(WitSpace.intoElement(this.raw));
   }
 }

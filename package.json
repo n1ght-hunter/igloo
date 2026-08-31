@@ -1,8 +1,4 @@
 {
   "name": "igloo",
-  "private": true,
-  "workspaces": [
-    "packages/*",
-    "plugins/*"
-  ]
+  "private": true
 }

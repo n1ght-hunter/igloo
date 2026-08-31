@@ -1,6 +1,7 @@
-import type { Markdown as WitMarkdown } from 'iced:app/markdown@0.1.0';
-import { markdownToElement } from 'iced:app/element@0.1.0';
+import { Markdown as WitMarkdown } from 'iced:app/markdown@0.1.0';
+import type { CallbackId } from 'iced:app/callbacks@0.1.0';
 import { Element, type IntoElement } from '../element.js';
+import { pushString } from '../callbacks.js';
 
 /**
  * Builder for creating Markdown widgets.
@@ -8,23 +9,31 @@ import { Element, type IntoElement } from '../element.js';
  *
  * @example
  * ```typescript
- * const md = Markdown.new('# Hello\n\nThis is **bold** text.');
+ * const md = Markdown.new('# Hello\n\n[link](https://example.com)', (url) => ({
+ *   type: 'linkClicked',
+ *   url,
+ * }));
  * ```
+ *
+ * @typeParam Msg - The application message type
  */
-export class Markdown implements IntoElement {
-  private record: WitMarkdown;
+export class Markdown<Msg> implements IntoElement {
+  private raw: WitMarkdown;
 
-  private constructor(content: string) {
-    this.record = { content };
+  private constructor(content: string, onLinkClick: CallbackId) {
+    this.raw = new WitMarkdown(content, onLinkClick);
   }
 
-  /** Create a new Markdown builder with the given content */
-  static new(content: string): Markdown {
-    return new Markdown(content);
+  /**
+   * Create a new Markdown builder.
+   * @param onLinkClick - Handler called with the URL of a clicked link
+   */
+  static new<Msg>(content: string, onLinkClick: (url: string) => Msg): Markdown<Msg> {
+    return new Markdown(content, pushString(onLinkClick));
   }
 
   /** Convert to Element */
   intoElement(): Element {
-    return new Element(markdownToElement(this.record));
+    return new Element(WitMarkdown.intoElement(this.raw));
   }
 }

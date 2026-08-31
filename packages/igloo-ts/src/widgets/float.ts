@@ -1,5 +1,5 @@
-import type { Float as WitFloat, Translation } from 'iced:app/float@0.1.0';
-import { floatToElement } from 'iced:app/element@0.1.0';
+import { Float as WitFloat } from 'iced:app/float@0.1.0';
+import type { Translation } from 'iced:app/float@0.1.0';
 import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 export type { Translation } from 'iced:app/float@0.1.0';
@@ -11,15 +11,15 @@ export type { Translation } from 'iced:app/float@0.1.0';
  * @example
  * ```typescript
  * const floating = Float.new(Text.new('Floating content'))
- *   .translation({ x: 100, y: 50 })
+ *   .translate(100, 50)
  *   .scale(0.8);
  * ```
  */
 export class Float implements IntoElement {
-  private record: WitFloat;
+  private raw: WitFloat;
 
   private constructor(content: ElementLike) {
-    this.record = { content: toElement(content).inner };
+    this.raw = new WitFloat(toElement(content).inner);
   }
 
   /** Create a new Float builder with the given content */
@@ -29,24 +29,24 @@ export class Float implements IntoElement {
 
   /** Set the scale factor */
   scale(scale: number): this {
-    this.record.scale = scale;
+    this.raw.scale(scale);
     return this;
   }
 
   /** Set the translation (offset) of the content */
   translation(translation: Translation): this {
-    this.record.translation = translation;
+    this.raw.translation(translation);
     return this;
   }
 
   /** Set the translation by x and y values */
   translate(x: number, y: number): this {
-    this.record.translation = { x, y };
+    this.raw.translation({ x, y });
     return this;
   }
 
   /** Convert to Element */
   intoElement(): Element {
-    return new Element(floatToElement(this.record));
+    return new Element(WitFloat.intoElement(this.raw));
   }
 }

@@ -33,7 +33,7 @@ Igloo lets you:
 ## Todo
 - Add iced canvas support
 - Add cwasm plugin support and precompilation guide
-- Auto cache plugins by compling then storing compiled version and useing hash to check for changes
+- Auto cache plugins by compiling then storing compiled version and using hash to check for changes
 - Figure out how to hook in iced tasks and subscriptions for async operations
 
 ## Getting Started

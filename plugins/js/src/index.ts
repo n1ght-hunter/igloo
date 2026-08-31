@@ -1,5 +1,3 @@
-import type { view as ViewType, update as UpdateType, MessageId, Message } from "iced:app/app@0.1.0"
-import type { cloneMessage as CloneMessageType } from "iced:app/message@0.1.0"
 import {
     createApp,
     Text,
@@ -15,18 +13,7 @@ import {
     Space,
     Padding,
     Scrollable,
-    type Message as IglooMessage,
 } from "igloo-ts"
-
-interface MessageExport {
-    cloneMessage: typeof CloneMessageType;
-}
-
-export const message: MessageExport = {
-    cloneMessage: (messageId: MessageId) => {
-        return messageId
-    }
-}
 
 // Task type
 interface Task {
@@ -52,14 +39,7 @@ type Msg =
     | { type: 'setFilter', filter: 'all' | 'active' | 'completed' }
     | { type: 'clearCompleted' }
 
-// Helper to extract string from message
-const getString = (msg: IglooMessage): string | null => {
-    if (msg.tag === 'string-type') return msg.val
-    return null
-}
-
-// Create the app
-const app = createApp<State, Msg>({
+const Application = createApp<State, Msg>({
     init: () => ({
         tasks: [
             { id: 1, text: 'Learn igloo-ts', completed: true },
@@ -114,7 +94,7 @@ const app = createApp<State, Msg>({
         }
     },
 
-    view: (state, messages) => {
+    view: (state) => {
         const completedCount = state.tasks.filter(t => t.completed).length
         const totalCount = state.tasks.length
         const progress = totalCount > 0 ? completedCount / totalCount : 0
@@ -135,12 +115,12 @@ const app = createApp<State, Msg>({
                     .push(
                         Checkbox.new(task.completed)
                             .label(task.text)
-                            .onToggle(messages, () => ({ type: 'toggleTask' as const, id: task.id }))
+                            .onToggle(() => ({ type: 'toggleTask' as const, id: task.id }))
                     )
                     .push(Space.new().width(Length.fill()))
                     .push(
                         Button.new(Text.new('×').size(16))
-                            .onPress(messages, () => ({ type: 'deleteTask' as const, id: task.id }))
+                            .onPress(() => ({ type: 'deleteTask' as const, id: task.id }))
                     )
             )
         }
@@ -150,7 +130,7 @@ const app = createApp<State, Msg>({
             const isActive = state.filter === filter
             return Button.new(
                 Text.new(label).size(isActive ? 14 : 12)
-            ).onPress(messages, () => ({ type: 'setFilter' as const, filter }))
+            ).onPress(() => ({ type: 'setFilter' as const, filter }))
         }
 
         return Container.new(
@@ -173,17 +153,14 @@ const app = createApp<State, Msg>({
                         .spacing(10)
                         .push(
                             TextInput.new('Add a new task...', state.inputText)
-                                .onInput(messages, (m) => {
-                                    const val = getString(m)
-                                    return { type: 'inputChanged' as const, value: val ?? '' }
-                                })
-                                .onSubmit(messages, () => ({ type: 'addTask' }))
+                                .onInput((value) => ({ type: 'inputChanged' as const, value }))
+                                .onSubmit(() => ({ type: 'addTask' }))
                                 .width(Length.fill())
                                 .padding(Padding.all(8))
                         )
                         .push(
                             Button.new(Text.new('Add'))
-                                .onPress(messages, () => ({ type: 'addTask' }))
+                                .onPress(() => ({ type: 'addTask' }))
                                 .padding(Padding.xy(16, 8))
                         )
                 )
@@ -197,7 +174,7 @@ const app = createApp<State, Msg>({
                         .push(Space.new().width(Length.fill()))
                         .push(
                             Button.new(Text.new('Clear Completed'))
-                                .onPress(messages, () => ({ type: 'clearCompleted' }))
+                                .onPress(() => ({ type: 'clearCompleted' }))
                         )
                 )
                 .push(Rule.horizontal(1))
@@ -220,5 +197,4 @@ const app = createApp<State, Msg>({
     }
 })
 
-export const update: typeof UpdateType = app.update
-export const view: typeof ViewType = app.view
+export const appInstance = { Application }

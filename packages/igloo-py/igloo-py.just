@@ -5,7 +5,7 @@ default:
 # Generate Python bindings from WIT
 gen:
     rm -rf src/wit_world
-    uv run componentize-py --wit-path ../../wit bindings src
+    uv run componentize-py --wit-path ../../crates/igloo/wit bindings src
     # Move componentize-py support files into igloo_py/ to keep them in sync
     rm -rf src/igloo_py/componentize_py_async_support
     mv src/componentize_py_async_support src/igloo_py/

@@ -3,11 +3,14 @@ default:
     @just --list js
 
 bundle:
-    bun build ./src/index.ts --outdir ./dist --external='iced:app'
+    pnpm exec rolldown -c rolldown.config.mjs
+
+check:
+    pnpm exec tsc --noEmit
 
 componentize:
     jco componentize ./dist/index.js \
-        --wit ../../wit/ \
+        --wit ../../crates/igloo/wit/ \
         --world-name app \
         --out js-app.wasm \
         --disable all \

@@ -16,14 +16,14 @@
     "src"
   ],
   "scripts": {
-    "gen": "jco guest-types ../../wit --out-dir ./src/generated/"
+    "gen": "jco guest-types ../../crates/igloo/wit --out-dir ./src/generated/"
   },
   "devDependencies": {
     "@bytecodealliance/jco": "^1",
-    "@types/bun": "latest",
-    "typescript": "^5"
+    "rolldown": "latest",
+    "typescript": "^7"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^7"
   }
 }

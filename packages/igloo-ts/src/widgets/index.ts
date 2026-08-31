@@ -28,8 +28,4 @@ export { Markdown } from './markdown.js';
 export { Scrollable, ScrollbarConfig, type Direction, type Scrollbar } from './scrollable.js';
 export { Grid } from './grid.js';
 export { Float, type Translation } from './float.js';
-export { KeyedColumn, type Key } from './keyed-column.js';
-
-// Advanced widgets
-export { Table } from './table.js';
-export { PaneGrid } from './pane-grid.js';
+export { KeyedColumn } from './keyed-column.js';
