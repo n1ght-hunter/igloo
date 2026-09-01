@@ -1,27 +1,23 @@
 use iced_core::{Length, Pixels, text};
 
-use crate::{
-    Element,
-    bindings::iced::app::element::checkbox_to_element,
-    element::{CreateMessage, Widget},
-};
+use crate::Element;
+use crate::bindings::iced::app::checkbox::Checkbox as WitCheckbox;
 
 /// A box that can be checked.
 pub struct Checkbox<Message> {
     is_checked: bool,
     label: Option<String>,
-    on_toggle: Option<Box<dyn Fn(bool) -> Message + Send + Sync>>,
-    size: Option<Pixels>,
+    on_toggle: Option<Box<dyn Fn(bool) -> Message>>,
+    size: Option<f32>,
     width: Option<Length>,
-    height: Option<Length>,
-    spacing: Option<Pixels>,
-    text_size: Option<Pixels>,
+    spacing: Option<f32>,
+    text_size: Option<f32>,
     text_line_height: Option<text::LineHeight>,
     text_wrapping: Option<text::Wrapping>,
     text_shaping: Option<text::Shaping>,
 }
 
-impl<Message> Checkbox<Message> {
+impl<Message: 'static> Checkbox<Message> {
     /// Creates a new [`Checkbox`] with the given checked state.
     pub fn new(is_checked: bool) -> Self {
         Self {
@@ -30,7 +26,6 @@ impl<Message> Checkbox<Message> {
             on_toggle: None,
             size: None,
             width: None,
-            height: None,
             spacing: None,
             text_size: None,
             text_line_height: None,
@@ -46,13 +41,13 @@ impl<Message> Checkbox<Message> {
     }
 
     /// Sets the message to produce when the [`Checkbox`] is toggled.
-    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + Send + Sync + 'static) -> Self {
+    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + 'static) -> Self {
         self.on_toggle = Some(Box::new(message));
         self
     }
 
     pub fn size(mut self, size: impl Into<Pixels>) -> Self {
-        self.size = Some(size.into());
+        self.size = Some(size.into().0);
         self
     }
 
@@ -61,18 +56,13 @@ impl<Message> Checkbox<Message> {
         self
     }
 
-    pub fn height(mut self, height: impl Into<Length>) -> Self {
-        self.height = Some(height.into());
-        self
-    }
-
     pub fn spacing(mut self, spacing: impl Into<Pixels>) -> Self {
-        self.spacing = Some(spacing.into());
+        self.spacing = Some(spacing.into().0);
         self
     }
 
     pub fn text_size(mut self, size: impl Into<Pixels>) -> Self {
-        self.text_size = Some(size.into());
+        self.text_size = Some(size.into().0);
         self
     }
 
@@ -92,37 +82,38 @@ impl<Message> Checkbox<Message> {
     }
 }
 
-impl<Message: 'static> Widget<Message> for Checkbox<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        checkbox_to_element(&crate::bindings::iced::app::element::Checkbox {
-            is_checked: self.is_checked,
-            label: self.label,
-            on_toggle: self.on_toggle.map(|f| {
-                create_message.add_message_func(Box::new(move |msg| {
-                    if let crate::bindings::Message::BoolType(value) = msg {
-                        Some(f(value))
-                    } else {
-                        None
-                    }
-                }))
-            }),
-            size: self.size.map(Into::into),
-            width: self.width.map(Into::into),
-            height: self.height.map(Into::into),
-            spacing: self.spacing.map(Into::into),
-            text_size: self.text_size.map(Into::into),
-            text_line_height: self.text_line_height.map(Into::into),
-            text_wrapping: self.text_wrapping.map(Into::into),
-            text_shaping: self.text_shaping.map(Into::into),
-        })
-    }
-}
-
-impl<Message: Clone + 'static> From<Checkbox<Message>> for Element<Message> {
+impl<Message: 'static> From<Checkbox<Message>> for Element<Message> {
     fn from(checkbox: Checkbox<Message>) -> Self {
-        Element::new(Box::new(checkbox))
+        Element::new(move |realize| {
+            let raw = WitCheckbox::new(checkbox.is_checked);
+            if let Some(label) = checkbox.label {
+                raw.label(&label);
+            }
+            if let Some(on_toggle) = checkbox.on_toggle {
+                raw.on_toggle(realize.bool_mapper(on_toggle));
+            }
+            if let Some(size) = checkbox.size {
+                raw.size(size);
+            }
+            if let Some(width) = checkbox.width {
+                raw.width(width.into());
+            }
+            if let Some(spacing) = checkbox.spacing {
+                raw.spacing(spacing);
+            }
+            if let Some(text_size) = checkbox.text_size {
+                raw.text_size(text_size);
+            }
+            if let Some(lh) = checkbox.text_line_height {
+                raw.text_line_height(lh.into());
+            }
+            if let Some(wrapping) = checkbox.text_wrapping {
+                raw.text_wrapping(wrapping.into());
+            }
+            if let Some(shaping) = checkbox.text_shaping {
+                raw.text_shaping(shaping.into());
+            }
+            WitCheckbox::into_element(raw)
+        })
     }
 }

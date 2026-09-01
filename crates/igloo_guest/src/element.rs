@@ -1,135 +1,108 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
-use iced_core::Color;
+use crate::bindings::iced::app::message_types::Viewport;
+use crate::bindings::iced::app::shared::Element as WitElement;
 
-use crate::bindings::{MessageId, iced::app::element::explain};
-
-pub type MessageFunction<Message> =
-    Box<dyn Fn(crate::bindings::iced::app::message::Message) -> Option<Message> + Send + Sync>;
-
-pub trait CreateMessage<Message> {
-    fn add_message_func(&self, message: MessageFunction<Message>) -> MessageId;
-
-    fn add_message(&self, message: Message) -> MessageId;
+/// Turns a widget's deferred callbacks into opaque callback ids.
+///
+/// [`Element::map`] composes an adapter implementing this trait for the source
+/// `Message` type on top of the target's implementation, which is what lets
+/// mapping work uniformly for a fixed message and every value-carrying mapper
+/// kind. The only real implementation lives in [`crate::ApplicationResource`],
+/// where the concrete `Application::Message` is known.
+pub(crate) trait Realize<Message> {
+    fn fixed(&self, msg: Message) -> u32;
+    fn bool_mapper(&self, f: Box<dyn Fn(bool) -> Message>) -> u32;
+    fn f32_mapper(&self, f: Box<dyn Fn(f32) -> Message>) -> u32;
+    fn f64_mapper(&self, f: Box<dyn Fn(f64) -> Message>) -> u32;
+    fn u64_mapper(&self, f: Box<dyn Fn(u64) -> Message>) -> u32;
+    fn string_mapper(&self, f: Box<dyn Fn(String) -> Message>) -> u32;
+    fn viewport_mapper(&self, f: Box<dyn Fn(Viewport) -> Message>) -> u32;
 }
 
-pub trait Widget<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn CreateMessage<Message>,
-    ) -> crate::bindings::Element;
-}
-
+/// A view element whose widget tree and message callbacks are not yet built into
+/// WIT resources.
+///
+/// Building is deferred until [`crate::ApplicationResource::view`], where the
+/// concrete `Application::Message` type is known and every callback — fixed or
+/// value-carrying — can be turned into a real `message` resource with no type
+/// erasure.
+#[allow(missing_debug_implementations)]
 pub struct Element<Message> {
-    widget: Box<dyn Widget<Message>>,
-}
-
-impl<Message> std::fmt::Debug for Element<Message> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Element").finish()
-    }
-}
-
-impl<Message> Element<Message> {
-    pub fn new(widget: Box<dyn Widget<Message>>) -> Self {
-        Self { widget }
-    }
-
-    pub fn as_element(
-        self,
-        create_message: &dyn CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        self.widget.as_element(create_message)
-    }
-
-    pub fn explain(self, color: Color) -> Element<Message>
-    where
-        Message: 'static,
-    {
-        Element::new(Box::new(Explain {
-            color,
-            widget: self.widget,
-        }))
-    }
+    build: Box<dyn FnOnce(&dyn Realize<Message>) -> WitElement>,
 }
 
 impl<Message: 'static> Element<Message> {
-    pub fn map<B: 'static>(self, f: impl Fn(Message) -> B + Send + Sync + 'static) -> Element<B> {
-        Element::new(Box::new(Mapper::new(self.widget, f)))
-    }
-}
-
-struct Explain<Message> {
-    color: Color,
-    widget: Box<dyn Widget<Message>>,
-}
-
-impl<Message> Widget<Message> for Explain<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        explain(self.widget.as_element(create_message), self.color.into())
-    }
-}
-
-struct Mapper<MessageA, MessageB> {
-    widget: Box<dyn Widget<MessageA>>,
-    mapper: Arc<dyn Fn(MessageA) -> MessageB + Send + Sync>,
-}
-
-impl<MessageA, MessageB> Mapper<MessageA, MessageB> {
-    pub fn new<F>(widget: Box<dyn Widget<MessageA>>, mapper: F) -> Self
-    where
-        F: Fn(MessageA) -> MessageB + Send + Sync + 'static,
-    {
-        Self {
-            widget,
-            mapper: Arc::new(mapper),
-        }
-    }
-}
-
-impl<MessageA: 'static, MessageB: 'static> Widget<MessageB> for Mapper<MessageA, MessageB> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn CreateMessage<MessageB>,
-    ) -> crate::bindings::Element {
-        let create_message = MapperMessageCreator::new(self.mapper, create_message);
-        self.widget.as_element(&create_message)
-    }
-}
-
-struct MapperMessageCreator<'a, MessageA, MessageB> {
-    mapper: Arc<dyn Fn(MessageA) -> MessageB + Send + Sync>,
-    create_message: &'a dyn CreateMessage<MessageB>,
-}
-
-impl<'a, MessageA, MessageB> MapperMessageCreator<'a, MessageA, MessageB> {
-    pub fn new(
-        mapper: Arc<dyn Fn(MessageA) -> MessageB + Send + Sync>,
-        create_message: &'a dyn CreateMessage<MessageB>,
+    pub(crate) fn new(
+        build: impl FnOnce(&dyn Realize<Message>) -> WitElement + 'static,
     ) -> Self {
         Self {
-            mapper,
-            create_message,
+            build: Box::new(build),
         }
+    }
+
+    pub(crate) fn build(self, realize: &dyn Realize<Message>) -> WitElement {
+        (self.build)(realize)
+    }
+
+    /// Wraps the element with a debug overlay of the given color.
+    pub fn explain(self, color: impl Into<crate::bindings::iced::app::shared::Color>) -> Self {
+        let color = color.into();
+        Element::new(move |realize| self.build(realize).explain(color))
+    }
+
+    /// Applies `f` to the messages produced by this element's subtree.
+    ///
+    /// Works uniformly for the fixed message a widget sends immediately (e.g.
+    /// `on_press`) and for value-carrying callbacks (`on_toggle`, `on_input`,
+    /// ...), which only resolve to a message once the user interacts with the
+    /// widget — both are composed, not rewritten after the fact.
+    pub fn map<B: 'static>(self, f: impl Fn(Message) -> B + 'static) -> Element<B> {
+        let f: Rc<dyn Fn(Message) -> B> = Rc::new(f);
+        Element::new(move |realize: &dyn Realize<B>| {
+            let adapter = MapRealize { inner: realize, f };
+            self.build(&adapter)
+        })
     }
 }
 
-impl<'a, MessageA: 'static, MessageB: 'static> CreateMessage<MessageA>
-    for MapperMessageCreator<'a, MessageA, MessageB>
-{
-    fn add_message_func(&self, message: MessageFunction<MessageA>) -> MessageId {
-        let mapper = Arc::clone(&self.mapper);
-        let mapped_message = Box::new(move |msg| message(msg).map(|msg| (mapper)(msg)));
+struct MapRealize<'a, Message, B> {
+    inner: &'a dyn Realize<B>,
+    f: Rc<dyn Fn(Message) -> B>,
+}
 
-        // Here we would use the mapper to transform the message before adding it.
-        self.create_message.add_message_func(mapped_message)
+impl<Message: 'static, B: 'static> Realize<Message> for MapRealize<'_, Message, B> {
+    fn fixed(&self, msg: Message) -> u32 {
+        self.inner.fixed((self.f)(msg))
     }
 
-    fn add_message(&self, message: MessageA) -> MessageId {
-        // Here we would use the mapper to transform the message before adding it.
-        self.create_message.add_message((self.mapper)(message))
+    fn bool_mapper(&self, g: Box<dyn Fn(bool) -> Message>) -> u32 {
+        let f = self.f.clone();
+        self.inner.bool_mapper(Box::new(move |v| f(g(v))))
+    }
+
+    fn f32_mapper(&self, g: Box<dyn Fn(f32) -> Message>) -> u32 {
+        let f = self.f.clone();
+        self.inner.f32_mapper(Box::new(move |v| f(g(v))))
+    }
+
+    fn f64_mapper(&self, g: Box<dyn Fn(f64) -> Message>) -> u32 {
+        let f = self.f.clone();
+        self.inner.f64_mapper(Box::new(move |v| f(g(v))))
+    }
+
+    fn u64_mapper(&self, g: Box<dyn Fn(u64) -> Message>) -> u32 {
+        let f = self.f.clone();
+        self.inner.u64_mapper(Box::new(move |v| f(g(v))))
+    }
+
+    fn string_mapper(&self, g: Box<dyn Fn(String) -> Message>) -> u32 {
+        let f = self.f.clone();
+        self.inner.string_mapper(Box::new(move |v| f(g(v))))
+    }
+
+    fn viewport_mapper(&self, g: Box<dyn Fn(Viewport) -> Message>) -> u32 {
+        let f = self.f.clone();
+        self.inner.viewport_mapper(Box::new(move |v| f(g(v))))
     }
 }

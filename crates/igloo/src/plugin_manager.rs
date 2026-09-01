@@ -1,7 +1,12 @@
-use std::{collections::HashMap, ops::DerefMut, path::{Path, PathBuf}, sync::Arc};
+use std::{
+    collections::HashMap,
+    ops::DerefMut,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use crate::{
-    bindings::App,
+    bindings::{App, exports::iced::app::app_instance::MessageValue},
     widgets::{Message, ToElement, WrapperRenderer, WrapperTheme},
 };
 use tracing::info;
@@ -9,7 +14,9 @@ use wasmtime::{
     Config, Engine, Store,
     component::{Component, HasSelf, Linker},
 };
-use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView, p2::add_to_linker_sync};
+use wasmtime_wasi::{
+    ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView, p2::add_to_linker_sync,
+};
 
 pub struct MyState {
     wasi: WasiCtx,
@@ -46,11 +53,20 @@ pub enum PluginError {
 
 type Result<T> = std::result::Result<T, PluginError>;
 
+/// A loaded plugin: the bindgen world handle plus the `application` resource
+/// created for it at instantiation time. The resource is the guest's own state
+/// and outlives every `view`/`update` call — it is only dropped when the plugin
+/// is replaced or the manager itself goes away.
+struct Plugin {
+    app: App,
+    instance: wasmtime::component::ResourceAny,
+}
+
 pub struct PluginManager {
     store: std::cell::RefCell<Store<MyState>>,
     engine: Engine,
     linker: Linker<MyState>,
-    plugins: HashMap<String, App>,
+    plugins: HashMap<String, Plugin>,
 }
 
 impl std::fmt::Debug for PluginManager {
@@ -63,7 +79,6 @@ impl std::fmt::Debug for PluginManager {
 
 impl PluginManager {
     pub fn new() -> Result<Self> {
-        // Construct the wasm engine with async support enabled.
         let engine = Engine::new(Config::new().wasm_component_model(true))?;
 
         let mut linker = Linker::new(&engine);
@@ -98,26 +113,51 @@ impl PluginManager {
         self.plugins.keys().cloned().collect()
     }
 
+    /// Instantiates a component and constructs its `application` resource, which
+    /// holds the plugin's state for as long as the plugin lives.
+    fn instantiate(&mut self, component: &Component) -> Result<Plugin> {
+        let app = App::instantiate(self.store.get_mut(), component, &self.linker)?;
+        let instance = app
+            .iced_app_app_instance()
+            .application()
+            .call_constructor(self.store.get_mut())?;
+        Ok(Plugin { app, instance })
+    }
+
     /// Adds a plugin from a file.
     pub fn add_plugin_from_file(
         &mut self,
         name: impl Into<String>,
         file: impl AsRef<Path>,
     ) -> Result<()> {
-        // Create our component and call our generated host function.
         self.raw_add(name.into(), |engine| {
             Ok(Component::from_file(engine, file)?)
         })
     }
 
+    /// Sends a message to a plugin's update function.
+    ///
+    /// Every `Message` variant already carries a plain callback id the guest
+    /// minted ahead of time, plus the raw value for mapper variants. The guest
+    /// resolves the id into a real `Application::Message` itself, so this just
+    /// forwards to the matching `update-*` entry point.
     pub fn plugin_update(&mut self, id: &str, msg: Message) -> Result<()> {
-        if let Some(plugin) = self.plugins.get_mut(id) {
-            let mut store = self.store.borrow_mut();
-            let Message { id, content } = msg;
-            Ok(plugin.call_update(store.deref_mut(), id, &content)?)
-        } else {
-            Err(PluginError::NotFound(id.into()))
-        }
+        let Some(plugin) = self.plugins.get_mut(id) else {
+            return Err(PluginError::NotFound(id.into()));
+        };
+        let (callback_id, value) = match msg {
+            Message::Fixed { rep } => (rep, MessageValue::Fixed),
+            Message::Bool { mapper, value } => (mapper, MessageValue::BoolValue(value)),
+            Message::F32 { mapper, value } => (mapper, MessageValue::F32Value(value)),
+            Message::F64 { mapper, value } => (mapper, MessageValue::F64Value(value)),
+            Message::U64 { mapper, value } => (mapper, MessageValue::U64Value(value)),
+            Message::String { mapper, value } => (mapper, MessageValue::StringValue(value)),
+            Message::Viewport { mapper, value } => (mapper, MessageValue::ViewportValue(value)),
+        };
+        let mut store = self.store.borrow_mut();
+        let app = plugin.app.iced_app_app_instance().application();
+        app.call_update(store.deref_mut(), plugin.instance, callback_id, &value)?;
+        Ok(())
     }
 
     pub fn plugin_view<'a, Theme, Renderer>(
@@ -132,7 +172,10 @@ impl PluginManager {
 
         let mut store = self.store.borrow_mut();
         let result = plugin
-            .call_view(store.deref_mut())
+            .app
+            .iced_app_app_instance()
+            .application()
+            .call_view(store.deref_mut(), plugin.instance)
             .inspect_err(|e| {
                 tracing::error!("Failed to call view for plugin {}: {}", id, e);
             })
@@ -151,8 +194,8 @@ impl PluginManager {
     /// Adds a plugin from pre-loaded bytes.
     pub fn add_plugin_from_bytes(&mut self, name: &str, bytes: &[u8]) -> Result<()> {
         let component = Component::from_binary(&self.engine, bytes)?;
-        let app = App::instantiate(self.store.get_mut(), &component, &self.linker)?;
-        if self.plugins.insert(name.to_string(), app).is_some() {
+        let plugin = self.instantiate(&component)?;
+        if self.plugins.insert(name.to_string(), plugin).is_some() {
             info!("Replaced existing plugin: {}", name);
         }
         Ok(())
@@ -160,8 +203,8 @@ impl PluginManager {
 
     /// Adds a pre-compiled plugin component.
     pub fn add_compiled_plugin(&mut self, plugin: CompiledPlugin) -> Result<()> {
-        let app = App::instantiate(self.store.get_mut(), &plugin.component, &self.linker)?;
-        if self.plugins.insert(plugin.name.clone(), app).is_some() {
+        let instance = self.instantiate(&plugin.component)?;
+        if self.plugins.insert(plugin.name.clone(), instance).is_some() {
             info!("Replaced existing plugin: {}", plugin.name);
         }
         Ok(())
@@ -179,8 +222,8 @@ impl PluginManager {
         component: F,
     ) -> Result<()> {
         let component = component(&self.engine)?;
-        let app = App::instantiate(self.store.get_mut(), &component, &self.linker)?;
-        if self.plugins.insert(id.clone(), app).is_some() {
+        let plugin = self.instantiate(&component)?;
+        if self.plugins.insert(id.clone(), plugin).is_some() {
             info!("Replaced existing plugin: {}", id);
         }
 
@@ -214,7 +257,6 @@ pub async fn load_and_compile_plugin_async(
         .await
         .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
 
-    // Compile in a blocking task to not block the async runtime
     let component = tokio::task::spawn_blocking(move || Component::from_binary(&engine, &bytes))
         .await
         .map_err(|e| format!("Task join error for {}: {}", name, e))?

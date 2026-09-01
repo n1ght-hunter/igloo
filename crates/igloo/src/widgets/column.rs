@@ -1,12 +1,30 @@
 use crate::{
-    bindings::iced::app::{column::Column},
-    widgets::{ToElement, WrapperRenderer, WrapperTheme},
+    bindings::iced::app::{
+        alignment::Horizontal,
+        column::{self, HostColumn},
+        length::Length,
+        padding::Padding,
+        shared::{Element, Pixels},
+    },
+    plugin_manager::MyState,
+    widgets::{Message, ToElement, WrapperRenderer, WrapperTheme},
 };
+use wasmtime::component::Resource;
 
-use super::Message;
+#[derive(Debug)]
+pub struct ColumnResource {
+    pub children: Vec<Resource<Element>>,
+    pub spacing: Option<Pixels>,
+    pub padding: Option<Padding>,
+    pub width: Option<Length>,
+    pub height: Option<Length>,
+    pub max_width: Option<Pixels>,
+    pub align_x: Option<Horizontal>,
+    pub clip: Option<bool>,
+}
 
-impl ToElement for Column {
-    fn to_element<'a, Theme, Renderer>(
+impl ColumnResource {
+    pub fn to_iced_element<'a, Theme, Renderer>(
         self,
         resource_table: &mut wasmtime::component::ResourceTable,
     ) -> iced::Element<'a, Message, Theme, Renderer>
@@ -14,51 +32,93 @@ impl ToElement for Column {
         Theme: WrapperTheme + 'a,
         Renderer: WrapperRenderer + 'a,
     {
-        let Column {
-            elements,
-            spacing,
-            padding,
-            width,
-            height,
-            max_width,
-            align_x,
-            clip,
-        } = self;
-
-        let elements: Vec<iced::Element<'a, Message, Theme, Renderer>> = elements
+        let children: Vec<iced::Element<'a, Message, Theme, Renderer>> = self
+            .children
             .into_iter()
             .map(|e| resource_table.delete(e).unwrap().to_element(resource_table))
             .collect();
-        let mut column = iced::widget::Column::with_children(elements);
 
-        if let Some(spacing) = spacing {
-            column = column.spacing(spacing);
+        let mut col = iced::widget::Column::with_children(children);
+        if let Some(spacing) = self.spacing {
+            col = col.spacing(spacing);
         }
-
-        if let Some(padding) = padding {
-            column = column.padding(padding);
+        if let Some(padding) = self.padding {
+            col = col.padding(padding);
         }
-
-        if let Some(width) = width {
-            column = column.width(width);
+        if let Some(w) = self.width {
+            col = col.width(w);
         }
-
-        if let Some(height) = height {
-            column = column.height(height);
+        if let Some(h) = self.height {
+            col = col.height(h);
         }
-
-        if let Some(max_width) = max_width {
-            column = column.max_width(max_width);
+        if let Some(max) = self.max_width {
+            col = col.max_width(max);
         }
-
-        if let Some(align_x) = align_x {
-            column = column.align_x(align_x);
+        if let Some(align) = self.align_x {
+            col = col.align_x(align);
         }
-
-        if let Some(clip) = clip {
-            column = column.clip(clip);
+        if let Some(clip) = self.clip {
+            col = col.clip(clip);
         }
+        col.into()
+    }
+}
 
-        column.into()
+impl HostColumn for MyState {
+    fn new(&mut self) -> Resource<column::Column> {
+        self.table
+            .push(ColumnResource {
+                children: vec![],
+                spacing: None,
+                padding: None,
+                width: None,
+                height: None,
+                max_width: None,
+                align_x: None,
+                clip: None,
+            })
+            .unwrap()
+    }
+
+    fn push(&mut self, self_: Resource<column::Column>, child: Resource<Element>) {
+        self.table.get_mut(&self_).unwrap().children.push(child);
+    }
+
+    fn spacing(&mut self, self_: Resource<column::Column>, amount: Pixels) {
+        self.table.get_mut(&self_).unwrap().spacing = Some(amount);
+    }
+
+    fn padding(&mut self, self_: Resource<column::Column>, p: Padding) {
+        self.table.get_mut(&self_).unwrap().padding = Some(p);
+    }
+
+    fn width(&mut self, self_: Resource<column::Column>, w: Length) {
+        self.table.get_mut(&self_).unwrap().width = Some(w);
+    }
+
+    fn height(&mut self, self_: Resource<column::Column>, h: Length) {
+        self.table.get_mut(&self_).unwrap().height = Some(h);
+    }
+
+    fn max_width(&mut self, self_: Resource<column::Column>, max: Pixels) {
+        self.table.get_mut(&self_).unwrap().max_width = Some(max);
+    }
+
+    fn align_x(&mut self, self_: Resource<column::Column>, align: Horizontal) {
+        self.table.get_mut(&self_).unwrap().align_x = Some(align);
+    }
+
+    fn clip(&mut self, self_: Resource<column::Column>, clip: bool) {
+        self.table.get_mut(&self_).unwrap().clip = Some(clip);
+    }
+
+    fn into_element(&mut self, self_: Resource<column::Column>) -> Resource<Element> {
+        let col = self.table.delete(self_).unwrap();
+        self.table.push(super::Element::Column(col)).unwrap()
+    }
+
+    fn drop(&mut self, rep: Resource<column::Column>) -> wasmtime::Result<()> {
+        self.table.delete(rep)?;
+        Ok(())
     }
 }

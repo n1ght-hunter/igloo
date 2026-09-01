@@ -10,32 +10,20 @@ pub mod grid;
 pub mod image;
 pub mod keyed;
 pub mod markdown;
-pub mod pane_grid;
 pub mod pick_list;
 pub mod progress_bar;
 pub mod radio;
 pub mod row;
 pub mod rule;
-pub mod slider;
-pub mod svg;
-pub mod table;
-pub mod text;
-// pub mod text_editor;
 pub mod scrollable;
+pub mod slider;
 pub mod space;
+pub mod svg;
+pub mod text;
 pub mod text_input;
 pub mod toggler;
 pub mod tooltip;
-mod utils;
 pub mod vertical_slider;
-
-use std::{borrow::Borrow, ops::RangeInclusive};
-
-use crate::{
-    Element,
-    widgets::{scrollable::Scrollable, space::Space},
-};
-use iced_core::{Length, Pixels};
 
 pub use checkbox::Checkbox;
 pub use column::Column;
@@ -46,21 +34,24 @@ pub use grid::Grid;
 pub use image::Image;
 pub use keyed::KeyedColumn;
 pub use markdown::Markdown;
-pub use pane_grid::PaneGrid;
 pub use pick_list::PickList;
 pub use progress_bar::ProgressBar;
 pub use radio::Radio;
 pub use row::Row;
 pub use rule::Rule;
+pub use scrollable::Scrollable;
 pub use slider::Slider;
+pub use space::Space;
 pub use svg::Svg;
-// pub use table::Table;
 pub use text::Text;
-// pub use text_editor::TextEditor;
 pub use text_input::TextInput;
 pub use toggler::Toggler;
 pub use tooltip::Tooltip;
 pub use vertical_slider::VerticalSlider;
+
+use std::ops::RangeInclusive;
+
+use crate::Element;
 
 /// Creates a [`Text`] widget with the given content.
 pub fn text(text: impl Into<String>) -> Text {
@@ -72,14 +63,39 @@ pub fn column<Message>() -> Column<Message> {
     Column::new()
 }
 
+/// Creates a [`Button`] with the given content.
+pub fn button<Message: 'static>(element: impl Into<Element<Message>>) -> button::Button<Message> {
+    button::Button::new(element)
+}
+
 /// Creates an empty [`Row`].
 pub fn row<Message>() -> Row<Message> {
     Row::new()
 }
 
 /// Creates a [`Container`] with the given content.
-pub fn container<Message>(content: impl Into<Element<Message>>) -> Container<Message> {
+pub fn container<Message: 'static>(content: impl Into<Element<Message>>) -> Container<Message> {
     Container::new(content)
+}
+
+/// Displays floating content on top of the application.
+pub fn float<Message: 'static>(content: impl Into<Element<Message>>) -> Float<Message> {
+    Float::new(content)
+}
+
+/// Creates an empty [`Grid`].
+pub fn grid<Message>() -> Grid<Message> {
+    Grid::new()
+}
+
+/// Creates an empty [`KeyedColumn`].
+pub fn keyed_column<Message>() -> KeyedColumn<Message> {
+    KeyedColumn::new()
+}
+
+/// Creates a [`Scrollable`] wrapping the given content.
+pub fn scrollable<Message: 'static>(content: impl Into<Element<Message>>) -> Scrollable<Message> {
+    Scrollable::new(content)
 }
 
 /// Creates a [`Tooltip`] for the given content.
@@ -91,38 +107,38 @@ pub fn tooltip<Message>(
     Tooltip::new(content, tooltip, position)
 }
 
-/// Creates a [`Button`] with the given content.
-pub fn button<Message: Clone>(element: impl Into<Element<Message>>) -> button::Button<Message> {
-    button::Button::new(element)
-}
-
-/// Creates a [`Checkbox`] with the given checked state.
-pub fn checkbox<Message>(is_checked: bool) -> Checkbox<Message> {
-    Checkbox::new(is_checked)
-}
-
 /// Creates a horizontal [`Rule`] with the given thickness.
-pub fn horizontal_rule(thickness: impl Into<Pixels>) -> Rule {
+pub fn horizontal_rule(thickness: impl Into<iced_core::Pixels>) -> Rule {
     Rule::horizontal(thickness)
 }
 
 /// Creates a vertical [`Rule`] with the given thickness.
-pub fn vertical_rule(thickness: impl Into<Pixels>) -> Rule {
+pub fn vertical_rule(thickness: impl Into<iced_core::Pixels>) -> Rule {
     Rule::vertical(thickness)
 }
 
-/// Creates a [`ProgressBar`] with the given range and value.
+/// Creates an amount of empty [`Space`].
+pub fn space() -> Space {
+    Space::new()
+}
+
+/// Creates a new [`Svg`] from the given path.
+pub fn svg(path: impl Into<String>) -> Svg {
+    Svg::new(path)
+}
+
+/// Creates a new [`Image`] with the given path.
+pub fn image(handle: impl Into<String>) -> Image {
+    Image::new(handle)
+}
+
+/// Creates a new [`ProgressBar`] with the given range and value.
 pub fn progress_bar(range: RangeInclusive<f32>, value: f32) -> ProgressBar {
     ProgressBar::new(range, value)
 }
 
-/// Creates a [`Toggler`] with the given state.
-pub fn toggler<Message>(is_toggled: bool) -> Toggler<Message> {
-    Toggler::new(is_toggled)
-}
-
-/// Creates a [`Radio`] with the given label and value.
-pub fn radio<Message, V, F>(
+/// Creates a new [`Radio`] button with the given label and value.
+pub fn radio<Message: 'static, F, V>(
     label: impl Into<String>,
     value: V,
     selected: Option<V>,
@@ -135,124 +151,74 @@ where
     Radio::new(label, value, selected, f)
 }
 
-/// Creates a [`ComboBox`] with the given options.
-pub fn combo_box<T, Message>(
-    options: &combo_box::State<T>,
-    placeholder: String,
-    selection: Option<T>,
-    on_selected: impl Fn(T) -> Message + Send + Sync + 'static,
-) -> ComboBox<T, Message>
-where
-    T: std::fmt::Display + Clone,
-{
-    ComboBox::new(options, placeholder, selection, on_selected)
+/// Creates a new [`Checkbox`] with the given checked state.
+pub fn checkbox<Message: 'static>(is_checked: bool) -> Checkbox<Message> {
+    Checkbox::new(is_checked)
 }
 
-/// Creates a [`Float`] with the given content.
-pub fn float<Message>(content: impl Into<Element<Message>>) -> Float<Message> {
-    Float::new(content)
+/// Creates a new [`Toggler`] with the given state.
+pub fn toggler<Message: 'static>(is_toggled: bool) -> Toggler<Message> {
+    Toggler::new(is_toggled)
 }
 
-/// Creates an empty [`Grid`].
-pub fn grid<Message>() -> Grid<Message> {
-    Grid::new()
-}
-
-/// Creates an [`Image`] from the given path.
-pub fn image(path: impl Into<String>) -> Image {
-    Image::new(path)
-}
-
-/// Creates an empty [`KeyedColumn`].
-pub fn keyed_column<Message>() -> KeyedColumn<Message> {
-    KeyedColumn::new()
-}
-
-/// Creates a [`Markdown`] widget from the given source.
-pub fn markdown(content: impl Into<String>) -> Markdown {
-    Markdown::new(content)
-}
-
-/// Creates an [`Overlay`] with the given elements.
-/// Creates a [`PaneGrid`] with the given children.
-pub fn pane_grid<Message>(
-    children: impl IntoIterator<Item = Element<Message>>,
-) -> PaneGrid<Message> {
-    PaneGrid::new(children)
-}
-
-/// Creates a [`PickList`] with the given options.
-pub fn pick_list<T, L, V, Message>(
-    options: L,
-    selected: Option<V>,
-    on_select: impl Fn(T) -> Message + Send + Sync + 'static,
-) -> PickList<T, L, V, Message>
-where
-    T: ToString + PartialEq + Send + Sync + Clone,
-    L: Borrow<[T]> + 'static,
-    V: Borrow<T> + 'static,
-    Message: Clone,
-{
-    PickList::new(options, selected, on_select)
-}
-
-/// Creates a [`Slider`] with the given range and value.
-pub fn slider<Message>(
-    range: RangeInclusive<f32>,
-    value: f32,
-    on_change: impl Fn(f32) -> Message + Send + Sync + 'static,
-) -> Slider<Message> {
-    Slider::new(range, value, on_change)
-}
-
-/// Creates a [`VerticalSlider`] with the given range and value.
-pub fn vertical_slider<Message>(
-    range: RangeInclusive<f32>,
-    value: f32,
-    on_change: impl Fn(f32) -> Message + Send + Sync + 'static,
-) -> VerticalSlider<Message> {
-    VerticalSlider::new(range, value, on_change)
-}
-
-// /// Creates a [`Table`] with the given column headers.
-// pub fn table(headers: impl IntoIterator<Item = Element>) -> Table {
-//     Table::new(headers)
-// }
-
-/// Creates an [`Svg`] from the given path.
-pub fn svg(path: impl Into<String>) -> Svg {
-    Svg::new(path)
-}
-
-// /// Creates a [`TextEditor`] with the given content.
-// pub fn text_editor(value: impl Into<String>) -> TextEditor {
-//     TextEditor::new(value)
-// }
-
-/// Creates a [`TextInput`] with the given placeholder and value.
-pub fn text_input<Message>(
+/// Creates a new [`TextInput`] with the given placeholder and value.
+pub fn text_input<Message: 'static>(
     placeholder: impl Into<String>,
     value: impl Into<String>,
 ) -> TextInput<Message> {
     TextInput::new(placeholder, value)
 }
 
-/// Creates a new [`Space`] widget that fills the available
-/// horizontal space.
-///
-/// This can be useful to separate widgets in a [`Row`].
-pub fn horizontal_space() -> Space {
-    Space::with_width(Length::Fill)
+/// Creates a new [`Slider`] for the given range and value.
+pub fn slider<Message: 'static>(
+    range: RangeInclusive<f32>,
+    value: f32,
+    on_change: impl Fn(f32) -> Message + 'static,
+) -> Slider<Message> {
+    Slider::new(range, value, on_change)
 }
 
-/// Creates a new [`Space`] widget that fills the available
-/// vertical space.
-///
-/// This can be useful to separate widgets in a [`Column`].
-pub fn vertical_space() -> Space {
-    Space::with_height(Length::Fill)
+/// Creates a new [`VerticalSlider`] for the given range and value.
+pub fn vertical_slider<Message: 'static>(
+    range: RangeInclusive<f32>,
+    value: f32,
+    on_change: impl Fn(f32) -> Message + 'static,
+) -> VerticalSlider<Message> {
+    VerticalSlider::new(range, value, on_change)
 }
 
-pub fn scrollable<Message>(content: impl Into<Element<Message>>) -> Scrollable<Message> {
-    Scrollable::new(content)
+/// Creates a new [`ComboBox`] with the given options.
+pub fn combo_box<T, Message: 'static>(
+    options: &combo_box::State<T>,
+    placeholder: String,
+    selection: Option<T>,
+    on_selected: impl Fn(T) -> Message + 'static,
+) -> ComboBox<T, Message>
+where
+    T: std::fmt::Display + Clone + 'static,
+{
+    ComboBox::new(options, placeholder, selection, on_selected)
+}
+
+/// Creates a new [`PickList`] with the given options.
+pub fn pick_list<T, L, V, Message: 'static>(
+    options: L,
+    selected: Option<V>,
+    on_select: impl Fn(T) -> Message + 'static,
+) -> PickList<Message>
+where
+    T: ToString + PartialEq + Clone + 'static,
+    L: std::borrow::Borrow<[T]>,
+    V: std::borrow::Borrow<T>,
+{
+    PickList::new(options, selected, on_select)
+}
+
+/// Creates a [`Markdown`] widget from the given source, mapping clicked link
+/// URLs to a message through `on_link_click`.
+pub fn markdown<Message: 'static>(
+    content: impl Into<String>,
+    on_link_click: impl Fn(String) -> Message + 'static,
+) -> Markdown<Message> {
+    Markdown::new(content, on_link_click)
 }

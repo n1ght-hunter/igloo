@@ -1,26 +1,23 @@
 use iced_core::{Length, Pixels, text};
 
-use crate::{
-    Element,
-    bindings::iced::app::element::radio_to_element,
-    element::Widget,
-};
+use crate::Element;
+use crate::bindings::iced::app::radio::Radio as WitRadio;
 
 /// A circular button representing an alternative.
 pub struct Radio<Message> {
-    on_click: Message,
-    is_selected: bool,
     label: String,
+    is_selected: bool,
+    on_select: Message,
+    size: Option<f32>,
     width: Option<Length>,
-    size: Option<Pixels>,
-    spacing: Option<Pixels>,
-    text_size: Option<Pixels>,
+    spacing: Option<f32>,
+    text_size: Option<f32>,
     text_line_height: Option<text::LineHeight>,
-    text_shaping: Option<text::Shaping>,
     text_wrapping: Option<text::Wrapping>,
+    text_shaping: Option<text::Shaping>,
 }
 
-impl<Message> Radio<Message> {
+impl<Message: 'static> Radio<Message> {
     /// Creates a new [`Radio`] with the given label and value.
     pub fn new<F, V>(label: impl Into<String>, value: V, selected: Option<V>, f: F) -> Self
     where
@@ -28,11 +25,11 @@ impl<Message> Radio<Message> {
         F: FnOnce(V) -> Message,
     {
         Self {
-            is_selected: Some(value) == selected,
-            on_click: f(value),
             label: label.into(),
-            width: None,
+            is_selected: Some(value) == selected,
+            on_select: f(value),
             size: None,
+            width: None,
             spacing: None,
             text_size: None,
             text_line_height: None,
@@ -42,7 +39,7 @@ impl<Message> Radio<Message> {
     }
 
     pub fn size(mut self, size: impl Into<Pixels>) -> Self {
-        self.size = Some(size.into());
+        self.size = Some(size.into().0);
         self
     }
 
@@ -52,12 +49,12 @@ impl<Message> Radio<Message> {
     }
 
     pub fn spacing(mut self, spacing: impl Into<Pixels>) -> Self {
-        self.spacing = Some(spacing.into());
+        self.spacing = Some(spacing.into().0);
         self
     }
 
     pub fn text_size(mut self, size: impl Into<Pixels>) -> Self {
-        self.text_size = Some(size.into());
+        self.text_size = Some(size.into().0);
         self
     }
 
@@ -77,28 +74,33 @@ impl<Message> Radio<Message> {
     }
 }
 
-impl<Message: Clone> Widget<Message> for Radio<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        radio_to_element(&crate::bindings::iced::app::radio::Radio {
-            label: self.label,
-            is_selected: self.is_selected,
-            on_select: create_message.add_message(self.on_click),
-            size: self.size.map(Into::into),
-            width: self.width.map(Into::into),
-            spacing: self.spacing.map(Into::into),
-            text_size: self.text_size.map(Into::into),
-            text_line_height: self.text_line_height.map(Into::into),
-            text_wrapping: self.text_wrapping.map(Into::into),
-            text_shaping: self.text_shaping.map(Into::into),
-        })
-    }
-}
-
-impl<Message: Clone + 'static> From<Radio<Message>> for Element<Message> {
+impl<Message: 'static> From<Radio<Message>> for Element<Message> {
     fn from(radio: Radio<Message>) -> Self {
-        Element::new(Box::new(radio))
+        Element::new(move |realize| {
+            let wit_msg = realize.fixed(radio.on_select);
+            let raw = WitRadio::new(&radio.label, radio.is_selected, wit_msg);
+            if let Some(size) = radio.size {
+                raw.size(size);
+            }
+            if let Some(width) = radio.width {
+                raw.width(width.into());
+            }
+            if let Some(spacing) = radio.spacing {
+                raw.spacing(spacing);
+            }
+            if let Some(text_size) = radio.text_size {
+                raw.text_size(text_size);
+            }
+            if let Some(lh) = radio.text_line_height {
+                raw.text_line_height(lh.into());
+            }
+            if let Some(wrapping) = radio.text_wrapping {
+                raw.text_wrapping(wrapping.into());
+            }
+            if let Some(shaping) = radio.text_shaping {
+                raw.text_shaping(shaping.into());
+            }
+            WitRadio::into_element(raw)
+        })
     }
 }

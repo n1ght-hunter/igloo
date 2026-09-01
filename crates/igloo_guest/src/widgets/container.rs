@@ -3,24 +3,17 @@ use iced_core::{
     alignment::{Horizontal, Vertical},
 };
 
-use crate::{
-    Element,
-    bindings::iced::app::{self, element::container_to_element},
-    element::Widget,
-};
+use crate::Element;
+use crate::bindings::iced::app::container::Container as WitContainer;
 
 /// A box that contains another element.
-#[derive(Debug)]
 pub struct Container<Message> {
     content: Element<Message>,
     padding: Option<Padding>,
     width: Option<Length>,
     height: Option<Length>,
-    max_width: Option<Pixels>,
-    max_height: Option<Pixels>,
-    align_x: Option<Horizontal>,
-    align_y: Option<Vertical>,
-    clip: Option<bool>,
+    max_width: Option<f32>,
+    max_height: Option<f32>,
     center_x: Option<Length>,
     center_y: Option<Length>,
     center: Option<Length>,
@@ -28,21 +21,21 @@ pub struct Container<Message> {
     align_right: Option<Length>,
     align_top: Option<Length>,
     align_bottom: Option<Length>,
+    align_x: Option<Horizontal>,
+    align_y: Option<Vertical>,
+    clip: Option<bool>,
 }
 
-impl<Message> Container<Message> {
+impl<Message: 'static> Container<Message> {
     /// Creates a [`Container`] with the given content.
     pub fn new(content: impl Into<Element<Message>>) -> Self {
-        Container {
+        Self {
             content: content.into(),
             padding: None,
             width: None,
             height: None,
             max_width: None,
             max_height: None,
-            align_x: None,
-            align_y: None,
-            clip: None,
             center_x: None,
             center_y: None,
             center: None,
@@ -50,6 +43,9 @@ impl<Message> Container<Message> {
             align_right: None,
             align_top: None,
             align_bottom: None,
+            align_x: None,
+            align_y: None,
+            clip: None,
         }
     }
 
@@ -73,13 +69,13 @@ impl<Message> Container<Message> {
 
     /// Sets the maximum width of the [`Container`].
     pub fn max_width(mut self, max_width: impl Into<Pixels>) -> Self {
-        self.max_width = Some(max_width.into());
+        self.max_width = Some(max_width.into().0);
         self
     }
 
     /// Sets the maximum height of the [`Container`].
     pub fn max_height(mut self, max_height: impl Into<Pixels>) -> Self {
-        self.max_height = Some(max_height.into());
+        self.max_height = Some(max_height.into().0);
         self
     }
 
@@ -146,34 +142,57 @@ impl<Message> Container<Message> {
     }
 }
 
-impl<Message> Widget<Message> for Container<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        container_to_element(app::element::Container {
-            content: self.content.as_element(create_message),
-            padding: self.padding.map(Into::into),
-            width: self.width.map(Into::into),
-            height: self.height.map(Into::into),
-            max_width: self.max_width.map(Into::into),
-            max_height: self.max_height.map(Into::into),
-            align_x: self.align_x.map(Into::into),
-            align_y: self.align_y.map(Into::into),
-            clip: self.clip,
-            center_x: self.center_x.map(Into::into),
-            center_y: self.center_y.map(Into::into),
-            center: self.center.map(Into::into),
-            align_left: self.align_left.map(Into::into),
-            align_right: self.align_right.map(Into::into),
-            align_top: self.align_top.map(Into::into),
-            align_bottom: self.align_bottom.map(Into::into),
-        })
-    }
-}
-
 impl<Message: 'static> From<Container<Message>> for Element<Message> {
     fn from(container: Container<Message>) -> Self {
-        Element::new(Box::new(container))
+        Element::new(move |realize| {
+            let content = container.content.build(realize);
+            let raw = WitContainer::new(content);
+            if let Some(padding) = container.padding {
+                raw.padding(padding.into());
+            }
+            if let Some(width) = container.width {
+                raw.width(width.into());
+            }
+            if let Some(height) = container.height {
+                raw.height(height.into());
+            }
+            if let Some(max_width) = container.max_width {
+                raw.max_width(max_width);
+            }
+            if let Some(max_height) = container.max_height {
+                raw.max_height(max_height);
+            }
+            if let Some(width) = container.center_x {
+                raw.center_x(width.into());
+            }
+            if let Some(height) = container.center_y {
+                raw.center_y(height.into());
+            }
+            if let Some(length) = container.center {
+                raw.center(length.into());
+            }
+            if let Some(width) = container.align_left {
+                raw.align_left(width.into());
+            }
+            if let Some(width) = container.align_right {
+                raw.align_right(width.into());
+            }
+            if let Some(height) = container.align_top {
+                raw.align_top(height.into());
+            }
+            if let Some(height) = container.align_bottom {
+                raw.align_bottom(height.into());
+            }
+            if let Some(align) = container.align_x {
+                raw.align_x(align.into());
+            }
+            if let Some(align) = container.align_y {
+                raw.align_y(align.into());
+            }
+            if let Some(clip) = container.clip {
+                raw.clip(clip);
+            }
+            WitContainer::into_element(raw)
+        })
     }
 }

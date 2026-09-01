@@ -1,9 +1,7 @@
-use iced_core::{
-    Length, Padding,
-    text::{self, LineHeight},
-};
+use iced_core::{Length, Padding, text};
 
-use crate::{Element, bindings::iced::app::element::combo_box_to_element, element::Widget};
+use crate::Element;
+use crate::bindings::iced::app::combo_box::ComboBox as WitComboBox;
 
 #[derive(Debug, Clone)]
 pub struct State<T> {
@@ -14,7 +12,10 @@ pub struct State<T> {
 impl<T: std::fmt::Display + Clone> State<T> {
     pub fn new(options: Vec<T>) -> Self {
         Self {
-            str_options: options.iter().map(|o| o.to_string()).collect(),
+            str_options: options
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
             options,
         }
     }
@@ -23,6 +24,9 @@ impl<T: std::fmt::Display + Clone> State<T> {
         &self.str_options
     }
 
+    // Parses a selection string back into T using a per-instance options
+    // table, unlike std::str::FromStr::from_str which is a free function.
+    #[allow(clippy::wrong_self_convention)]
     fn from_str(&self, input: &str) -> Option<T> {
         self.str_options
             .iter()
@@ -35,33 +39,34 @@ impl<T: std::fmt::Display + Clone> State<T> {
 pub struct ComboBox<T, Message> {
     options: State<T>,
     placeholder: String,
-    selection: Option<T>,
-    on_selected: Box<dyn Fn(T) -> Message + Send + Sync>,
-    on_input: Option<Box<dyn Fn(String) -> Message + Send + Sync>>,
-    on_option_hovered: Option<Box<dyn Fn(T) -> Message + Send + Sync>>,
+    selected: Option<String>,
+    on_selected: Box<dyn Fn(T) -> Message>,
+    on_input: Option<Box<dyn Fn(String) -> Message>>,
+    on_option_hovered: Option<Box<dyn Fn(T) -> Message>>,
     on_open: Option<Message>,
     on_close: Option<Message>,
     padding: Option<Padding>,
     size: Option<f32>,
-    line_height: Option<LineHeight>,
+    line_height: Option<text::LineHeight>,
     width: Option<Length>,
 }
 
 impl<T, Message> ComboBox<T, Message>
 where
-    T: std::fmt::Display + Clone,
+    T: std::fmt::Display + Clone + 'static,
+    Message: 'static,
 {
     /// Creates a new [`ComboBox`] with the given options.
     pub fn new(
         options: &State<T>,
         placeholder: String,
         selection: Option<T>,
-        on_selected: impl Fn(T) -> Message + Send + Sync + 'static,
+        on_selected: impl Fn(T) -> Message + 'static,
     ) -> Self {
         Self {
             options: options.clone(),
             placeholder,
-            selection,
+            selected: selection.map(|s| s.to_string()),
             on_selected: Box::new(on_selected),
             on_input: None,
             on_option_hovered: None,
@@ -74,15 +79,12 @@ where
         }
     }
 
-    pub fn on_input(mut self, message: impl Fn(String) -> Message + Send + Sync + 'static) -> Self {
+    pub fn on_input(mut self, message: impl Fn(String) -> Message + 'static) -> Self {
         self.on_input = Some(Box::new(message));
         self
     }
 
-    pub fn on_option_hovered(
-        mut self,
-        message: impl Fn(T) -> Message + Send + Sync + 'static,
-    ) -> Self {
+    pub fn on_option_hovered(mut self, message: impl Fn(T) -> Message + 'static) -> Self {
         self.on_option_hovered = Some(Box::new(message));
         self
     }
@@ -118,66 +120,60 @@ where
     }
 }
 
-impl<T, Message: Clone + 'static> Widget<Message> for ComboBox<T, Message>
-where
-    T: std::fmt::Display + Clone + Send + Sync + 'static,
-{
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        let on_selected = self.on_selected;
-        let options = self.options;
-        let options2 = options.clone();
-        combo_box_to_element(&crate::bindings::iced::app::combo_box::ComboBox {
-            options: options.str_options().to_owned(),
-            placeholder: self.placeholder.to_string(),
-            selected: self.selection.map(|s| s.to_string()),
-            on_selected: create_message.add_message_func(Box::new(move |v| {
-                if let crate::bindings::Message::StringType(value) = v {
-                    Some((on_selected)(options.from_str(&value)?))
-                } else {
-                    None
-                }
-            })),
-            on_input: self.on_input.map(|f| {
-                create_message.add_message_func(Box::new(move |msg| {
-                    if let crate::bindings::Message::StringType(value) = msg {
-                        Some(f(value))
-                    } else {
-                        None
-                    }
-                }))
-            }),
-            on_option_hovered: self.on_option_hovered.map(|f| {
-                create_message.add_message_func(Box::new(move |msg| {
-                    if let crate::bindings::Message::StringType(value) = msg {
-                        Some(f(options2.from_str(&value)?))
-                    } else {
-                        None
-                    }
-                }))
-            }),
-            on_open: self
-                .on_open
-                .as_ref()
-                .map(|f| create_message.add_message((*f).clone())),
-            on_close: self
-                .on_close
-                .as_ref()
-                .map(|f| create_message.add_message((*f).clone())),
-            padding: self.padding.map(Into::into),
-            size: self.size.map(Into::into),
-            line_height: self.line_height.map(Into::into),
-            width: self.width.map(Into::into),
-        })
-    }
-}
-
-impl<T: std::fmt::Display + Clone + Send + Sync + 'static, Message: Clone + 'static>
-    From<ComboBox<T, Message>> for Element<Message>
+impl<T: std::fmt::Display + Clone + 'static, Message: 'static> From<ComboBox<T, Message>>
+    for Element<Message>
 {
     fn from(combo_box: ComboBox<T, Message>) -> Self {
-        Element::new(Box::new(combo_box))
+        Element::new(move |realize| {
+            let lookup = combo_box.options.clone();
+            let on_selected = combo_box.on_selected;
+            let on_selected_mapper = realize.string_mapper(Box::new(move |value| {
+                let selected = lookup
+                    .from_str(&value)
+                    .expect("combo box produced an unknown option");
+                on_selected(selected)
+            }));
+
+            let raw = WitComboBox::new(
+                combo_box.options.str_options(),
+                &combo_box.placeholder,
+                combo_box.selected.as_deref(),
+                on_selected_mapper,
+            );
+
+            if let Some(on_input) = combo_box.on_input {
+                raw.on_input(realize.string_mapper(on_input));
+            }
+            if let Some(on_option_hovered) = combo_box.on_option_hovered {
+                let lookup = combo_box.options.clone();
+                let mapper = realize.string_mapper(Box::new(move |value| {
+                    let hovered = lookup
+                        .from_str(&value)
+                        .expect("combo box produced an unknown option");
+                    on_option_hovered(hovered)
+                }));
+                raw.on_option_hovered(mapper);
+            }
+            if let Some(msg) = combo_box.on_open {
+                raw.on_open(realize.fixed(msg));
+            }
+            if let Some(msg) = combo_box.on_close {
+                raw.on_close(realize.fixed(msg));
+            }
+            if let Some(padding) = combo_box.padding {
+                raw.padding(padding.into());
+            }
+            if let Some(size) = combo_box.size {
+                raw.size(size);
+            }
+            if let Some(line_height) = combo_box.line_height {
+                raw.line_height(line_height.into());
+            }
+            if let Some(width) = combo_box.width {
+                raw.width(width.into());
+            }
+
+            WitComboBox::into_element(raw)
+        })
     }
 }

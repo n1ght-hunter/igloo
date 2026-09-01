@@ -1,124 +1,83 @@
 use iced_core::{Length, Pixels, alignment, text};
 
-use crate::{Element, bindings::iced::app::element::toggler_to_element, element::Widget};
+use crate::Element;
+use crate::bindings::iced::app::toggler::Toggler as WitToggler;
 
 /// Togglers let users make binary choices by toggling a switch.
 pub struct Toggler<Message> {
-    is_toggled: bool,
-    label: Option<String>,
-    on_toggle: Option<Box<dyn Fn(bool) -> Message + Send + Sync>>,
-    size: Option<Pixels>,
-    width: Option<Length>,
-    text_size: Option<Pixels>,
-    text_line_height: Option<text::LineHeight>,
-    text_alignment: Option<alignment::Horizontal>,
-    text_shaping: Option<text::Shaping>,
-    text_wrapping: Option<text::Wrapping>,
-    spacing: Option<Pixels>,
+    raw: WitToggler,
+    on_toggle: Option<Box<dyn Fn(bool) -> Message>>,
 }
 
-impl<Message> Toggler<Message> {
+impl<Message: 'static> Toggler<Message> {
     /// Creates a new [`Toggler`] with the given state.
     pub fn new(is_toggled: bool) -> Self {
         Self {
-            is_toggled,
-            label: None,
+            raw: WitToggler::new(is_toggled),
             on_toggle: None,
-            size: None,
-            width: None,
-            text_size: None,
-            text_line_height: None,
-            text_alignment: None,
-            text_shaping: None,
-            text_wrapping: None,
-            spacing: None,
         }
     }
 
     /// Sets the label of the [`Toggler`].
-    pub fn label(mut self, label: impl Into<String>) -> Self {
-        self.label = Some(label.into());
+    pub fn label(self, label: impl Into<String>) -> Self {
+        self.raw.label(&label.into());
         self
     }
 
     /// Sets the message to produce when the [`Toggler`] is toggled.
-    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + Send + Sync + 'static) -> Self {
+    pub fn on_toggle(mut self, message: impl Fn(bool) -> Message + 'static) -> Self {
         self.on_toggle = Some(Box::new(message));
         self
     }
 
-    pub fn size(mut self, size: impl Into<Pixels>) -> Self {
-        self.size = Some(size.into());
+    pub fn size(self, size: impl Into<Pixels>) -> Self {
+        self.raw.size(size.into().0);
         self
     }
 
-    pub fn width(mut self, width: impl Into<Length>) -> Self {
-        self.width = Some(width.into());
+    pub fn width(self, width: impl Into<Length>) -> Self {
+        self.raw.width(width.into().into());
         self
     }
 
-    pub fn text_size(mut self, size: impl Into<Pixels>) -> Self {
-        self.text_size = Some(size.into());
+    pub fn text_size(self, size: impl Into<Pixels>) -> Self {
+        self.raw.text_size(size.into().0);
         self
     }
 
-    pub fn text_line_height(mut self, line_height: impl Into<text::LineHeight>) -> Self {
-        self.text_line_height = Some(line_height.into());
+    pub fn text_line_height(self, line_height: impl Into<text::LineHeight>) -> Self {
+        self.raw.text_line_height(line_height.into().into());
         self
     }
 
-    pub fn text_alignment(mut self, alignment: impl Into<alignment::Horizontal>) -> Self {
-        self.text_alignment = Some(alignment.into());
+    pub fn text_alignment(self, alignment: impl Into<alignment::Horizontal>) -> Self {
+        self.raw.text_alignment(alignment.into().into());
         self
     }
 
-    pub fn text_shaping(mut self, shaping: impl Into<text::Shaping>) -> Self {
-        self.text_shaping = Some(shaping.into());
+    pub fn text_shaping(self, shaping: impl Into<text::Shaping>) -> Self {
+        self.raw.text_shaping(shaping.into().into());
         self
     }
 
-    pub fn text_wrapping(mut self, wrapping: impl Into<text::Wrapping>) -> Self {
-        self.text_wrapping = Some(wrapping.into());
+    pub fn text_wrapping(self, wrapping: impl Into<text::Wrapping>) -> Self {
+        self.raw.text_wrapping(wrapping.into().into());
         self
     }
 
-    pub fn spacing(mut self, spacing: impl Into<Pixels>) -> Self {
-        self.spacing = Some(spacing.into());
+    pub fn spacing(self, spacing: impl Into<Pixels>) -> Self {
+        self.raw.spacing(spacing.into().0);
         self
-    }
-}
-
-impl<Message: 'static> Widget<Message> for Toggler<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        toggler_to_element(&crate::bindings::iced::app::toggler::Toggler {
-            is_toggled: self.is_toggled,
-            label: self.label,
-            on_toggle: self.on_toggle.map(|f| {
-                create_message.add_message_func(Box::new(move |msg| {
-                    if let crate::bindings::Message::BoolType(value) = msg {
-                        Some(f(value))
-                    } else {
-                        None
-                    }
-                }))
-            }),
-            size: self.size.map(Into::into),
-            width: self.width.map(Into::into),
-            text_size: self.text_size.map(Into::into),
-            text_line_height: self.text_line_height.map(Into::into),
-            text_alignment: self.text_alignment.map(Into::into),
-            text_shaping: self.text_shaping.map(Into::into),
-            text_wrapping: self.text_wrapping.map(Into::into),
-            spacing: self.spacing.map(Into::into),
-        })
     }
 }
 
 impl<Message: 'static> From<Toggler<Message>> for Element<Message> {
     fn from(toggler: Toggler<Message>) -> Self {
-        Element::new(Box::new(toggler))
+        Element::new(move |realize| {
+            if let Some(on_toggle) = toggler.on_toggle {
+                toggler.raw.on_toggle(realize.bool_mapper(on_toggle));
+            }
+            WitToggler::into_element(toggler.raw)
+        })
     }
 }

@@ -1,22 +1,18 @@
+use std::marker::PhantomData;
+
 use iced_core::{Length, Padding, Pixels, alignment};
 
 use crate::Element;
-use crate::bindings::iced::app::element::keyed_column_to_element;
-use crate::element::Widget;
+use crate::bindings::iced::app::keyed::KeyedColumn as WitKeyedColumn;
 
-type Key = u64;
+/// The key of a keyed element.
+pub type Key = u64;
 
-/// A container that keeps the state of its children using keys.
-#[derive(Debug)]
+/// A container that keeps track of its children by key, minimizing rebuilds.
 pub struct KeyedColumn<Message> {
-    keys: Vec<Key>,
-    children: Vec<Element<Message>>,
-    spacing: Option<Pixels>,
-    padding: Option<Padding>,
-    width: Option<Length>,
-    height: Option<Length>,
-    max_width: Option<Pixels>,
-    align_items: Option<alignment::Alignment>,
+    raw: WitKeyedColumn,
+    children: Vec<(Key, Element<Message>)>,
+    _message: PhantomData<Message>,
 }
 
 impl<Message> Default for KeyedColumn<Message> {
@@ -28,104 +24,87 @@ impl<Message> Default for KeyedColumn<Message> {
 impl<Message> KeyedColumn<Message> {
     /// Creates an empty [`KeyedColumn`].
     pub fn new() -> Self {
-        Self::from_vecs(Vec::new(), Vec::new())
-    }
-
-    /// Creates a [`Column`] with the given capacity.
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self::from_vecs(Vec::with_capacity(capacity), Vec::with_capacity(capacity))
-    }
-
-    pub fn from_vecs(keys: Vec<Key>, children: Vec<Element<Message>>) -> Self {
-        KeyedColumn {
-            keys,
-            children,
-            spacing: None,
-            padding: None,
-            width: None,
-            height: None,
-            max_width: None,
-            align_items: None,
+        Self {
+            raw: WitKeyedColumn::new(),
+            children: Vec::new(),
+            _message: PhantomData,
         }
     }
 
-    /// Creates a [`KeyedColumn`] from an already allocated [`Vec`].
-    pub fn with_children(children: Vec<(Key, Element<Message>)>) -> Self {
-        let iterator = children.into_iter();
+    /// Creates a [`KeyedColumn`] with the given capacity.
+    pub fn with_capacity(_capacity: usize) -> Self {
+        Self::new()
+    }
 
-        Self::with_capacity(iterator.size_hint().0).extend(iterator)
+    /// Creates a [`KeyedColumn`] from already allocated keys and children.
+    pub fn from_vecs(keys: Vec<Key>, children: Vec<Element<Message>>) -> Self {
+        keys.into_iter()
+            .zip(children)
+            .fold(Self::new(), |column, (key, child)| column.push(key, child))
+    }
+
+    /// Creates a [`KeyedColumn`] with the given keyed children.
+    pub fn with_children(children: Vec<(Key, Element<Message>)>) -> Self {
+        Self::new().extend(children)
     }
 
     /// Adds a keyed element to the [`KeyedColumn`].
     pub fn push(mut self, key: Key, child: impl Into<Element<Message>>) -> Self {
-        let child = child.into();
-        self.keys.push(key);
-        self.children.push(child);
+        self.children.push((key, child.into()));
         self
     }
 
-    /// Extends the [`KeyedColumn`] with the given children.
-    pub fn extend(self, children: impl IntoIterator<Item = (u64, Element<Message>)>) -> Self {
+    /// Extends the [`KeyedColumn`] with the given keyed children.
+    pub fn extend(self, children: impl IntoIterator<Item = (Key, Element<Message>)>) -> Self {
         children
             .into_iter()
-            .fold(self, |col, (key, elem)| col.push(key, elem))
+            .fold(self, |column, (key, child)| column.push(key, child))
     }
 
-    pub fn spacing(mut self, spacing: impl Into<Pixels>) -> Self {
-        self.spacing = Some(spacing.into());
+    /// Sets the spacing between elements in the [`KeyedColumn`].
+    pub fn spacing(self, spacing: impl Into<Pixels>) -> Self {
+        self.raw.spacing(spacing.into().0);
         self
     }
 
-    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
-        self.padding = Some(padding.into());
+    /// Sets the padding of the [`KeyedColumn`].
+    pub fn padding(self, padding: impl Into<Padding>) -> Self {
+        self.raw.padding(padding.into().into());
         self
     }
 
-    pub fn width(mut self, width: impl Into<Length>) -> Self {
-        self.width = Some(width.into());
+    /// Sets the width of the [`KeyedColumn`].
+    pub fn width(self, width: impl Into<Length>) -> Self {
+        self.raw.width(width.into().into());
         self
     }
 
-    pub fn height(mut self, height: impl Into<Length>) -> Self {
-        self.height = Some(height.into());
+    /// Sets the height of the [`KeyedColumn`].
+    pub fn height(self, height: impl Into<Length>) -> Self {
+        self.raw.height(height.into().into());
         self
     }
 
-    pub fn max_width(mut self, max_width: impl Into<Pixels>) -> Self {
-        self.max_width = Some(max_width.into());
+    /// Sets the maximum width of the [`KeyedColumn`].
+    pub fn max_width(self, max_width: impl Into<Pixels>) -> Self {
+        self.raw.max_width(max_width.into().0);
         self
     }
 
-    pub fn align_items(mut self, alignment: impl Into<alignment::Alignment>) -> Self {
-        self.align_items = Some(alignment.into());
+    /// Sets the alignment of the elements in the [`KeyedColumn`].
+    pub fn align_items(self, align: impl Into<alignment::Alignment>) -> Self {
+        self.raw.align_items(align.into().into());
         self
-    }
-}
-
-impl<Message> Widget<Message> for KeyedColumn<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        keyed_column_to_element(crate::bindings::iced::app::element::KeyedColumn {
-            keys: self.keys,
-            children: self
-                .children
-                .into_iter()
-                .map(|e| e.as_element(create_message))
-                .collect(),
-            spacing: self.spacing.map(Into::into),
-            padding: self.padding.map(Into::into),
-            width: self.width.map(Into::into),
-            height: self.height.map(Into::into),
-            max_width: self.max_width.map(Into::into),
-            align_items: self.align_items.map(Into::into),
-        })
     }
 }
 
 impl<Message: 'static> From<KeyedColumn<Message>> for Element<Message> {
     fn from(column: KeyedColumn<Message>) -> Self {
-        Element::new(Box::new(column))
+        Element::new(move |realize| {
+            for (key, child) in column.children {
+                column.raw.push(key, child.build(realize));
+            }
+            WitKeyedColumn::into_element(column.raw)
+        })
     }
 }

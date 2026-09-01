@@ -1,10 +1,9 @@
 use iced_core::{Length, Padding};
 
-use crate::{Element, bindings::iced::app::element::button_to_element};
+use crate::Element;
+use crate::bindings::iced::app::button::Button as WitButton;
 
-/// A generic widget that produces a message when pressed.
-#[derive(Debug)]
-pub struct Button<Message: Clone> {
+pub struct Button<Message> {
     content: Element<Message>,
     width: Option<Length>,
     height: Option<Length>,
@@ -13,8 +12,7 @@ pub struct Button<Message: Clone> {
     clip: Option<bool>,
 }
 
-impl<Message: Clone> Button<Message> {
-    /// Creates a new [`Button`] with the given content.
+impl<Message: 'static> Button<Message> {
     pub fn new(element: impl Into<Element<Message>>) -> Self {
         Self {
             content: element.into(),
@@ -26,61 +24,54 @@ impl<Message: Clone> Button<Message> {
         }
     }
 
-    /// Sets the width of the [`Button`].
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = Some(width.into());
         self
     }
 
-    /// Sets the height of the [`Button`].
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = Some(height.into());
         self
     }
 
-    /// Sets the [`Padding`] of the [`Button`].
     pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
         self.padding = Some(padding.into());
         self
     }
 
-    /// Sets the message to produce when pressed.
     pub fn on_press(mut self, message: Message) -> Self {
         self.on_press = Some(message);
         self
     }
 
-    /// Sets whether the contents of the [`Button`] should be clipped on overflow.
     pub fn clip(mut self, clip: bool) -> Self {
         self.clip = Some(clip);
         self
     }
 }
 
-impl<Message: Clone> crate::element::Widget<Message> for Button<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        button_to_element(crate::bindings::iced::app::element::Button {
-            content: self.content.as_element(create_message),
-            width: self.width.map(Into::into),
-            height: self.height.map(Into::into),
-            padding: self.padding.map(Into::into),
-            on_press: self.on_press.map(|msg| create_message.add_message(msg)),
-            clip: self.clip,
+impl<Message: 'static> From<Button<Message>> for Element<Message> {
+    fn from(button: Button<Message>) -> Self {
+        Element::new(move |realize| {
+            let content = button.content.build(realize);
+            let raw = WitButton::new(content);
+            if let Some(width) = button.width {
+                raw.width(width.into());
+            }
+            if let Some(height) = button.height {
+                raw.height(height.into());
+            }
+            if let Some(padding) = button.padding {
+                raw.padding(padding.into());
+            }
+            if let Some(msg) = button.on_press {
+                raw.on_press(realize.fixed(msg));
+            }
+            if let Some(clip) = button.clip {
+                raw.clip(clip);
+            }
+            WitButton::into_element(raw)
         })
     }
 }
 
-impl<Message: Clone + 'static> From<Button<Message>> for Element<Message> {
-    fn from(button: Button<Message>) -> Self {
-        Element::new(Box::new(button))
-    }
-}
-
-// impl From<Button> for Element {
-//     fn from(value: Button) -> Self {
-//         button_to_element(value.0)
-//     }
-// }

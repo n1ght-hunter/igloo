@@ -1,64 +1,47 @@
 use iced_core::{Length, Pixels};
 
-use crate::{
-    Element,
-    bindings::iced::app::{
-        element::scrollable_to_element,
-        message::Viewport,
-        scrollable::{Anchor, Direction, Scrollbar},
-    },
-    element::Widget,
+use crate::Element;
+use crate::bindings::iced::app::message_types::Viewport;
+use crate::bindings::iced::app::scrollable::{
+    Anchor, Direction, Scrollable as WitScrollable, Scrollbar,
 };
 
 /// A scrollable container.
 pub struct Scrollable<Message> {
     content: Element<Message>,
+    direction: Option<Direction>,
     width: Option<Length>,
     height: Option<Length>,
-    on_scroll: Option<Box<dyn Fn(Viewport) -> Message + Send + Sync>>,
-    direction: Option<Direction>,
+    on_scroll: Option<Box<dyn Fn(Viewport) -> Message>>,
 }
 
-impl<Message> Scrollable<Message> {
+impl<Message: 'static> Scrollable<Message> {
+    /// Creates a new [`Scrollable`] wrapping the given content.
     pub fn new(content: impl Into<Element<Message>>) -> Self {
         Self {
             content: content.into(),
+            direction: None,
             width: None,
             height: None,
             on_scroll: None,
-
-            direction: None,
         }
     }
 
     /// Creates a new [`Scrollable`] with the given [`Direction`].
-    pub fn with_direction(
-        content: impl Into<Element<Message>>,
-        direction: impl Into<Direction>,
-    ) -> Self {
-        Scrollable {
-            content: content.into(),
-            width: None,
-            height: None,
-            on_scroll: None,
-            direction: Some(direction.into()),
-        }
+    pub fn with_direction(content: impl Into<Element<Message>>, direction: Direction) -> Self {
+        let mut this = Self::new(content);
+        this.direction = Some(direction);
+        this
     }
 
     /// Makes the [`Scrollable`] scroll horizontally, with default [`Scrollbar`] settings.
     pub fn horizontal(self) -> Self {
-        self.direction(Direction::Horizontal(Scrollbar {
-            alignment: None,
-            spacing: None,
-            width: None,
-            margin: None,
-            scroller_width: None,
-        }))
+        self.direction(Direction::Horizontal(Scrollbar::default()))
     }
 
     /// Sets the [`Direction`] of the [`Scrollable`].
-    pub fn direction(mut self, direction: impl Into<Direction>) -> Self {
-        self.direction = Some(direction.into());
+    pub fn direction(mut self, direction: Direction) -> Self {
+        self.direction = Some(direction);
         self
     }
 
@@ -75,9 +58,7 @@ impl<Message> Scrollable<Message> {
     }
 
     /// Sets a function to call when the [`Scrollable`] is scrolled.
-    ///
-    /// The function takes the [`Viewport`] of the [`Scrollable`]
-    pub fn on_scroll(mut self, f: impl Fn(Viewport) -> Message + Send + Sync + 'static) -> Self {
+    pub fn on_scroll(mut self, f: impl Fn(Viewport) -> Message + 'static) -> Self {
         self.on_scroll = Some(Box::new(f));
         self
     }
@@ -104,21 +85,13 @@ impl<Message> Scrollable<Message> {
 
     /// Sets the [`Anchor`] of the horizontal direction of the [`Scrollable`], if applicable.
     pub fn anchor_x(mut self, alignment: Anchor) -> Self {
-        let direction = if let Some(direction) = &mut self.direction {
-            direction
-        } else {
-            self.direction = Some(Direction::Vertical(Scrollbar {
-                alignment: None,
-                spacing: None,
-                width: None,
-                margin: None,
-                scroller_width: None,
-            }));
-            self.direction.as_mut().unwrap()
-        };
+        let direction = self
+            .direction
+            .get_or_insert_with(|| Direction::Vertical(Scrollbar::default()));
+
         match direction {
             Direction::Horizontal(horizontal) | Direction::Both((horizontal, _)) => {
-                horizontal.alignment = Some(alignment);
+                horizontal.anchor = Some(alignment);
             }
             Direction::Vertical(_) => {}
         }
@@ -128,21 +101,13 @@ impl<Message> Scrollable<Message> {
 
     /// Sets the [`Anchor`] of the vertical direction of the [`Scrollable`], if applicable.
     pub fn anchor_y(mut self, alignment: Anchor) -> Self {
-        let direction = if let Some(direction) = &mut self.direction {
-            direction
-        } else {
-            self.direction = Some(Direction::Vertical(Scrollbar {
-                alignment: None,
-                spacing: None,
-                width: None,
-                margin: None,
-                scroller_width: None,
-            }));
-            self.direction.as_mut().unwrap()
-        };
+        let direction = self
+            .direction
+            .get_or_insert_with(|| Direction::Vertical(Scrollbar::default()));
+
         match direction {
             Direction::Vertical(vertical) | Direction::Both((_, vertical)) => {
-                vertical.alignment = Some(alignment);
+                vertical.anchor = Some(alignment);
             }
             Direction::Horizontal(_) => {}
         }
@@ -156,18 +121,10 @@ impl<Message> Scrollable<Message> {
     /// The `spacing` provided will be used as space between the [`Scrollbar`] and the contents
     /// of the [`Scrollable`].
     pub fn spacing(mut self, new_spacing: impl Into<Pixels>) -> Self {
-        let direction = if let Some(direction) = &mut self.direction {
-            direction
-        } else {
-            self.direction = Some(Direction::Vertical(Scrollbar {
-                alignment: None,
-                spacing: None,
-                width: None,
-                margin: None,
-                scroller_width: None,
-            }));
-            self.direction.as_mut().unwrap()
-        };
+        let direction = self
+            .direction
+            .get_or_insert_with(|| Direction::Vertical(Scrollbar::default()));
+
         match direction {
             Direction::Horizontal(scrollbar) | Direction::Vertical(scrollbar) => {
                 scrollbar.spacing = Some(new_spacing.into().0);
@@ -179,31 +136,24 @@ impl<Message> Scrollable<Message> {
     }
 }
 
-impl<Message: 'static> Widget<Message> for Scrollable<Message> {
-    fn as_element(
-        self: Box<Self>,
-        create_message: &dyn crate::element::CreateMessage<Message>,
-    ) -> crate::bindings::Element {
-        scrollable_to_element(crate::bindings::iced::app::scrollable::Scrollable {
-            content: self.content.as_element(create_message),
-            width: self.width.map(Into::into),
-            height: self.height.map(Into::into),
-            direction: self.direction,
-            on_scroll: self.on_scroll.map(|f| {
-                create_message.add_message_func(Box::new(move |viewport| {
-                    if let crate::bindings::Message::Viewport(v) = viewport {
-                        Some(f(v))
-                    } else {
-                        None
-                    }
-                }))
-            }),
-        })
-    }
-}
-
 impl<Message: 'static> From<Scrollable<Message>> for Element<Message> {
     fn from(scrollable: Scrollable<Message>) -> Self {
-        Element::new(Box::new(scrollable))
+        Element::new(move |realize| {
+            let content = scrollable.content.build(realize);
+            let raw = WitScrollable::new(content);
+            if let Some(direction) = scrollable.direction {
+                raw.direction(direction);
+            }
+            if let Some(width) = scrollable.width {
+                raw.width(width.into());
+            }
+            if let Some(height) = scrollable.height {
+                raw.height(height.into());
+            }
+            if let Some(on_scroll) = scrollable.on_scroll {
+                raw.on_scroll(realize.viewport_mapper(on_scroll));
+            }
+            WitScrollable::into_element(raw)
+        })
     }
 }
