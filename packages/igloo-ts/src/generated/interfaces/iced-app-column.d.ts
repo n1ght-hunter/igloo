@@ -8,14 +8,18 @@ declare module 'iced:app/column@0.1.0' {
   export type Length = import('iced:app/length@0.1.0').Length;
   export type Padding = import('iced:app/padding@0.1.0').Padding;
   export type Horizontal = import('iced:app/alignment@0.1.0').Horizontal;
-  export interface Column {
-    elements: Array<Element>,
-    spacing?: Pixels,
-    padding?: Padding,
-    height?: Length,
-    width?: Length,
-    maxWidth?: Pixels,
-    alignX?: Horizontal,
-    clip?: boolean,
+  
+  export class Column implements Disposable {
+    constructor()
+    push(child: Element): void;
+    spacing(amount: Pixels): void;
+    padding(p: Padding): void;
+    width(w: Length): void;
+    height(h: Length): void;
+    maxWidth(max: Pixels): void;
+    alignX(align: Horizontal): void;
+    clip(clip: boolean): void;
+    static intoElement(widget: Column): Element;
+    [Symbol.dispose](): void;
   }
 }

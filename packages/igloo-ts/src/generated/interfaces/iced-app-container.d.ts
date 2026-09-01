@@ -9,22 +9,25 @@ declare module 'iced:app/container@0.1.0' {
   export type Padding = import('iced:app/padding@0.1.0').Padding;
   export type Horizontal = import('iced:app/alignment@0.1.0').Horizontal;
   export type Vertical = import('iced:app/alignment@0.1.0').Vertical;
-  export interface Container {
-    content: Element,
-    padding?: Padding,
-    width?: Length,
-    height?: Length,
-    maxWidth?: Pixels,
-    maxHeight?: Pixels,
-    centerX?: Length,
-    centerY?: Length,
-    center?: Length,
-    alignLeft?: Length,
-    alignRight?: Length,
-    alignTop?: Length,
-    alignBottom?: Length,
-    alignX?: Horizontal,
-    alignY?: Vertical,
-    clip?: boolean,
+  
+  export class Container implements Disposable {
+    constructor(content: Element)
+    padding(p: Padding): void;
+    width(w: Length): void;
+    height(h: Length): void;
+    maxWidth(max: Pixels): void;
+    maxHeight(max: Pixels): void;
+    centerX(w: Length): void;
+    centerY(h: Length): void;
+    center(l: Length): void;
+    alignLeft(w: Length): void;
+    alignRight(w: Length): void;
+    alignTop(h: Length): void;
+    alignBottom(h: Length): void;
+    alignX(align: Horizontal): void;
+    alignY(align: Vertical): void;
+    clip(clip: boolean): void;
+    static intoElement(widget: Container): Element;
+    [Symbol.dispose](): void;
   }
 }

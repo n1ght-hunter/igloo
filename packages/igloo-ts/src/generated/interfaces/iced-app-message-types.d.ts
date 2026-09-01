@@ -1,83 +1,9 @@
 declare module 'iced:app/message-types@0.1.0' {
-  export type Pane = bigint;
-  export type Split = bigint;
-  export interface Size {
-    width: number,
-    height: number,
-  }
   export interface Rectangle {
     x: number,
     y: number,
     width: number,
     height: number,
-  }
-  export interface Picked {
-    pane: Pane,
-  }
-  export interface Canceled {
-    pane: Pane,
-  }
-  /**
-   * # Variants
-   * 
-   * ## `"top"`
-   * 
-   * ## `"left"`
-   * 
-   * ## `"right"`
-   * 
-   * ## `"bottom"`
-   */
-  export type Edge = 'top' | 'left' | 'right' | 'bottom';
-  export type Region = RegionCenter | RegionEdge;
-  export interface RegionCenter {
-    tag: 'center',
-  }
-  export interface RegionEdge {
-    tag: 'edge',
-    val: Edge,
-  }
-  export type Target = TargetEdge | TargetPane;
-  export interface TargetEdge {
-    tag: 'edge',
-    val: Edge,
-  }
-  export interface TargetPane {
-    tag: 'pane',
-    val: [Pane, Region],
-  }
-  export interface Dropped {
-    pane: Pane,
-    target: Target,
-  }
-  /**
-   * An event produced during a drag and drop interaction of a PaneGrid.
-   */
-  export type DragEvent = DragEventPicked | DragEventDropped | DragEventCanceled;
-  /**
-   * A Pane was picked for dragging.
-   */
-  export interface DragEventPicked {
-    tag: 'picked',
-    val: Picked,
-  }
-  /**
-   * A Pane was dropped on top of another Pane.
-   */
-  export interface DragEventDropped {
-    tag: 'dropped',
-    val: Dropped,
-  }
-  /**
-   * A Pane was picked and then dropped outside of other Pane boundaries.
-   */
-  export interface DragEventCanceled {
-    tag: 'canceled',
-    val: Canceled,
-  }
-  export interface ResizeEvent {
-    split: Split,
-    ratio: number,
   }
   export interface AbsoluteOffset {
     x: number,

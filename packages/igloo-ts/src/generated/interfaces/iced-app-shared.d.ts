@@ -62,6 +62,10 @@ declare module 'iced:app/shared@0.1.0' {
     * Dummy function to trigger class generation in jco componentize.
     */
     noop(): void;
+    /**
+    * Wraps the element with a debug overlay of the given color.
+    */
+    explain(color: Color): Element;
     [Symbol.dispose](): void;
   }
 }

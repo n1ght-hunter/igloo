@@ -1,7 +1,20 @@
+/// <reference path="./generated/wit.d.ts" />
+
 // Core
 export { Element, toElement, type IntoElement, type ElementLike } from './element.js';
-export { MessageManager } from './message.js';
 export { createApp, type App } from './app.js';
+export {
+  Frame,
+  withFrame,
+  type Callback,
+  pushFixed,
+  pushBool,
+  pushF32,
+  pushF64,
+  pushU64,
+  pushString,
+  pushViewport,
+} from './callbacks.js';
 
 // Types
 export {
@@ -26,8 +39,6 @@ export {
   type Shaping,
   type Wrapping,
   type TextAlignment,
-  type MessageId,
-  type Message,
 } from './types/index.js';
 
 // Widgets
@@ -61,13 +72,9 @@ export {
   Grid,
   Float,
   KeyedColumn,
-  // Advanced
-  Table,
-  PaneGrid,
   // Types from widgets
   type Rotation,
   type Direction,
   type Scrollbar,
   type Translation,
-  type Key,
 } from './widgets/index.js';

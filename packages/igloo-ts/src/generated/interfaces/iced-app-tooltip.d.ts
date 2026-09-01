@@ -16,12 +16,13 @@ declare module 'iced:app/tooltip@0.1.0' {
    * ## `"follow-cursor"`
    */
   export type Position = 'top' | 'bottom' | 'left' | 'right' | 'follow-cursor';
-  export interface Tooltip {
-    content: Element,
-    tooltip: Element,
-    position: Position,
-    gap?: Pixels,
-    padding?: Pixels,
-    snapWithinViewport?: boolean,
+  
+  export class Tooltip implements Disposable {
+    constructor(content: Element, tooltip: Element, position: Position)
+    gap(g: Pixels): void;
+    padding(p: Pixels): void;
+    snapWithinViewport(snap: boolean): void;
+    static intoElement(widget: Tooltip): Element;
+    [Symbol.dispose](): void;
   }
 }

@@ -1,5 +1,4 @@
-import type { Svg as WitSvg } from 'iced:app/svg@0.1.0';
-import { svgToElement } from 'iced:app/element@0.1.0';
+import { Svg as WitSvg } from 'iced:app/svg@0.1.0';
 import { Element, type IntoElement } from '../element.js';
 
 /**
@@ -12,10 +11,10 @@ import { Element, type IntoElement } from '../element.js';
  * ```
  */
 export class Svg implements IntoElement {
-  private record: WitSvg;
+  private raw: WitSvg;
 
   private constructor(path: string) {
-    this.record = { path };
+    this.raw = new WitSvg(path);
   }
 
   /** Create a new SVG builder with the given file path */
@@ -25,6 +24,6 @@ export class Svg implements IntoElement {
 
   /** Convert to Element */
   intoElement(): Element {
-    return new Element(svgToElement(this.record));
+    return new Element(WitSvg.intoElement(this.raw));
   }
 }

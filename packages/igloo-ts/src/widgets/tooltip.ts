@@ -1,8 +1,7 @@
-import type { Tooltip as WitTooltip } from 'iced:app/tooltip@0.1.0';
+import { Tooltip as WitTooltip } from 'iced:app/tooltip@0.1.0';
+import type { Position } from 'iced:app/tooltip@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
-import { tooltipToElement } from 'iced:app/element@0.1.0';
 import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
-import { Position } from '../types/enums.js';
 
 /**
  * Builder for creating Tooltip widgets.
@@ -13,15 +12,15 @@ import { Position } from '../types/enums.js';
  * const withTooltip = Tooltip.new(
  *   Button.new(Text.new('?')),
  *   Text.new('Help information'),
- *   Position.Top
+ *   'top',
  * );
  * ```
  */
 export class Tooltip implements IntoElement {
-  private record: WitTooltip;
+  private raw: WitTooltip;
 
   private constructor(content: ElementLike, tooltip: ElementLike, position: Position) {
-    this.record = { content: toElement(content).inner, tooltip: toElement(tooltip).inner, position };
+    this.raw = new WitTooltip(toElement(content).inner, toElement(tooltip).inner, position);
   }
 
   /**
@@ -36,24 +35,24 @@ export class Tooltip implements IntoElement {
 
   /** Set the gap between content and tooltip */
   gap(gap: Pixels): this {
-    this.record.gap = gap;
+    this.raw.gap(gap);
     return this;
   }
 
   /** Set the tooltip padding */
   padding(padding: Pixels): this {
-    this.record.padding = padding;
+    this.raw.padding(padding);
     return this;
   }
 
   /** Enable or disable snapping within viewport */
   snapWithinViewport(snap: boolean = true): this {
-    this.record.snapWithinViewport = snap;
+    this.raw.snapWithinViewport(snap);
     return this;
   }
 
   /** Convert to Element */
   intoElement(): Element {
-    return new Element(tooltipToElement(this.record));
+    return new Element(WitTooltip.intoElement(this.raw));
   }
 }

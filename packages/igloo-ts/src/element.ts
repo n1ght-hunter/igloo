@@ -1,5 +1,4 @@
 import type { Element as WitElement, Color } from 'iced:app/shared@0.1.0';
-import { explain } from 'iced:app/element@0.1.0';
 
 /**
  * Interface for types that can be converted to an Element.
@@ -46,6 +45,6 @@ export class Element implements IntoElement {
    * Useful for visualizing element bounds during development.
    */
   explain(color: Color): Element {
-    return new Element(explain(this.inner, color));
+    return new Element(this.inner.explain(color));
   }
 }

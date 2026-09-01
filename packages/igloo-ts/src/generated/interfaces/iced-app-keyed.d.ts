@@ -5,21 +5,20 @@
 declare module 'iced:app/keyed@0.1.0' {
   export type Pixels = import('iced:app/shared@0.1.0').Pixels;
   export type Element = import('iced:app/shared@0.1.0').Element;
-  export type Alignment = import('iced:app/alignment@0.1.0').Alignment;
-  export type Padding = import('iced:app/padding@0.1.0').Padding;
   export type Length = import('iced:app/length@0.1.0').Length;
-  export type Key = bigint;
-  /**
-   * A container that keeps the state of its children using keys.
-   */
-  export interface KeyedColumn {
-    keys: BigUint64Array,
-    children: Array<Element>,
-    spacing?: Pixels,
-    padding?: Padding,
-    width?: Length,
-    height?: Length,
-    maxWidth?: Pixels,
-    alignItems?: Alignment,
+  export type Padding = import('iced:app/padding@0.1.0').Padding;
+  export type Alignment = import('iced:app/alignment@0.1.0').Alignment;
+  
+  export class KeyedColumn implements Disposable {
+    constructor()
+    push(key: bigint, child: Element): void;
+    spacing(amount: Pixels): void;
+    padding(p: Padding): void;
+    width(w: Length): void;
+    height(h: Length): void;
+    maxWidth(amount: Pixels): void;
+    alignItems(align: Alignment): void;
+    static intoElement(widget: KeyedColumn): Element;
+    [Symbol.dispose](): void;
   }
 }

@@ -14,21 +14,12 @@ declare module 'iced:app/float@0.1.0' {
      */
     y: number,
   }
-  /**
-   * Displays floating content on top of the application.
-   */
-  export interface Float {
-    /**
-     * The content of the [`Float`].
-     */
-    content: Element,
-    /**
-     * The optional scale to apply to the content.
-     */
-    scale?: number,
-    /**
-     * The optional translation applied to the content.
-     */
-    translation?: Translation,
+  
+  export class Float implements Disposable {
+    constructor(content: Element)
+    scale(s: number): void;
+    translation(t: Translation): void;
+    static intoElement(widget: Float): Element;
+    [Symbol.dispose](): void;
   }
 }

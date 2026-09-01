@@ -1,6 +1,5 @@
-import type { Grid as WitGrid } from 'iced:app/grid@0.1.0';
+import { Grid as WitGrid } from 'iced:app/grid@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
-import { gridToElement } from 'iced:app/element@0.1.0';
 import { Element, toElement, type ElementLike, type IntoElement } from '../element.js';
 
 /**
@@ -13,16 +12,14 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  *   .columns(3)
  *   .spacing(10)
  *   .push(Text.new('Cell 1'))
- *   .push(Text.new('Cell 2'))
- *   .push(Text.new('Cell 3'))
- *   .push(Text.new('Cell 4'));
+ *   .push(Text.new('Cell 2'));
  * ```
  */
 export class Grid implements IntoElement {
-  private record: WitGrid;
+  private raw: WitGrid;
 
   private constructor() {
-    this.record = { elements: [] };
+    this.raw = new WitGrid();
   }
 
   /** Create a new empty Grid builder */
@@ -32,57 +29,55 @@ export class Grid implements IntoElement {
 
   /** Create a Grid with the given elements */
   static with(elements: ElementLike[]): Grid {
-    const grid = new Grid();
-    grid.record.elements = elements.map((e) => toElement(e).inner);
-    return grid;
+    return new Grid().extend(elements);
   }
 
   /** Add an element to the grid */
   push(element: ElementLike): this {
-    this.record.elements.push(toElement(element).inner);
+    this.raw.push(toElement(element).inner);
     return this;
   }
 
   /** Add multiple elements */
   extend(elements: ElementLike[]): this {
     for (const element of elements) {
-      this.record.elements.push(toElement(element).inner);
+      this.raw.push(toElement(element).inner);
     }
     return this;
   }
 
   /** Set the spacing between cells */
   spacing(spacing: Pixels): this {
-    this.record.spacing = spacing;
+    this.raw.spacing(spacing);
     return this;
   }
 
   /** Set the grid width in pixels */
   width(width: Pixels): this {
-    this.record.width = width;
+    this.raw.width(width);
     return this;
   }
 
   /** Set the grid height in pixels */
   height(height: Pixels): this {
-    this.record.height = height;
+    this.raw.height(height);
     return this;
   }
 
   /** Set the number of columns */
   columns(columns: number | bigint): this {
-    this.record.columns = BigInt(columns);
+    this.raw.columns(BigInt(columns));
     return this;
   }
 
   /** Set fluid column width (columns resize based on content) */
   fluid(width: Pixels): this {
-    this.record.fluid = width;
+    this.raw.fluid(width);
     return this;
   }
 
   /** Convert to Element */
   intoElement(): Element {
-    return new Element(gridToElement(this.record));
+    return new Element(WitGrid.intoElement(this.raw));
   }
 }

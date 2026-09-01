@@ -7,9 +7,9 @@
     "igloo-ts": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "rolldown": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^7"
   }
 }

@@ -10,8 +10,7 @@
     "declarationDir": "./dist",
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["ESNext"],
-    "types": ["bun-types"]
+    "lib": ["ESNext"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

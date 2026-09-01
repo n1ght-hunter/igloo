@@ -1,17 +1,11 @@
 /// <reference path="./iced-app-shared.d.ts" />
 declare module 'iced:app/rule@0.1.0' {
   export type Pixels = import('iced:app/shared@0.1.0').Pixels;
-  /**
-   * A horizontal or vertical rule used for dividing content.
-   */
-  export interface Rule {
-    /**
-     * Whether the rule is horizontal.
-     */
-    isHorizontal: boolean,
-    /**
-     * Thickness of the rule in pixels.
-     */
-    thickness: Pixels,
+  export type Element = import('iced:app/shared@0.1.0').Element;
+  
+  export class Rule implements Disposable {
+    constructor(isHorizontal: boolean, thickness: Pixels)
+    static intoElement(widget: Rule): Element;
+    [Symbol.dispose](): void;
   }
 }

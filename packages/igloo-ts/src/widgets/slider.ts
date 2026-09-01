@@ -1,10 +1,9 @@
-import type { Slider as WitSlider } from 'iced:app/slider@0.1.0';
+import { Slider as WitSlider } from 'iced:app/slider@0.1.0';
+import type { CallbackId } from 'iced:app/callbacks@0.1.0';
 import type { Length } from 'iced:app/length@0.1.0';
 import type { Pixels } from 'iced:app/shared@0.1.0';
-import type { Message } from 'iced:app/message@0.1.0';
-import { sliderToElement } from 'iced:app/element@0.1.0';
 import { Element, type IntoElement } from '../element.js';
-import { MessageManager } from '../message.js';
+import { pushF32, pushFixed } from '../callbacks.js';
 
 /**
  * Builder for creating horizontal Slider widgets.
@@ -12,85 +11,72 @@ import { MessageManager } from '../message.js';
  *
  * @example
  * ```typescript
- * const slider = Slider.new(
- *   0, 100, state.volume,
- *   messages,
- *   (msg) => {
- *     if (msg.tag === 'f32-type') {
- *       return { type: 'volumeChanged', value: msg.val };
- *     }
- *     return { type: 'noop' };
- *   }
- * ).step(1);
+ * const slider = Slider.new(0, 100, state.volume, (value) => ({
+ *   type: 'volumeChanged',
+ *   value,
+ * })).step(1);
  * ```
  *
  * @typeParam Msg - The application message type
  */
 export class Slider<Msg> implements IntoElement {
-  private record: WitSlider;
+  private raw: WitSlider;
 
-  private constructor(rangeStart: number, rangeEnd: number, value: number, onChange: bigint) {
-    this.record = { rangeStart, rangeEnd, value, onChange };
+  private constructor(rangeStart: number, rangeEnd: number, value: number, onChange: CallbackId) {
+    this.raw = new WitSlider(rangeStart, rangeEnd, value, onChange);
   }
 
   /**
    * Create a new Slider builder.
-   * @param rangeStart - Start of the value range
-   * @param rangeEnd - End of the value range
-   * @param value - Current value
-   * @param messages - MessageManager instance
-   * @param onChange - Handler called when value changes (receives f32-type Message)
+   * @param onChange - Handler called with the new value while dragging
    */
   static new<Msg>(
     rangeStart: number,
     rangeEnd: number,
     value: number,
-    messages: MessageManager<Msg>,
-    onChange: (message: Message) => Msg
+    onChange: (value: number) => Msg,
   ): Slider<Msg> {
-    return new Slider(rangeStart, rangeEnd, value, messages.register(onChange));
+    return new Slider(rangeStart, rangeEnd, value, pushF32(onChange));
   }
 
   /** Set the default value (value to reset to on double-click) */
   default(defaultValue: number): this {
-    this.record.default = defaultValue;
+    this.raw.default(defaultValue);
     return this;
   }
 
-  /**
-   * Set the message to emit when the slider is released.
-   */
-  onRelease<M extends Msg>(messages: MessageManager<M>, handler: () => M): Slider<M> {
-    this.record.onRelease = messages.on(handler);
-    return this as unknown as Slider<M>;
+  /** Set the message to emit when the slider is released */
+  onRelease(msg: () => Msg): this {
+    this.raw.onRelease(pushFixed(msg()));
+    return this;
   }
 
   /** Set the width */
   width(width: Length): this {
-    this.record.width = width;
+    this.raw.width(width);
     return this;
   }
 
   /** Set the height in pixels */
   height(height: Pixels): this {
-    this.record.height = height;
+    this.raw.height(height);
     return this;
   }
 
   /** Set the step size for normal dragging */
   step(step: number): this {
-    this.record.step = step;
+    this.raw.step(step);
     return this;
   }
 
   /** Set the step size when holding shift */
   shiftStep(step: number): this {
-    this.record.shiftStep = step;
+    this.raw.shiftStep(step);
     return this;
   }
 
   /** Convert to Element */
   intoElement(): Element {
-    return new Element(sliderToElement(this.record));
+    return new Element(WitSlider.intoElement(this.raw));
   }
 }
