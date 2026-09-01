@@ -8,24 +8,48 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import length
 from ..imports import text
+from ..imports import length
+from ..imports import shared
 
-
-@dataclass
 class Checkbox:
     """
     A box that can be checked.
     """
+    
+    def __init__(self, is_checked: bool) -> None:
+        raise NotImplementedError
 
-    is_checked: bool
-    label: Optional[str]
-    on_toggle: Optional[int]
-    size: Optional[float]
-    width: Optional[length.Length]
-    height: Optional[length.Length]
-    spacing: Optional[float]
-    text_size: Optional[float]
-    text_line_height: Optional[text.LineHeight]
-    text_wrapping: Optional[text.Wrapping]
-    text_shaping: Optional[text.Shaping]
+    def label(self, label: str) -> None:
+        raise NotImplementedError
+    def on_toggle(self, mapper: int) -> None:
+        raise NotImplementedError
+    def size(self, s: float) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def spacing(self, s: float) -> None:
+        raise NotImplementedError
+    def text_size(self, s: float) -> None:
+        raise NotImplementedError
+    def text_line_height(self, lh: text.LineHeight) -> None:
+        raise NotImplementedError
+    def text_wrapping(self, w: text.Wrapping) -> None:
+        raise NotImplementedError
+    def text_shaping(self, s: text.Shaping) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

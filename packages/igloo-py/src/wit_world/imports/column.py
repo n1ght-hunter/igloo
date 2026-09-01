@@ -13,14 +13,39 @@ from ..imports import padding
 from ..imports import alignment
 from ..imports import shared
 
-
-@dataclass
 class Column:
-    elements: List[shared.Element]
-    spacing: Optional[float]
-    padding: Optional[padding.Padding]
-    height: Optional[length.Length]
-    width: Optional[length.Length]
-    max_width: Optional[float]
-    align_x: Optional[alignment.Horizontal]
-    clip: Optional[bool]
+    
+    def __init__(self) -> None:
+        raise NotImplementedError
+
+    def push(self, child: shared.Element) -> None:
+        raise NotImplementedError
+    def spacing(self, amount: float) -> None:
+        raise NotImplementedError
+    def padding(self, p: padding.Padding) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def max_width(self, max: float) -> None:
+        raise NotImplementedError
+    def align_x(self, align: alignment.Horizontal) -> None:
+        raise NotImplementedError
+    def clip(self, clip: bool) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

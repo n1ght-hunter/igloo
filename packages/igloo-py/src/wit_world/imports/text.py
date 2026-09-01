@@ -14,36 +14,32 @@ from ..imports import alignment
 
 
 @dataclass
-class Alignment_Default:
+class TextAlignment_Default:
     pass
 
 
 @dataclass
-class Alignment_Left:
+class TextAlignment_Left:
     pass
 
 
 @dataclass
-class Alignment_Center:
+class TextAlignment_Center:
     pass
 
 
 @dataclass
-class Alignment_Right:
+class TextAlignment_Right:
     pass
 
 
 @dataclass
-class Alignment_Justified:
+class TextAlignment_Justified:
     pass
 
 
-Alignment = Union[
-    Alignment_Default, Alignment_Left, Alignment_Center, Alignment_Right, Alignment_Justified
-]
-"""
-The horizontal alignment of some text.
-"""
+TextAlignment = Union[TextAlignment_Default, TextAlignment_Left, TextAlignment_Center, TextAlignment_Right, TextAlignment_Justified]
+
 
 
 @dataclass
@@ -57,42 +53,52 @@ class LineHeight_Absolute:
 
 
 LineHeight = Union[LineHeight_Relative, LineHeight_Absolute]
-"""
-The height of a line of text in a paragraph.
-"""
 
 
 class Shaping(Enum):
-    """
-    The shaping strategy of some text.
-    """
-
     BASIC = 0
     ADVANCED = 1
     AUTO = 2
 
-
 class Wrapping(Enum):
-    """
-    The wrapping strategy of some text.
-    """
-
     NONE = 0
     WORD = 1
     GLYPH = 2
     WORD_OR_GLYPH = 3
 
-
-@dataclass
 class Text:
-    text: str
-    size: Optional[float]
-    line_height: Optional[LineHeight]
-    width: Optional[length.Length]
-    height: Optional[length.Length]
-    center: Optional[bool]
-    align_x: Optional[Alignment]
-    align_y: Optional[alignment.Vertical]
-    shaping: Optional[Shaping]
-    wrapping: Optional[Wrapping]
-    color: Optional[shared.Color]
+    
+    def __init__(self, content: str) -> None:
+        raise NotImplementedError
+
+    def size(self, s: float) -> None:
+        raise NotImplementedError
+    def line_height(self, lh: LineHeight) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def center(self) -> None:
+        raise NotImplementedError
+    def align_x(self, align: TextAlignment) -> None:
+        raise NotImplementedError
+    def align_y(self, align: alignment.Vertical) -> None:
+        raise NotImplementedError
+    def color(self, c: shared.Color) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

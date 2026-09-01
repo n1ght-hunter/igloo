@@ -10,7 +10,6 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 
-
 class Position(Enum):
     TOP = 0
     BOTTOM = 1
@@ -18,12 +17,29 @@ class Position(Enum):
     RIGHT = 3
     FOLLOW_CURSOR = 4
 
-
-@dataclass
 class Tooltip:
-    content: shared.Element
-    tooltip: shared.Element
-    position: Position
-    gap: Optional[float]
-    padding: Optional[float]
-    snap_within_viewport: Optional[bool]
+    
+    def __init__(self, content: shared.Element, tooltip: shared.Element, position: Position) -> None:
+        raise NotImplementedError
+
+    def gap(self, g: float) -> None:
+        raise NotImplementedError
+    def padding(self, p: float) -> None:
+        raise NotImplementedError
+    def snap_within_viewport(self, snap: bool) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

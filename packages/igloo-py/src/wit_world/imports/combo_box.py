@@ -8,26 +8,47 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
+from ..imports import shared
 from ..imports import padding
 from ..imports import length
 from ..imports import text
 
-
-@dataclass
 class ComboBox:
     """
     A widget allowing selection from a list of options.
     """
+    
+    def __init__(self, options: List[str], placeholder: str, selected: Optional[str], on_selected: int) -> None:
+        raise NotImplementedError
 
-    options: List[str]
-    placeholder: str
-    selected: Optional[str]
-    on_selected: int
-    on_input: Optional[int]
-    on_option_hovered: Optional[int]
-    on_open: Optional[int]
-    on_close: Optional[int]
-    padding: Optional[padding.Padding]
-    size: Optional[float]
-    line_height: Optional[text.LineHeight]
-    width: Optional[length.Length]
+    def on_input(self, mapper: int) -> None:
+        raise NotImplementedError
+    def on_option_hovered(self, mapper: int) -> None:
+        raise NotImplementedError
+    def on_open(self, msg: int) -> None:
+        raise NotImplementedError
+    def on_close(self, msg: int) -> None:
+        raise NotImplementedError
+    def padding(self, p: padding.Padding) -> None:
+        raise NotImplementedError
+    def size(self, s: float) -> None:
+        raise NotImplementedError
+    def line_height(self, lh: text.LineHeight) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

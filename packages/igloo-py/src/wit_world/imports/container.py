@@ -8,27 +8,58 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
-from ..imports import alignment
 from ..imports import length
 from ..imports import shared
+from ..imports import padding
+from ..imports import alignment
 
-
-@dataclass
 class Container:
-    content: shared.Element
-    padding: Optional[padding.Padding]
-    width: Optional[length.Length]
-    height: Optional[length.Length]
-    max_width: Optional[float]
-    max_height: Optional[float]
-    center_x: Optional[length.Length]
-    center_y: Optional[length.Length]
-    center: Optional[length.Length]
-    align_left: Optional[length.Length]
-    align_right: Optional[length.Length]
-    align_top: Optional[length.Length]
-    align_bottom: Optional[length.Length]
-    align_x: Optional[alignment.Horizontal]
-    align_y: Optional[alignment.Vertical]
-    clip: Optional[bool]
+    
+    def __init__(self, content: shared.Element) -> None:
+        raise NotImplementedError
+
+    def padding(self, p: padding.Padding) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def max_width(self, max: float) -> None:
+        raise NotImplementedError
+    def max_height(self, max: float) -> None:
+        raise NotImplementedError
+    def center_x(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def center_y(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def center(self, l: length.Length) -> None:
+        raise NotImplementedError
+    def align_left(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def align_right(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def align_top(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def align_bottom(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def align_x(self, align: alignment.Horizontal) -> None:
+        raise NotImplementedError
+    def align_y(self, align: alignment.Vertical) -> None:
+        raise NotImplementedError
+    def clip(self, clip: bool) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

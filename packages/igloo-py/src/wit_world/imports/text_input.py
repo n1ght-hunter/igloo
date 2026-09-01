@@ -8,26 +8,50 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
-from ..imports import text
-from ..imports import alignment
+from ..imports import shared
 from ..imports import length
+from ..imports import alignment
+from ..imports import text
+from ..imports import padding
 
-
-@dataclass
 class TextInput:
     """
     A field that can be filled with text.
     """
+    
+    def __init__(self, placeholder: str, value: str) -> None:
+        raise NotImplementedError
 
-    placeholder: str
-    value: str
-    secure: Optional[bool]
-    on_input: Optional[int]
-    on_submit: Optional[int]
-    on_paste: Optional[int]
-    width: Optional[length.Length]
-    padding: Optional[padding.Padding]
-    size: Optional[float]
-    line_height: Optional[text.LineHeight]
-    align_x: Optional[alignment.Horizontal]
+    def secure(self, secure: bool) -> None:
+        raise NotImplementedError
+    def on_input(self, mapper: int) -> None:
+        raise NotImplementedError
+    def on_submit(self, msg: int) -> None:
+        raise NotImplementedError
+    def on_paste(self, mapper: int) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def padding(self, p: padding.Padding) -> None:
+        raise NotImplementedError
+    def size(self, s: float) -> None:
+        raise NotImplementedError
+    def line_height(self, lh: text.LineHeight) -> None:
+        raise NotImplementedError
+    def align_x(self, a: alignment.Horizontal) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

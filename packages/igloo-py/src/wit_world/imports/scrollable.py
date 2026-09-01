@@ -11,18 +11,19 @@ from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 from ..imports import length
 
-
 class Anchor(Enum):
+    """
+    The anchor of the scroller of a scrollable relative to its viewport.
+    """
     START = 0
     END = 1
-
 
 @dataclass
 class Scrollbar:
     width: Optional[float]
     margin: Optional[float]
     scroller_width: Optional[float]
-    alignment: Optional[Anchor]
+    anchor: Optional[Anchor]
     spacing: Optional[float]
 
 
@@ -44,10 +45,31 @@ class Direction_Both:
 Direction = Union[Direction_Vertical, Direction_Horizontal, Direction_Both]
 
 
-@dataclass
 class Scrollable:
-    content: shared.Element
-    width: Optional[length.Length]
-    height: Optional[length.Length]
-    on_scroll: Optional[int]
-    direction: Optional[Direction]
+    
+    def __init__(self, content: shared.Element) -> None:
+        raise NotImplementedError
+
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def direction(self, d: Direction) -> None:
+        raise NotImplementedError
+    def on_scroll(self, mapper: int) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

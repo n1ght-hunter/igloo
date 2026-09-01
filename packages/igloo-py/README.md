@@ -12,51 +12,44 @@ uv add igloo-py
 
 ```python
 from igloo_py import (
-    create_app,
+    App,
+    igloo_app,
     Text,
     Column,
     Button,
     Length,
     Padding,
-    MessageManager,
     ElementLike,
 )
 
 
-class CounterApp:
-    def init(self) -> int:
-        return 0
+@igloo_app
+class CounterApp(App[str]):
+    def __init__(self) -> None:
+        self.count = 0
 
-    def update(self, state: int, msg: str) -> int:
+    def update(self, msg: str) -> None:
         if msg == "increment":
-            return state + 1
+            self.count += 1
         elif msg == "decrement":
-            return state - 1
-        return state
+            self.count -= 1
 
-    def view(self, state: int, messages: MessageManager[str]) -> ElementLike:
+    def view(self) -> ElementLike:
         return Column.new().spacing(10).push(
-            Text.new(f"Count: {state}").size(24)
+            Text.new(f"Count: {self.count}").size(24)
         ).push(
-            Button.new(Text.new("+")).on_press(messages, lambda: "increment")
+            Button.new(Text.new("+")).on_press(lambda: "increment")
         ).push(
-            Button.new(Text.new("-")).on_press(messages, lambda: "decrement")
+            Button.new(Text.new("-")).on_press(lambda: "decrement")
         )
-
-
-app_exports = create_app(CounterApp())
-
-# Export for WIT interface
-update = app_exports.update
-view = app_exports.view
 ```
 
 ## Building
 
 ```bash
 # Generate WIT bindings
-uv run componentize-py --wit-path ../../wit bindings src/igloo_py/generated
+mise run gen
 
 # Build WASM component
-uv run componentize-py --wit-path ../../wit --world app --output app.wasm src/app
+mise run //plugins/python:build
 ```

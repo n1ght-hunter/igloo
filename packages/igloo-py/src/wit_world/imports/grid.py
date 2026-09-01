@@ -10,16 +10,38 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 
-
-@dataclass
 class Grid:
     """
     A container that arranges its contents in a grid.
     """
+    
+    def __init__(self) -> None:
+        raise NotImplementedError
 
-    elements: List[shared.Element]
-    spacing: Optional[float]
-    width: Optional[float]
-    height: Optional[float]
-    columns: Optional[int]
-    fluid: Optional[float]
+    def push(self, child: shared.Element) -> None:
+        raise NotImplementedError
+    def spacing(self, amount: float) -> None:
+        raise NotImplementedError
+    def width(self, w: float) -> None:
+        raise NotImplementedError
+    def height(self, h: float) -> None:
+        raise NotImplementedError
+    def columns(self, columns: int) -> None:
+        raise NotImplementedError
+    def fluid(self, amount: float) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

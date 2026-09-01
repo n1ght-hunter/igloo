@@ -8,12 +8,32 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
+from ..imports import shared
 
-
-@dataclass
 class Markdown:
     """
     A widget that can parse and display Markdown.
     """
+    
+    def __init__(self, content: str, on_link_click: int) -> None:
+        """
+        Creates a new [`Markdown`] widget from the given source, mapping
+        clicked link URLs to a message through `on-link-click`.
+        """
+        raise NotImplementedError
 
-    content: str
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

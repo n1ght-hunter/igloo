@@ -19,9 +19,7 @@ from igloo_py import (
     Scrollable,
     Length,
     Padding,
-    MessageManager,
     ElementLike,
-    Message as WitMessage,
 )
 
 
@@ -70,13 +68,6 @@ class ClearCompleted:
 Msg = InputChanged | AddTask | ToggleTask | DeleteTask | SetFilter | ClearCompleted
 
 
-def get_string(msg: WitMessage) -> str | None:
-    """Extract string from message."""
-    if isinstance(msg, dict) and msg.get("tag") == "string-type":
-        return msg.get("val")
-    return None
-
-
 @igloo_app
 class TaskManagerApp(App[Msg]):
     """Task Manager application."""
@@ -98,7 +89,9 @@ class TaskManagerApp(App[Msg]):
 
             case AddTask():
                 if self.input_text.strip():
-                    self.tasks.append(Task(self.next_id, self.input_text.strip(), False))
+                    self.tasks.append(
+                        Task(self.next_id, self.input_text.strip(), False)
+                    )
                     self.input_text = ""
                     self.next_id += 1
 
@@ -117,7 +110,7 @@ class TaskManagerApp(App[Msg]):
             case ClearCompleted():
                 self.tasks = [t for t in self.tasks if not t.completed]
 
-    def view(self, messages: MessageManager[Msg]) -> ElementLike:
+    def view(self) -> ElementLike:
         completed_count = sum(1 for t in self.tasks if t.completed)
         total_count = len(self.tasks)
         progress = completed_count / total_count if total_count > 0 else 0.0
@@ -140,12 +133,12 @@ class TaskManagerApp(App[Msg]):
                 .push(
                     Checkbox.new(task.completed)
                     .label(task.text)
-                    .on_toggle(messages, lambda tid=task_id: ToggleTask(tid))
+                    .on_toggle(lambda _checked, tid=task_id: ToggleTask(tid))
                 )
                 .push(Space.new().width(Length.fill()))
                 .push(
                     Button.new(Text.new("×").size(16)).on_press(
-                        messages, lambda tid=task_id: DeleteTask(tid)
+                        lambda tid=task_id: DeleteTask(tid)
                     )
                 )
             )
@@ -154,7 +147,7 @@ class TaskManagerApp(App[Msg]):
         def filter_button(label: str, f: FilterType) -> ElementLike:
             is_active = self.filter == f
             return Button.new(Text.new(label).size(14 if is_active else 12)).on_press(
-                messages, lambda filter_val=f: SetFilter(filter_val)
+                lambda filter_val=f: SetFilter(filter_val)
             )
 
         # Empty state message
@@ -181,9 +174,9 @@ class TaskManagerApp(App[Msg]):
                     Column.new()
                     .spacing(4)
                     .push(
-                        Text.new(f"Progress: {completed_count}/{total_count} tasks completed").size(
-                            14
-                        )
+                        Text.new(
+                            f"Progress: {completed_count}/{total_count} tasks completed"
+                        ).size(14)
                     )
                     .push(ProgressBar.new(0, 1, progress).length(Length.fill()))
                 )
@@ -194,14 +187,14 @@ class TaskManagerApp(App[Msg]):
                     .spacing(10)
                     .push(
                         TextInput.new("Add a new task...", self.input_text)
-                        .on_input(messages, lambda m: InputChanged(get_string(m) or ""))
-                        .on_submit(messages, lambda: AddTask())
+                        .on_input(lambda value: InputChanged(value))
+                        .on_submit(lambda: AddTask())
                         .width(Length.fill())
                         .padding(Padding.all(8))
                     )
                     .push(
                         Button.new(Text.new("Add"))
-                        .on_press(messages, lambda: AddTask())
+                        .on_press(lambda: AddTask())
                         .padding(Padding.xy(16, 8))
                     )
                 )
@@ -215,13 +208,17 @@ class TaskManagerApp(App[Msg]):
                     .push(Space.new().width(Length.fill()))
                     .push(
                         Button.new(Text.new("Clear Completed")).on_press(
-                            messages, lambda: ClearCompleted()
+                            lambda: ClearCompleted()
                         )
                     )
                 )
                 .push(Rule.horizontal(1))
                 # Task list in scrollable container
-                .push(Scrollable.new(task_list.padding(Padding.all(4))).height(Length.fixed(300)))
+                .push(
+                    Scrollable.new(task_list.padding(Padding.all(4))).height(
+                        Length.fixed(300)
+                    )
+                )
                 # Empty state message
                 .push(empty_widget)
             )
@@ -230,4 +227,4 @@ class TaskManagerApp(App[Msg]):
         )
 
 
-# WitWorld and Message are automatically exported by @igloo_app decorator
+# AppInstance and Application are automatically exported by @igloo_app.

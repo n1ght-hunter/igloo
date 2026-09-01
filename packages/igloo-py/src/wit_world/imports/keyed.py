@@ -8,23 +8,42 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
-from ..imports import shared
 from ..imports import length
 from ..imports import alignment
+from ..imports import padding
+from ..imports import shared
 
-
-@dataclass
 class KeyedColumn:
-    """
-    A container that keeps the state of its children using keys.
-    """
+    
+    def __init__(self) -> None:
+        raise NotImplementedError
 
-    keys: List[int]
-    children: List[shared.Element]
-    spacing: Optional[float]
-    padding: Optional[padding.Padding]
-    width: Optional[length.Length]
-    height: Optional[length.Length]
-    max_width: Optional[float]
-    align_items: Optional[alignment.Alignment]
+    def push(self, key: int, child: shared.Element) -> None:
+        raise NotImplementedError
+    def spacing(self, amount: float) -> None:
+        raise NotImplementedError
+    def padding(self, p: padding.Padding) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def max_width(self, amount: float) -> None:
+        raise NotImplementedError
+    def align_items(self, align: alignment.Alignment) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

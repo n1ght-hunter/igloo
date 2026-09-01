@@ -8,13 +8,28 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
+from ..imports import shared
 
-
-@dataclass
 class Rule:
     """
     A horizontal or vertical rule used for dividing content.
     """
+    
+    def __init__(self, is_horizontal: bool, thickness: float) -> None:
+        raise NotImplementedError
 
-    is_horizontal: bool
-    thickness: float
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

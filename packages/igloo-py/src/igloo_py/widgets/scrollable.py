@@ -1,17 +1,21 @@
 """Scrollable widget builder."""
 
-from typing import Any, TypeVar, Callable, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, TypeVar
 
-from ..element import Element, ElementLike, to_element, IntoElement
-from ..message import MessageManager, Message
+from wit_world.imports.message_types import Viewport
 from wit_world.imports.scrollable import (
-    Scrollable as WitScrollable,
-    Direction_Vertical,
-    Direction_Horizontal,
     Direction_Both,
+    Direction_Horizontal,
+    Direction_Vertical,
     Scrollbar,
 )
-from wit_world.imports.element import scrollable_to_element
+from wit_world.imports.scrollable import (
+    Scrollable as WitScrollable,
+)
+
+from ..callbacks import push_viewport
+from ..element import Element, ElementLike, IntoElement, to_element
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -34,11 +38,7 @@ class Scrollable(IntoElement):
     """
 
     def __init__(self, content: ElementLike) -> None:
-        self._content = to_element(content).inner
-        self._width: Any = None
-        self._height: Any = None
-        self._on_scroll: Optional[int] = None
-        self._direction: Any = None
+        self._raw = WitScrollable(to_element(content).inner)
 
     @classmethod
     def new(cls, content: ElementLike) -> "Scrollable":
@@ -47,27 +47,25 @@ class Scrollable(IntoElement):
 
     def width(self, width: "WitLength") -> "Scrollable":
         """Set the width."""
-        self._width = width
+        self._raw.width(width)
         return self
 
     def height(self, height: "WitLength") -> "Scrollable":
         """Set the height."""
-        self._height = height
+        self._raw.height(height)
         return self
 
-    def on_scroll(
-        self, messages: MessageManager[Msg], handler: Callable[[Message], Msg]
-    ) -> "Scrollable":
+    def on_scroll(self, mapper: Callable[[Viewport], Msg]) -> "Scrollable":
         """
         Set the message to emit when scrolling occurs.
         The Message will have tag 'viewport' with scroll position info.
         """
-        self._on_scroll = messages.register(handler)
+        self._raw.on_scroll(push_viewport(mapper))
         return self
 
     def direction(self, direction: Any) -> "Scrollable":
         """Set the scroll direction and scrollbar configuration."""
-        self._direction = direction
+        self._raw.direction(direction)
         return self
 
     def vertical(self, scrollbar: dict[str, Any] | None = None) -> "Scrollable":
@@ -76,10 +74,10 @@ class Scrollable(IntoElement):
             width=scrollbar.get("width") if scrollbar else None,
             margin=scrollbar.get("margin") if scrollbar else None,
             scroller_width=scrollbar.get("scroller_width") if scrollbar else None,
-            alignment=scrollbar.get("alignment") if scrollbar else None,
+            anchor=scrollbar.get("anchor") if scrollbar else None,
             spacing=scrollbar.get("spacing") if scrollbar else None,
         )
-        self._direction = Direction_Vertical(sb)
+        self._raw.direction(Direction_Vertical(sb))
         return self
 
     def horizontal(self, scrollbar: dict[str, Any] | None = None) -> "Scrollable":
@@ -88,10 +86,10 @@ class Scrollable(IntoElement):
             width=scrollbar.get("width") if scrollbar else None,
             margin=scrollbar.get("margin") if scrollbar else None,
             scroller_width=scrollbar.get("scroller_width") if scrollbar else None,
-            alignment=scrollbar.get("alignment") if scrollbar else None,
+            anchor=scrollbar.get("anchor") if scrollbar else None,
             spacing=scrollbar.get("spacing") if scrollbar else None,
         )
-        self._direction = Direction_Horizontal(sb)
+        self._raw.direction(Direction_Horizontal(sb))
         return self
 
     def both(
@@ -104,7 +102,7 @@ class Scrollable(IntoElement):
             width=vertical_scrollbar.get("width") if vertical_scrollbar else None,
             margin=vertical_scrollbar.get("margin") if vertical_scrollbar else None,
             scroller_width=vertical_scrollbar.get("scroller_width") if vertical_scrollbar else None,
-            alignment=vertical_scrollbar.get("alignment") if vertical_scrollbar else None,
+            anchor=vertical_scrollbar.get("anchor") if vertical_scrollbar else None,
             spacing=vertical_scrollbar.get("spacing") if vertical_scrollbar else None,
         )
         hsb = Scrollbar(
@@ -113,19 +111,12 @@ class Scrollable(IntoElement):
             scroller_width=horizontal_scrollbar.get("scroller_width")
             if horizontal_scrollbar
             else None,
-            alignment=horizontal_scrollbar.get("alignment") if horizontal_scrollbar else None,
+            anchor=horizontal_scrollbar.get("anchor") if horizontal_scrollbar else None,
             spacing=horizontal_scrollbar.get("spacing") if horizontal_scrollbar else None,
         )
-        self._direction = Direction_Both((vsb, hsb))
+        self._raw.direction(Direction_Both((vsb, hsb)))
         return self
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        record = WitScrollable(
-            content=self._content,
-            width=self._width,
-            height=self._height,
-            on_scroll=self._on_scroll,
-            direction=self._direction,
-        )
-        return Element(scrollable_to_element(record))
+        return Element(WitScrollable.into_element(self._raw))

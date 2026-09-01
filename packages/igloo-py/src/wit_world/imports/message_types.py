@@ -11,115 +11,31 @@ from componentize_py_types import Result, Ok, Err, Some
 
 
 @dataclass
-class Size:
-    width: float
-    height: float
-
-
-@dataclass
 class Rectangle:
     x: float
     y: float
     width: float
     height: float
 
-
-@dataclass
-class Picked:
-    pane: int
-
-
-@dataclass
-class Canceled:
-    pane: int
-
-
-class Edge(Enum):
-    TOP = 0
-    LEFT = 1
-    RIGHT = 2
-    BOTTOM = 3
-
-
-@dataclass
-class Region_Center:
-    pass
-
-
-@dataclass
-class Region_Edge:
-    value: Edge
-
-
-Region = Union[Region_Center, Region_Edge]
-
-
-@dataclass
-class Target_Edge:
-    value: Edge
-
-
-@dataclass
-class Target_Pane:
-    value: Tuple[int, Region]
-
-
-Target = Union[Target_Edge, Target_Pane]
-
-
-@dataclass
-class Dropped:
-    pane: int
-    target: Target
-
-
-@dataclass
-class DragEvent_Picked:
-    value: Picked
-
-
-@dataclass
-class DragEvent_Dropped:
-    value: Dropped
-
-
-@dataclass
-class DragEvent_Canceled:
-    value: Canceled
-
-
-DragEvent = Union[DragEvent_Picked, DragEvent_Dropped, DragEvent_Canceled]
-"""
-An event produced during a drag and drop interaction of a PaneGrid.
-"""
-
-
-@dataclass
-class ResizeEvent:
-    split: int
-    ratio: float
-
-
 @dataclass
 class AbsoluteOffset:
     x: float
     y: float
-
 
 @dataclass
 class RelativeOffset:
     x: float
     y: float
 
-
 @dataclass
 class Viewport:
     """
     The current Viewport of the Scrollable.
     """
-
     absolute_offset: AbsoluteOffset
     absolute_offset_reversed: AbsoluteOffset
     relative_offset: RelativeOffset
     bounds: Rectangle
     content_bounds: Rectangle
+
+

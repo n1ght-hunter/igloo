@@ -1,11 +1,12 @@
 """Checkbox widget builder."""
 
-from typing import Any, TypeVar, Callable, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, TypeVar
 
-from ..element import Element, IntoElement
-from ..message import MessageManager, Message
 from wit_world.imports.checkbox import Checkbox as WitCheckbox
-from wit_world.imports.element import checkbox_to_element
+
+from ..callbacks import push_bool
+from ..element import Element, IntoElement
 
 if TYPE_CHECKING:
     from ..types.length import WitLength
@@ -21,21 +22,11 @@ class Checkbox(IntoElement):
     Example:
         checkbox = Checkbox.new(state.is_enabled)
             .label("Enable feature")
-            .on_toggle(messages, lambda: {"type": "toggled"})
+            .on_toggle(lambda checked: {"type": "toggled", "checked": checked})
     """
 
     def __init__(self, is_checked: bool) -> None:
-        self._is_checked = is_checked
-        self._label: Optional[str] = None
-        self._on_toggle: Optional[int] = None
-        self._size: Optional[float] = None
-        self._width: Any = None
-        self._height: Any = None
-        self._spacing: Optional[float] = None
-        self._text_size: Optional[float] = None
-        self._text_line_height: Any = None
-        self._text_wrapping: Any = None
-        self._text_shaping: Any = None
+        self._raw = WitCheckbox(is_checked)
 
     @classmethod
     def new(cls, is_checked: bool) -> "Checkbox":
@@ -44,79 +35,49 @@ class Checkbox(IntoElement):
 
     def label(self, label: str) -> "Checkbox":
         """Set the checkbox label."""
-        self._label = label
+        self._raw.label(label)
         return self
 
-    def on_toggle(self, messages: MessageManager[Msg], handler: Callable[[], Msg]) -> "Checkbox":
-        """
-        Set the message to emit when the checkbox is toggled.
-        """
-        self._on_toggle = messages.on(handler)
-        return self
-
-    def on_toggle_msg(
-        self, messages: MessageManager[Msg], handler: Callable[[Message], Msg]
-    ) -> "Checkbox":
-        """
-        Set the message to emit when the checkbox is toggled.
-        The Message will have tag 'bool-type' with the new checked state.
-        """
-        self._on_toggle = messages.register(handler)
+    def on_toggle(self, mapper: Callable[[bool], Msg]) -> "Checkbox":
+        """Set the message to emit when the checked state changes."""
+        self._raw.on_toggle(push_bool(mapper))
         return self
 
     def size(self, size: float) -> "Checkbox":
         """Set the checkbox size in pixels."""
-        self._size = size
+        self._raw.size(size)
         return self
 
     def width(self, width: "WitLength") -> "Checkbox":
         """Set the width."""
-        self._width = width
-        return self
-
-    def height(self, height: "WitLength") -> "Checkbox":
-        """Set the height."""
-        self._height = height
+        self._raw.width(width)
         return self
 
     def spacing(self, spacing: float) -> "Checkbox":
         """Set the spacing between checkbox and label."""
-        self._spacing = spacing
+        self._raw.spacing(spacing)
         return self
 
     def text_size(self, size: float) -> "Checkbox":
         """Set the text size."""
-        self._text_size = size
+        self._raw.text_size(size)
         return self
 
     def text_line_height(self, line_height: Any) -> "Checkbox":
         """Set the text line height."""
-        self._text_line_height = line_height
+        self._raw.text_line_height(line_height)
         return self
 
     def text_wrapping(self, wrapping: Any) -> "Checkbox":
         """Set the text wrapping."""
-        self._text_wrapping = wrapping
+        self._raw.text_wrapping(wrapping)
         return self
 
     def text_shaping(self, shaping: Any) -> "Checkbox":
         """Set the text shaping."""
-        self._text_shaping = shaping
+        self._raw.text_shaping(shaping)
         return self
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        record = WitCheckbox(
-            is_checked=self._is_checked,
-            label=self._label,
-            on_toggle=self._on_toggle,
-            size=self._size,
-            width=self._width,
-            height=self._height,
-            spacing=self._spacing,
-            text_size=self._text_size,
-            text_line_height=self._text_line_height,
-            text_wrapping=self._text_wrapping,
-            text_shaping=self._text_shaping,
-        )
-        return Element(checkbox_to_element(record))
+        return Element(WitCheckbox.into_element(self._raw))

@@ -4,7 +4,7 @@ Igloo Python SDK - Builder pattern APIs for WASM component UI widgets.
 This SDK allows you to build Igloo plugins in Python following the Elm architecture.
 
 Example:
-    from igloo_py import App, igloo_app, Text, Column, Button, MessageManager, ElementLike
+    from igloo_py import App, igloo_app, Text, Column, Button, ElementLike
 
     @igloo_app
     class CounterApp(App[str]):
@@ -17,40 +17,50 @@ Example:
             elif msg == "decrement":
                 self.count -= 1
 
-        def view(self, messages: MessageManager[str]) -> ElementLike:
+        def view(self) -> ElementLike:
             return Column.new().spacing(10).push(
                 Text.new(f"Count: {self.count}").size(24)
             ).push(
-                Button.new(Text.new("+")).on_press(messages, lambda: "increment")
+                Button.new(Text.new("+")).on_press(lambda: "increment")
             ).push(
-                Button.new(Text.new("-")).on_press(messages, lambda: "decrement")
+                Button.new(Text.new("-")).on_press(lambda: "decrement")
             )
 
-    # That's it! WitWorld and Message are automatically exported.
+    # AppInstance and Application are automatically exported.
 """
 
 # Core
-from .element import Element, to_element, IntoElement, ElementLike
-from .message import MessageManager, Message, MessageId
-from .app import create_app, igloo_app, App, AppExports
+from .app import App, create_application, igloo_app
+from .callbacks import (
+    Frame,
+    push_bool,
+    push_f32,
+    push_f64,
+    push_fixed,
+    push_string,
+    push_u64,
+    push_viewport,
+    with_frame,
+)
+from .element import Element, ElementLike, IntoElement, to_element
 
 # Types
-from .types import Length, Padding, Color, Horizontal, Vertical
+from .types import Color, Horizontal, Length, Padding, Vertical
 from .types.color import ColorHelper
 
 # Widgets
 from .widgets import (
-    Text,
     Button,
-    Column,
-    Row,
-    Container,
-    TextInput,
     Checkbox,
+    Column,
+    Container,
     ProgressBar,
+    Row,
     Rule,
-    Space,
     Scrollable,
+    Space,
+    Text,
+    TextInput,
 )
 
 __all__ = [
@@ -59,13 +69,18 @@ __all__ = [
     "to_element",
     "IntoElement",
     "ElementLike",
-    "MessageManager",
-    "Message",
-    "MessageId",
-    "create_app",
+    "Frame",
+    "with_frame",
+    "push_fixed",
+    "push_bool",
+    "push_f32",
+    "push_f64",
+    "push_u64",
+    "push_string",
+    "push_viewport",
+    "create_application",
     "igloo_app",
     "App",
-    "AppExports",
     # Types
     "Length",
     "Padding",

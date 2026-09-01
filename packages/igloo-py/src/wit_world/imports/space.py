@@ -9,13 +9,32 @@ import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
+from ..imports import shared
 
-
-@dataclass
 class Space:
     """
     An amount of empty space.
     """
+    
+    def __init__(self) -> None:
+        raise NotImplementedError
 
-    width: Optional[length.Length]
-    height: Optional[length.Length]
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

@@ -8,16 +8,37 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
 from ..imports import length
+from ..imports import padding
 from ..imports import shared
 
-
-@dataclass
 class Button:
-    content: shared.Element
-    width: Optional[length.Length]
-    height: Optional[length.Length]
-    padding: Optional[padding.Padding]
-    on_press: Optional[int]
-    clip: Optional[bool]
+    
+    def __init__(self, content: shared.Element) -> None:
+        raise NotImplementedError
+
+    def on_press(self, msg: int) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def padding(self, p: padding.Padding) -> None:
+        raise NotImplementedError
+    def clip(self, clip: bool) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

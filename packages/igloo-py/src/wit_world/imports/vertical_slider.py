@@ -8,22 +8,41 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
+from ..imports import shared
 from ..imports import length
 
-
-@dataclass
 class VerticalSlider:
     """
     A vertical bar for selecting a value from a range of floats.
     """
+    
+    def __init__(self, range_start: float, range_end: float, value: float, on_change: int) -> None:
+        raise NotImplementedError
 
-    range_start: float
-    range_end: float
-    value: float
-    on_change: int
-    default: Optional[float]
-    on_release: Optional[int]
-    width: Optional[float]
-    height: Optional[length.Length]
-    step: Optional[float]
-    shift_step: Optional[float]
+    def default(self, v: float) -> None:
+        raise NotImplementedError
+    def on_release(self, msg: int) -> None:
+        raise NotImplementedError
+    def width(self, w: float) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def step(self, s: float) -> None:
+        raise NotImplementedError
+    def shift_step(self, s: float) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

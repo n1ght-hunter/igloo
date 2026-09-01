@@ -8,18 +8,8 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from .imports import message
-from .imports import shared
+
 
 
 class WitWorld(Protocol):
-    @abstractmethod
-    def update(self, message_id: int, message: message.Message) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def view(self) -> shared.Element:
-        """
-        Exported function for creating a view
-        """
-        raise NotImplementedError
+    pass

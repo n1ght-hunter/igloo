@@ -8,25 +8,47 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import padding
-from ..imports import length
 from ..imports import text
+from ..imports import padding
+from ..imports import shared
+from ..imports import length
 
-
-@dataclass
 class PickList:
     """
     A widget for selecting a value from a set of options.
     """
+    
+    def __init__(self, options: List[str], selected: Optional[str], on_select: int) -> None:
+        raise NotImplementedError
 
-    options: List[str]
-    selected: Optional[str]
-    on_select: int
-    placeholder: Optional[str]
-    width: Optional[length.Length]
-    padding: Optional[padding.Padding]
-    text_size: Optional[float]
-    text_line_height: Optional[text.LineHeight]
-    text_shaping: Optional[text.Shaping]
-    on_open: Optional[int]
-    on_close: Optional[int]
+    def placeholder(self, text: str) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def padding(self, p: padding.Padding) -> None:
+        raise NotImplementedError
+    def text_size(self, s: float) -> None:
+        raise NotImplementedError
+    def text_line_height(self, lh: text.LineHeight) -> None:
+        raise NotImplementedError
+    def text_shaping(self, s: text.Shaping) -> None:
+        raise NotImplementedError
+    def on_open(self, msg: int) -> None:
+        raise NotImplementedError
+    def on_close(self, msg: int) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

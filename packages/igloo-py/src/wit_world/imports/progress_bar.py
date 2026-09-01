@@ -9,17 +9,34 @@ import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
+from ..imports import shared
 
-
-@dataclass
 class ProgressBar:
     """
     A bar that displays progress.
     """
+    
+    def __init__(self, range_start: float, range_end: float, value: float) -> None:
+        raise NotImplementedError
 
-    range_start: float
-    range_end: float
-    value: float
-    length: Optional[length.Length]
-    girth: Optional[length.Length]
-    vertical: Optional[bool]
+    def length(self, l: length.Length) -> None:
+        raise NotImplementedError
+    def girth(self, g: length.Length) -> None:
+        raise NotImplementedError
+    def vertical(self, v: bool) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

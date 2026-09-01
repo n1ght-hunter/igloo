@@ -11,19 +11,42 @@ from componentize_py_types import Result, Ok, Err, Some
 from ..imports import length
 from ..imports import shared
 
-
-@dataclass
 class Image:
     """
     A frame that displays an image.
     """
+    
+    def __init__(self, handle: str) -> None:
+        raise NotImplementedError
 
-    handle: str
-    width: Optional[length.Length]
-    height: Optional[length.Length]
-    expand: Optional[bool]
-    content_fit: Optional[shared.ContentFit]
-    filter_method: Optional[shared.FilterMethod]
-    rotation: Optional[shared.Rotation]
-    opacity: Optional[float]
-    scale: Optional[float]
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def height(self, h: length.Length) -> None:
+        raise NotImplementedError
+    def expand(self, expand: bool) -> None:
+        raise NotImplementedError
+    def content_fit(self, fit: shared.ContentFit) -> None:
+        raise NotImplementedError
+    def filter_method(self, method: shared.FilterMethod) -> None:
+        raise NotImplementedError
+    def rotation(self, r: shared.Rotation) -> None:
+        raise NotImplementedError
+    def opacity(self, o: float) -> None:
+        raise NotImplementedError
+    def scale(self, s: float) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

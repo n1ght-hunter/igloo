@@ -1,145 +1,75 @@
 """Application framework following the Elm architecture."""
 
-from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Callable
-from dataclasses import dataclass
 import sys
+from abc import ABC, abstractmethod
+from types import ModuleType
+from typing import Generic, TypeVar, cast
 
-from .element import ElementLike, to_element, WitElement
-from .message import MessageManager, MessageId, Message
+from wit_world.exports import AppInstance as WitAppInstance
+from wit_world.exports.app_instance import Application as WitApplication
+from wit_world.exports.app_instance import MessageValue
+
+from .callbacks import Frame, resolve, with_frame
+from .element import ElementLike, WitElement, to_element
 
 Msg = TypeVar("Msg")
-T = TypeVar("T", bound="App")
+T = TypeVar("T", bound="App[object]")
 
 
 class App(ABC, Generic[Msg]):
-    """
-    Abstract base class for Igloo applications.
-
-    State is stored on `self` - just use instance attributes.
-    Override `update` to handle messages and mutate state.
-    Override `view` to render the current state.
-    """
+    """An Igloo application whose state is stored on the instance."""
 
     @abstractmethod
     def update(self, msg: Msg) -> None:
-        """Update state based on a message. Mutate self directly."""
+        """Update the application state from a message."""
         ...
 
     @abstractmethod
-    def view(self, messages: MessageManager[Msg]) -> ElementLike:
-        """Render the current state as an ElementLike (widget or Element)."""
+    def view(self) -> ElementLike:
+        """Render the current application state."""
         ...
 
 
+def create_application(app_type: type[App[Msg]]) -> type[WitApplication]:
+    """Create the exported WIT application resource for an App type."""
+
+    class Application:
+        def __init__(self) -> None:
+            erased_app_type = cast(type[App[object]], app_type)
+            self._app: App[object] = erased_app_type()
+            self._current: Frame[object] = Frame(0)
+            self._previous: Frame[object] = Frame(0)
+
+        def view(self) -> WitElement:
+            next_frame: Frame[object] = Frame(self._current.next_base())
+            with with_frame(next_frame):
+                element = to_element(self._app.view()).inner
+            self._previous = self._current
+            self._current = next_frame
+            return element
+
+        def update(self, id: int, value: MessageValue) -> None:
+            callback = self._current.get(id) or self._previous.get(id)
+            if callback is None:
+                return
+            message = resolve(callback, value)
+            if message is not None:
+                self._app.update(message)
+
+    return Application
+
+
 def igloo_app(cls: type[T]) -> type[T]:
-    """
-    Decorator that registers an App class and exports WitWorld and Message.
+    """Export an App subclass through componentize-py's generated bindings."""
+    application = create_application(cls)
 
-    Example:
-        from igloo_py import App, igloo_app, Text, Column, Button, MessageManager, ElementLike
+    class AppInstance(WitAppInstance):
+        pass
 
-        @igloo_app
-        class CounterApp(App[str]):
-            def __init__(self):
-                self.count = 0
-
-            def update(self, msg: str) -> None:
-                if msg == 'increment':
-                    self.count += 1
-                elif msg == 'decrement':
-                    self.count -= 1
-
-            def view(self, messages: MessageManager[str]) -> ElementLike:
-                return Column.new().push(
-                    Text.new(f"Count: {self.count}")
-                ).push(
-                    Button.new(Text.new("+")).on_press(messages, lambda: "increment")
-                )
-
-        # That's it! WitWorld and Message are automatically exported.
-    """
-    app = cls()
-    msg_manager: MessageManager = MessageManager()
-
-    def _update(msg_id: MessageId, message: Message) -> None:
-        msg = msg_manager.dispatch(msg_id, message)
-        if msg is not None:
-            app.update(msg)
-
-    def _view() -> WitElement:
-        msg_manager.clear()
-        return to_element(app.view(msg_manager)).inner
-
-    class WitWorld:
-        """WIT world implementation for componentize-py."""
-
-        def update(self, message_id: int, message: Message) -> None:
-            _update(message_id, message)
-
-        def view(self) -> WitElement:
-            return _view()
-
-    class MessageExport:
-        """WIT message export implementation."""
-
-        def clone_message(self, message: int) -> int:
-            return message
-
-    # Inject WitWorld and Message into the caller's module
-    frame = sys._getframe(1)
-    frame.f_globals["WitWorld"] = WitWorld
-    frame.f_globals["Message"] = MessageExport
-
+    module_globals = sys._getframe(1).f_globals
+    module_globals["AppInstance"] = AppInstance
+    module_globals["Application"] = application
+    resource_module = ModuleType("app_instance")
+    resource_module.__dict__["Application"] = application
+    sys.modules["app_instance"] = resource_module
     return cls
-
-
-@dataclass
-class AppExports:
-    """The exports required by the WIT interface."""
-
-    WitWorld: type
-    Message: type
-    update: Callable[[MessageId, Message], None]
-    view: Callable[[], WitElement]
-
-
-def create_app(app: App[Msg]) -> AppExports:
-    """
-    Create an Igloo application from an App instance.
-    Returns the WitWorld and Message classes required by componentize-py.
-
-    For simpler usage, consider using the @igloo_app decorator instead.
-    """
-    msg_manager: MessageManager[Msg] = MessageManager()
-
-    def _update(msg_id: MessageId, message: Message) -> None:
-        msg = msg_manager.dispatch(msg_id, message)
-        if msg is not None:
-            app.update(msg)
-
-    def _view() -> WitElement:
-        msg_manager.clear()
-        return to_element(app.view(msg_manager)).inner
-
-    class WitWorld:
-        """WIT world implementation for componentize-py."""
-
-        def update(self, message_id: int, message: Message) -> None:
-            _update(message_id, message)
-
-        def view(self) -> WitElement:
-            return _view()
-
-    class MessageExport:
-        """WIT message export implementation."""
-
-        def clone_message(self, message: int) -> int:
-            return message
-
-    return AppExports(
-        WitWorld=WitWorld,
-        Message=MessageExport,
-        update=_update,
-        view=_view,
-    )

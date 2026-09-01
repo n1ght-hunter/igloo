@@ -10,23 +10,38 @@ import weakref
 from componentize_py_types import Result, Ok, Err, Some
 from ..imports import shared
 
-
 @dataclass
 class Translation:
     """
     A translation applied to content.
     """
-
     x: float
     y: float
 
-
-@dataclass
 class Float:
     """
     Displays floating content on top of the application.
     """
+    
+    def __init__(self, content: shared.Element) -> None:
+        raise NotImplementedError
 
-    content: shared.Element
-    scale: Optional[float]
-    translation: Optional[Translation]
+    def scale(self, s: float) -> None:
+        raise NotImplementedError
+    def translation(self, t: Translation) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

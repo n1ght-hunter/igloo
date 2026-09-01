@@ -100,7 +100,9 @@ class Sink:
         while True:
             count = self.stream.check_write()
             if count == 0:
-                await register(cast(PollLoop, asyncio.get_event_loop()), self.stream.subscribe())
+                await register(
+                    cast(PollLoop, asyncio.get_event_loop()), self.stream.subscribe()
+                )
             elif offset == len(chunk):
                 if flushing:
                     return

@@ -1,8 +1,8 @@
 """Rule widget builder."""
 
-from ..element import Element, IntoElement
 from wit_world.imports.rule import Rule as WitRule
-from wit_world.imports.element import rule_to_element
+
+from ..element import Element, IntoElement
 
 
 class Rule(IntoElement):
@@ -19,8 +19,7 @@ class Rule(IntoElement):
     """
 
     def __init__(self, is_horizontal: bool, thickness: float) -> None:
-        self._is_horizontal = is_horizontal
-        self._thickness = thickness
+        self._raw = WitRule(is_horizontal, thickness)
 
     @classmethod
     def horizontal(cls, thickness: float) -> "Rule":
@@ -34,8 +33,4 @@ class Rule(IntoElement):
 
     def into_element(self) -> Element:
         """Convert to Element."""
-        record = WitRule(
-            is_horizontal=self._is_horizontal,
-            thickness=self._thickness,
-        )
-        return Element(rule_to_element(record))
+        return Element(WitRule.into_element(self._raw))

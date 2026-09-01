@@ -8,25 +8,51 @@ from abc import abstractmethod
 import weakref
 
 from componentize_py_types import Result, Ok, Err, Some
-from ..imports import alignment
-from ..imports import length
 from ..imports import text
+from ..imports import length
+from ..imports import shared
+from ..imports import alignment
 
-
-@dataclass
 class Toggler:
     """
     A widget representing a setting that can be toggled on or off.
     """
+    
+    def __init__(self, is_toggled: bool) -> None:
+        raise NotImplementedError
 
-    is_toggled: bool
-    label: Optional[str]
-    on_toggle: Optional[int]
-    size: Optional[float]
-    width: Optional[length.Length]
-    text_size: Optional[float]
-    text_line_height: Optional[text.LineHeight]
-    text_alignment: Optional[alignment.Horizontal]
-    text_shaping: Optional[text.Shaping]
-    text_wrapping: Optional[text.Wrapping]
-    spacing: Optional[float]
+    def label(self, label: str) -> None:
+        raise NotImplementedError
+    def on_toggle(self, mapper: int) -> None:
+        raise NotImplementedError
+    def size(self, s: float) -> None:
+        raise NotImplementedError
+    def width(self, w: length.Length) -> None:
+        raise NotImplementedError
+    def text_size(self, s: float) -> None:
+        raise NotImplementedError
+    def text_line_height(self, lh: text.LineHeight) -> None:
+        raise NotImplementedError
+    def text_alignment(self, a: alignment.Horizontal) -> None:
+        raise NotImplementedError
+    def text_shaping(self, s: text.Shaping) -> None:
+        raise NotImplementedError
+    def text_wrapping(self, w: text.Wrapping) -> None:
+        raise NotImplementedError
+    def spacing(self, s: float) -> None:
+        raise NotImplementedError
+    @classmethod
+    def into_element(cls, widget: Self) -> shared.Element:
+        raise NotImplementedError
+    def __enter__(self) -> Self:
+        """Returns self"""
+        return self
+                                
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+        """
+        Release this resource.
+        """
+        raise NotImplementedError
+
+
+

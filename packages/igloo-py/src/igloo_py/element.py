@@ -1,14 +1,10 @@
 """Element wrapper and IntoElement abstract base class."""
 
 from abc import ABC, abstractmethod
-from typing import Union, Any
+from typing import TypeAlias
 
-from wit_world.imports.element import explain as wit_explain
 from wit_world.imports.shared import Color
-
-# WitElement is the raw element type from WIT bindings
-# After generation, this will be properly typed
-WitElement = Any
+from wit_world.imports.shared import Element as WitElement
 
 
 class IntoElement(ABC):
@@ -38,11 +34,11 @@ class Element:
         Debug helper that draws a colored overlay on the element.
         Useful for visualizing element bounds during development.
         """
-        return Element(wit_explain(self.inner, color))
+        return Element(self.inner.explain(color))
 
 
 # Type that can be used where an Element is expected
-ElementLike = Union[Element, IntoElement]
+ElementLike: TypeAlias = Element | IntoElement
 
 
 def to_element(value: ElementLike) -> Element:
