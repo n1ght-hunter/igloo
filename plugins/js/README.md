@@ -9,5 +9,5 @@ pnpm install
 To build the plugin (bundle with rolldown, then componentize to a wasm component with jco):
 
 ```bash
-just js build
+mise run //plugins/js:build
 ```

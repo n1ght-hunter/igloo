@@ -1,8 +1,23 @@
 # enable mise settings experimental=true
 
+monorepo_root = true
+
+[settings]
+# Run every task's commands through nushell on all platforms.
+windows_default_inline_shell_args = "nu -c"
+unix_default_inline_shell_args = "nu -c"
+
+[monorepo]
+config_roots = [
+    "packages/igloo-ts",
+    "packages/igloo-py",
+    "plugins/js",
+    "plugins/python",
+    "plugins/rust",
+    "examples/rust_host",
+]
 
 [tools]
-just = "1.46.0"
 "github:bytecodealliance/wit-bindgen" = "0.55.0"
 wasmtime = "43"
 [tools."github:bytecodealliance/wasm-pkg-tools"]
@@ -15,66 +30,26 @@ node = "22"
 pnpm = "latest"
 "npm:@bytecodealliance/jco" = "latest"
 uv = "latest"
+"aqua:nushell/nushell" = "0.115.1"
 
-# Generate WIT types for igloo-ts library
-[tasks."igloo-ts:gen"]
-description = "Generate WIT types for igloo-ts"
-sources = ["crates/igloo/wit/**/*.wit"]
-outputs = ["packages/igloo-ts/src/generated/**/*"]
-run = "just igloo-ts gen"
-
-# Bundle JS plugin source
-[tasks."js:bundle"]
-description = "Bundle JS plugin with rolldown"
-depends = ["igloo-ts:gen"]
-sources = [
-    "plugins/js/src/**/*.ts",
-    "plugins/js/package.json",
-    "packages/igloo-ts/src/**/*.ts",
+[tasks.setup]
+description = "Install the wasm target and all mise-managed tools"
+run = [
+    "rustup target add wasm32-wasip2",
+    "mise install",
 ]
-outputs = ["plugins/js/dist/index.js"]
-run = "just js bundle"
 
-# Componentize JS bundle to WASM
-[tasks."js:componentize"]
-description = "Componentize JS bundle to WASM"
-depends = ["js:bundle"]
-sources = [
-    "plugins/js/dist/index.js",
-    "crates/igloo/wit/**/*.wit",
+[tasks.run]
+description = "Run the iced host example"
+depends = ["//examples/rust_host:run"]
+
+[tasks.build-plugins]
+description = "Build every guest plugin (Rust, JS, Python)"
+depends = [
+    "//plugins/rust:build",
+    "//plugins/js:build",
+    "//plugins/python:build",
 ]
-outputs = ["plugins/js/js-app.wasm"]
-run = "just js componentize"
-
-# Build everything for JS plugin
-[tasks."js:build"]
-description = "Build JS plugin (gen + bundle + componentize)"
-depends = ["js:componentize"]
-
-# Generate Python bindings for igloo-py library
-[tasks."igloo-py:gen"]
-description = "Generate WIT bindings for igloo-py"
-sources = ["crates/igloo/wit/**/*.wit"]
-outputs = ["packages/igloo-py/src/igloo_py/generated/**/*"]
-run = "just igloo-py gen"
-
-# Componentize Python plugin to WASM
-[tasks."python:componentize"]
-description = "Componentize Python plugin to WASM"
-depends = ["igloo-py:gen"]
-sources = [
-    "plugins/python/src/**/*.py",
-    "plugins/python/pyproject.toml",
-    "packages/igloo-py/src/**/*.py",
-    "crates/igloo/wit/**/*.wit",
-]
-outputs = ["plugins/python/python-app.wasm"]
-run = "just py componentize"
-
-# Build everything for Python plugin
-[tasks."python:build"]
-description = "Build Python plugin (gen + componentize)"
-depends = ["python:componentize"]
 
 # Build WIT package
 [tasks."wit:build"]

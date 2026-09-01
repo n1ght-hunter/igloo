@@ -1,0 +1,13 @@
+[tasks.gen]
+description = "Generate WIT types for igloo-ts"
+sources = ["../../crates/igloo/wit/**/*.wit"]
+outputs = ["src/generated/**/*"]
+run = """
+rm -rf src/generated
+jco guest-types ../../crates/igloo/wit --out-dir ./src/generated/
+"""
+
+[tasks.build]
+description = "Bundle igloo-ts with rolldown"
+depends = [":gen"]
+run = "pnpm exec rolldown -c rolldown.config.mjs"

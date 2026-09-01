@@ -1,0 +1,5 @@
+# No sources/outputs: cargo does its own incremental caching, and its mtime
+# behaviour (never rewriting an unchanged artifact) fights mise's freshness check.
+[tasks.build]
+description = "Build the Rust guest plugin to WASM"
+run = "cargo build -p rust_guest --target wasm32-wasip2 -r"

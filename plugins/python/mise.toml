@@ -1,0 +1,15 @@
+[tasks.componentize]
+description = "Componentize Python plugin to WASM"
+depends = ["//packages/igloo-py:gen"]
+sources = [
+    "src/**/*.py",
+    "pyproject.toml",
+    "../../packages/igloo-py/src/**/*.py",
+    "../../crates/igloo/wit/**/*.wit",
+]
+outputs = ["python-app.wasm"]
+run = "uv run componentize-py --wit-path ../../crates/igloo/wit --world app componentize -p src -p ../../packages/igloo-py/src -o python-app.wasm task_manager"
+
+[tasks.build]
+description = "Build Python plugin (gen + componentize)"
+depends = [":componentize"]

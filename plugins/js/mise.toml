@@ -1,0 +1,28 @@
+[tasks.bundle]
+description = "Bundle JS plugin with rolldown"
+depends = ["//packages/igloo-ts:gen"]
+sources = [
+    "src/**/*.ts",
+    "package.json",
+    "../../packages/igloo-ts/src/**/*.ts",
+]
+outputs = ["dist/index.js"]
+run = "pnpm exec rolldown -c rolldown.config.mjs"
+
+[tasks.check]
+description = "Type check JS plugin"
+run = "pnpm exec tsc --noEmit"
+
+[tasks.componentize]
+description = "Componentize JS bundle to WASM"
+depends = [":bundle"]
+sources = [
+    "dist/index.js",
+    "../../crates/igloo/wit/**/*.wit",
+]
+outputs = ["js-app.wasm"]
+run = "jco componentize ./dist/index.js --wit ../../crates/igloo/wit/ --world-name app --out js-app.wasm --disable all --enable stdio --debug-starlingmonkey-build"
+
+[tasks.build]
+description = "Build JS plugin (gen + bundle + componentize)"
+depends = [":componentize"]

@@ -41,7 +41,7 @@ Igloo lets you:
 ### Prerequisites
 
 - Rust and rustup installed
-- [mise](https://mise.jdx.dev/) installed 
+- [mise](https://mise.jdx.dev/) installed (provides all other tooling and task running)
 
 
 ### Setup
@@ -52,9 +52,9 @@ git clone https://github.com/n1ght-hunter/igloo.git
 cd igloo
 ```
 
-2. Install required Rust target:
+2. Install required Rust target and tools:
 ```bash
-just setup
+mise run setup
 # or manually:
 rustup target add wasm32-wasip2
 mise install
@@ -63,14 +63,16 @@ mise install
 3. Build plugins and run the example:
 ```bash
 # Build all plugins (Rust, TypeScript, Python) and run
-just build-plugins
-just run
+mise run build-plugins
+mise run run
 
 # Or build individual plugins:
-just build-rust    # Build Rust plugin
-just build-js      # Build TypeScript/JavaScript plugin
-just build-py      # Build Python plugin
+mise run //plugins/rust:build     # Build Rust plugin
+mise run //plugins/js:build       # Build TypeScript/JavaScript plugin
+mise run //plugins/python:build   # Build Python plugin
 ```
+
+Run `mise tasks ls --all` to see every available task.
 
 ### Language SDKs
 
@@ -226,8 +228,8 @@ let plugin_view = plugin_manager.plugin_view("my-plugin")?;
 
 - Build all components: `cargo build`
 - Build for WASM target: `cargo build --target wasm32-wasip2`
-- Run example: `just run`
-- Generate bindings: `just gen`
+- Run example: `mise run run`
+- Generate bindings: `mise run //packages/igloo-ts:gen` and `mise run //packages/igloo-py:gen`
 
 Warning: Loading plugins can be slow during development due to Wasmtime compilation. 
 Consider adding this to your `Cargo.toml` for faster builds or running in release mode:
