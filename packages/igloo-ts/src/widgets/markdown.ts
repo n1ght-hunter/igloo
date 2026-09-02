@@ -15,9 +15,9 @@ import { pushString } from '../callbacks.js';
  * }));
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this widget emits; inferred from `onLinkClick`.
  */
-export class Markdown<Msg> implements IntoElement {
+export class Markdown<Msg = never> implements IntoElement<Msg> {
   private raw: WitMarkdown;
 
   private constructor(content: string, onLinkClick: CallbackId) {
@@ -28,12 +28,12 @@ export class Markdown<Msg> implements IntoElement {
    * Create a new Markdown builder.
    * @param onLinkClick - Handler called with the URL of a clicked link
    */
-  static new<Msg>(content: string, onLinkClick: (url: string) => Msg): Markdown<Msg> {
+  static new<const M>(content: string, onLinkClick: (url: string) => M): Markdown<M> {
     return new Markdown(content, pushString(onLinkClick));
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitMarkdown.intoElement(this.raw));
   }
 }

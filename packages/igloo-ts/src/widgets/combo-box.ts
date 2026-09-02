@@ -20,9 +20,9 @@ import { pushFixed, pushString } from '../callbacks.js';
  * );
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this combo box emits; inferred from its handlers.
  */
-export class ComboBox<Msg> implements IntoElement {
+export class ComboBox<Msg = never> implements IntoElement<Msg> {
   private raw: WitComboBox;
 
   private constructor(
@@ -39,37 +39,37 @@ export class ComboBox<Msg> implements IntoElement {
    * @param onSelected - Handler called with the selected option
    * @param selected - The currently selected option, if any
    */
-  static new<Msg>(
+  static new<const M>(
     options: string[],
     placeholder: string,
-    onSelected: (value: string) => Msg,
+    onSelected: (value: string) => M,
     selected?: string,
-  ): ComboBox<Msg> {
+  ): ComboBox<M> {
     return new ComboBox(options, placeholder, selected, pushString(onSelected));
   }
 
   /** Set the message to emit when text is input (for filtering) */
-  onInput(mapper: (value: string) => Msg): this {
+  onInput<const M>(mapper: (value: string) => M): ComboBox<Msg | M> {
     this.raw.onInput(pushString(mapper));
-    return this;
+    return this as unknown as ComboBox<Msg | M>;
   }
 
   /** Set the message to emit when an option is hovered */
-  onOptionHovered(mapper: (value: string) => Msg): this {
+  onOptionHovered<const M>(mapper: (value: string) => M): ComboBox<Msg | M> {
     this.raw.onOptionHovered(pushString(mapper));
-    return this;
+    return this as unknown as ComboBox<Msg | M>;
   }
 
   /** Set the message to emit when the combo box is opened */
-  onOpen(msg: () => Msg): this {
+  onOpen<const M>(msg: () => M): ComboBox<Msg | M> {
     this.raw.onOpen(pushFixed(msg()));
-    return this;
+    return this as unknown as ComboBox<Msg | M>;
   }
 
   /** Set the message to emit when the combo box is closed */
-  onClose(msg: () => Msg): this {
+  onClose<const M>(msg: () => M): ComboBox<Msg | M> {
     this.raw.onClose(pushFixed(msg()));
-    return this;
+    return this as unknown as ComboBox<Msg | M>;
   }
 
   /** Set the padding */
@@ -97,7 +97,7 @@ export class ComboBox<Msg> implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitComboBox.intoElement(this.raw));
   }
 }

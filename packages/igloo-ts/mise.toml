@@ -7,6 +7,11 @@ rm -rf src/generated
 jco guest-types ../../crates/igloo/wit --out-dir ./src/generated/
 """
 
+[tasks.check]
+description = "Type check igloo-ts (library + type tests)"
+depends = [":gen"]
+run = "pnpm exec tsc --noEmit -p tsconfig.test.json"
+
 [tasks.build]
 description = "Bundle igloo-ts with rolldown"
 depends = [":gen"]

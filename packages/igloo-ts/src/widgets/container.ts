@@ -13,16 +13,18 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  * ```typescript
  * const centered = Container.new(Text.new('Centered')).center(Length.fill());
  * ```
+ *
+ * @typeParam Msg - The message type of the wrapped content, inferred from `new`.
  */
-export class Container implements IntoElement {
+export class Container<Msg = never> implements IntoElement<Msg> {
   private raw: WitContainer;
 
-  private constructor(content: ElementLike) {
+  private constructor(content: ElementLike<Msg>) {
     this.raw = new WitContainer(toElement(content).inner);
   }
 
   /** Create a new Container builder with the given content element */
-  static new(content: ElementLike): Container {
+  static new<const Msg = never>(content: ElementLike<Msg>): Container<Msg> {
     return new Container(content);
   }
 
@@ -117,7 +119,7 @@ export class Container implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitContainer.intoElement(this.raw));
   }
 }

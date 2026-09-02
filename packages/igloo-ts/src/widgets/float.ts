@@ -14,16 +14,18 @@ export type { Translation } from 'iced:app/float@0.1.0';
  *   .translate(100, 50)
  *   .scale(0.8);
  * ```
+ *
+ * @typeParam Msg - The message type of the floating content, inferred from `new`.
  */
-export class Float implements IntoElement {
+export class Float<Msg = never> implements IntoElement<Msg> {
   private raw: WitFloat;
 
-  private constructor(content: ElementLike) {
+  private constructor(content: ElementLike<Msg>) {
     this.raw = new WitFloat(toElement(content).inner);
   }
 
   /** Create a new Float builder with the given content */
-  static new(content: ElementLike): Float {
+  static new<const Msg = never>(content: ElementLike<Msg>): Float<Msg> {
     return new Float(content);
   }
 
@@ -46,7 +48,7 @@ export class Float implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitFloat.intoElement(this.raw));
   }
 }

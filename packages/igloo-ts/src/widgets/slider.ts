@@ -17,9 +17,9 @@ import { pushF32, pushFixed } from '../callbacks.js';
  * })).step(1);
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this slider emits; inferred from `onChange`.
  */
-export class Slider<Msg> implements IntoElement {
+export class Slider<Msg = never> implements IntoElement<Msg> {
   private raw: WitSlider;
 
   private constructor(rangeStart: number, rangeEnd: number, value: number, onChange: CallbackId) {
@@ -30,12 +30,12 @@ export class Slider<Msg> implements IntoElement {
    * Create a new Slider builder.
    * @param onChange - Handler called with the new value while dragging
    */
-  static new<Msg>(
+  static new<const M>(
     rangeStart: number,
     rangeEnd: number,
     value: number,
-    onChange: (value: number) => Msg,
-  ): Slider<Msg> {
+    onChange: (value: number) => M,
+  ): Slider<M> {
     return new Slider(rangeStart, rangeEnd, value, pushF32(onChange));
   }
 
@@ -46,9 +46,9 @@ export class Slider<Msg> implements IntoElement {
   }
 
   /** Set the message to emit when the slider is released */
-  onRelease(msg: () => Msg): this {
+  onRelease<const M>(msg: () => M): Slider<Msg | M> {
     this.raw.onRelease(pushFixed(msg()));
-    return this;
+    return this as unknown as Slider<Msg | M>;
   }
 
   /** Set the width */
@@ -76,7 +76,7 @@ export class Slider<Msg> implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitSlider.intoElement(this.raw));
   }
 }

@@ -10,7 +10,7 @@ import { Element, type IntoElement } from '../element.js';
  * const icon = Svg.new('/path/to/icon.svg');
  * ```
  */
-export class Svg implements IntoElement {
+export class Svg implements IntoElement<never> {
   private raw: WitSvg;
 
   private constructor(path: string) {
@@ -23,7 +23,7 @@ export class Svg implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<never> {
     return new Element(WitSvg.intoElement(this.raw));
   }
 }

@@ -18,9 +18,9 @@ import { pushFixed } from '../callbacks.js';
  * }));
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this radio emits; inferred from `onSelect`.
  */
-export class Radio<Msg> implements IntoElement {
+export class Radio<Msg = never> implements IntoElement<Msg> {
   private raw: WitRadio;
 
   private constructor(label: string, isSelected: boolean, msg: CallbackId) {
@@ -31,7 +31,7 @@ export class Radio<Msg> implements IntoElement {
    * Create a new Radio builder.
    * @param onSelect - Handler called when this radio is selected
    */
-  static new<Msg>(label: string, isSelected: boolean, onSelect: () => Msg): Radio<Msg> {
+  static new<const M>(label: string, isSelected: boolean, onSelect: () => M): Radio<M> {
     return new Radio(label, isSelected, pushFixed(onSelect()));
   }
 
@@ -78,7 +78,7 @@ export class Radio<Msg> implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitRadio.intoElement(this.raw));
   }
 }

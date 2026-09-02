@@ -16,8 +16,14 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  *   .pushKeyed(1n, Text.new('Item 1'))
  *   .pushKeyed(2n, Text.new('Item 2'));
  * ```
+ *
+ * The child message type is inferred and accumulated as elements are pushed;
+ * pass `KeyedColumn.new<Msg>()` to pin it so each push is checked against `Msg`.
+ *
+ * @typeParam Msg - The accumulated message type of the column's children.
+ * @typeParam Bound - Upper bound each child must satisfy; `unknown` when unpinned.
  */
-export class KeyedColumn implements IntoElement {
+export class KeyedColumn<Msg = never, Bound = unknown> implements IntoElement<Msg> {
   private raw: WitKeyedColumn;
 
   private constructor() {
@@ -25,22 +31,30 @@ export class KeyedColumn implements IntoElement {
   }
 
   /** Create a new empty KeyedColumn builder */
-  static new(): KeyedColumn {
+  static new(): KeyedColumn<never, unknown>;
+  /** Create a new empty KeyedColumn builder pinned to the message type `B` */
+  static new<B>(): KeyedColumn<never, B>;
+  static new(): KeyedColumn<never, unknown> {
     return new KeyedColumn();
   }
 
   /** Add a keyed element to the column */
-  pushKeyed(key: bigint, element: ElementLike): this {
+  pushKeyed<const M extends Bound>(
+    key: bigint,
+    element: ElementLike<M>,
+  ): KeyedColumn<Msg | M, Bound> {
     this.raw.push(key, toElement(element).inner);
-    return this;
+    return this as unknown as KeyedColumn<Msg | M, Bound>;
   }
 
   /** Add multiple keyed elements */
-  extendKeyed(items: Array<[bigint, ElementLike]>): this {
+  extendKeyed<const M extends Bound>(
+    items: Array<[bigint, ElementLike<M>]>,
+  ): KeyedColumn<Msg | M, Bound> {
     for (const [key, element] of items) {
       this.raw.push(key, toElement(element).inner);
     }
-    return this;
+    return this as unknown as KeyedColumn<Msg | M, Bound>;
   }
 
   /** Set the spacing between elements */
@@ -80,7 +94,7 @@ export class KeyedColumn implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitKeyedColumn.intoElement(this.raw));
   }
 }

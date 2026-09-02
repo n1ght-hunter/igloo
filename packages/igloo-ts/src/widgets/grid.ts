@@ -14,8 +14,14 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  *   .push(Text.new('Cell 1'))
  *   .push(Text.new('Cell 2'));
  * ```
+ *
+ * The child message type is inferred and accumulated as elements are pushed;
+ * pass `Grid.new<Msg>()` to pin it so each `push` is checked against `Msg`.
+ *
+ * @typeParam Msg - The accumulated message type of the grid's children.
+ * @typeParam Bound - Upper bound each child must satisfy; `unknown` when unpinned.
  */
-export class Grid implements IntoElement {
+export class Grid<Msg = never, Bound = unknown> implements IntoElement<Msg> {
   private raw: WitGrid;
 
   private constructor() {
@@ -23,27 +29,30 @@ export class Grid implements IntoElement {
   }
 
   /** Create a new empty Grid builder */
-  static new(): Grid {
+  static new(): Grid<never, unknown>;
+  /** Create a new empty Grid builder pinned to the message type `B` */
+  static new<B>(): Grid<never, B>;
+  static new(): Grid<never, unknown> {
     return new Grid();
   }
 
   /** Create a Grid with the given elements */
-  static with(elements: ElementLike[]): Grid {
-    return new Grid().extend(elements);
+  static with<const M>(elements: ElementLike<M>[]): Grid<M, unknown> {
+    return new Grid<M, unknown>().extend(elements);
   }
 
   /** Add an element to the grid */
-  push(element: ElementLike): this {
+  push<const M extends Bound>(element: ElementLike<M>): Grid<Msg | M, Bound> {
     this.raw.push(toElement(element).inner);
-    return this;
+    return this as unknown as Grid<Msg | M, Bound>;
   }
 
   /** Add multiple elements */
-  extend(elements: ElementLike[]): this {
+  extend<const M extends Bound>(elements: ElementLike<M>[]): Grid<Msg | M, Bound> {
     for (const element of elements) {
       this.raw.push(toElement(element).inner);
     }
-    return this;
+    return this as unknown as Grid<Msg | M, Bound>;
   }
 
   /** Set the spacing between cells */
@@ -77,7 +86,7 @@ export class Grid implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitGrid.intoElement(this.raw));
   }
 }

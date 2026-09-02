@@ -11,7 +11,7 @@ import { Element, type IntoElement } from '../element.js';
  * const flexSpace = Space.new().width(Length.fill());
  * ```
  */
-export class Space implements IntoElement {
+export class Space implements IntoElement<never> {
   private raw: WitSpace;
 
   private constructor() {
@@ -41,7 +41,7 @@ export class Space implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<never> {
     return new Element(WitSpace.intoElement(this.raw));
   }
 }

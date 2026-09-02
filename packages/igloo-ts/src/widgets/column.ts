@@ -9,6 +9,11 @@ import { Element, toElement, type IntoElement, type ElementLike } from '../eleme
  * Builder for creating Column layout widgets.
  * A Column arranges its children vertically.
  *
+ * The child message type is inferred and accumulated as elements are pushed, so
+ * `Column.new()` needs no annotation. Pass an explicit argument —
+ * `Column.new<Msg>()` — to pin the type: each `push` is then checked against
+ * `Msg` directly, so a stray message fails on the offending call.
+ *
  * @example
  * ```typescript
  * const col = Column.new()
@@ -16,8 +21,11 @@ import { Element, toElement, type IntoElement, type ElementLike } from '../eleme
  *   .push(Text.new('Item 1'))
  *   .push(Text.new('Item 2'));
  * ```
+ *
+ * @typeParam Msg - The accumulated message type of the column's children.
+ * @typeParam Bound - Upper bound each child must satisfy; `unknown` when unpinned.
  */
-export class Column implements IntoElement {
+export class Column<Msg = never, Bound = unknown> implements IntoElement<Msg> {
   private raw: WitColumn;
 
   private constructor() {
@@ -25,36 +33,41 @@ export class Column implements IntoElement {
   }
 
   /** Create a new empty Column builder */
-  static new(): Column {
+  static new(): Column<never, unknown>;
+  /** Create a new empty Column builder pinned to the message type `B` */
+  static new<B>(): Column<never, B>;
+  static new(): Column<never, unknown> {
     return new Column();
   }
 
   /** Create a Column with the given elements */
-  static with(elements: ElementLike[]): Column {
-    const col = new Column();
-    return col.extend(elements);
+  static with<const M>(elements: ElementLike<M>[]): Column<M, unknown> {
+    return new Column<M, unknown>().extend(elements);
   }
 
   /** Add an element to the column */
-  push(element: ElementLike): this {
+  push<const M extends Bound>(element: ElementLike<M>): Column<Msg | M, Bound> {
     this.raw.push(toElement(element).inner);
-    return this;
+    return this as unknown as Column<Msg | M, Bound>;
   }
 
   /** Add an element conditionally */
-  pushIf(condition: boolean, element: () => ElementLike): this {
+  pushIf<const M extends Bound>(
+    condition: boolean,
+    element: () => ElementLike<M>,
+  ): Column<Msg | M, Bound> {
     if (condition) {
       this.raw.push(toElement(element()).inner);
     }
-    return this;
+    return this as unknown as Column<Msg | M, Bound>;
   }
 
   /** Add multiple elements */
-  extend(elements: ElementLike[]): this {
+  extend<const M extends Bound>(elements: ElementLike<M>[]): Column<Msg | M, Bound> {
     for (const element of elements) {
       this.raw.push(toElement(element).inner);
     }
-    return this;
+    return this as unknown as Column<Msg | M, Bound>;
   }
 
   /** Set the spacing between elements in pixels */
@@ -100,7 +113,7 @@ export class Column implements IntoElement {
   }
 
   /** Convert to Element (implements IntoElement) */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitColumn.intoElement(this.raw));
   }
 }

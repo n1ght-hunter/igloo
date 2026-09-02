@@ -19,9 +19,9 @@ import { pushFixed, pushString } from '../callbacks.js';
  * })).placeholder('Select a color');
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this pick list emits; inferred from its handlers.
  */
-export class PickList<Msg> implements IntoElement {
+export class PickList<Msg = never> implements IntoElement<Msg> {
   private raw: WitPickList;
 
   private constructor(options: string[], selected: string | undefined, onSelect: CallbackId) {
@@ -32,11 +32,11 @@ export class PickList<Msg> implements IntoElement {
    * Create a new PickList builder.
    * @param onSelect - Handler called with the selected option
    */
-  static new<Msg>(
+  static new<const M>(
     options: string[],
     selected: string | undefined,
-    onSelect: (value: string) => Msg,
-  ): PickList<Msg> {
+    onSelect: (value: string) => M,
+  ): PickList<M> {
     return new PickList(options, selected, pushString(onSelect));
   }
 
@@ -77,19 +77,19 @@ export class PickList<Msg> implements IntoElement {
   }
 
   /** Set the message to emit when the pick list is opened */
-  onOpen(msg: () => Msg): this {
+  onOpen<const M>(msg: () => M): PickList<Msg | M> {
     this.raw.onOpen(pushFixed(msg()));
-    return this;
+    return this as unknown as PickList<Msg | M>;
   }
 
   /** Set the message to emit when the pick list is closed */
-  onClose(msg: () => Msg): this {
+  onClose<const M>(msg: () => M): PickList<Msg | M> {
     this.raw.onClose(pushFixed(msg()));
-    return this;
+    return this as unknown as PickList<Msg | M>;
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitPickList.intoElement(this.raw));
   }
 }

@@ -16,9 +16,9 @@ import { pushBool } from '../callbacks.js';
  *   .onToggle((checked) => ({ type: 'enabledChanged', value: checked }));
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this checkbox emits; inferred from `onToggle`.
  */
-export class Checkbox<Msg> implements IntoElement {
+export class Checkbox<Msg = never> implements IntoElement<Msg> {
   private raw: WitCheckbox;
 
   private constructor(isChecked: boolean) {
@@ -26,7 +26,7 @@ export class Checkbox<Msg> implements IntoElement {
   }
 
   /** Create a new Checkbox builder with the given checked state */
-  static new<Msg>(isChecked: boolean): Checkbox<Msg> {
+  static new(isChecked: boolean): Checkbox<never> {
     return new Checkbox(isChecked);
   }
 
@@ -37,9 +37,9 @@ export class Checkbox<Msg> implements IntoElement {
   }
 
   /** Set the message to emit when the checkbox is toggled, given the new state */
-  onToggle(mapper: (checked: boolean) => Msg): this {
+  onToggle<const M>(mapper: (checked: boolean) => M): Checkbox<Msg | M> {
     this.raw.onToggle(pushBool(mapper));
-    return this;
+    return this as unknown as Checkbox<Msg | M>;
   }
 
   /** Set the checkbox size in pixels */
@@ -85,7 +85,7 @@ export class Checkbox<Msg> implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitCheckbox.intoElement(this.raw));
   }
 }

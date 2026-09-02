@@ -13,7 +13,7 @@ import { Element, type IntoElement } from '../element.js';
  * Column.new().push(Text.new('Hello, World!').size(24));
  * ```
  */
-export class Text implements IntoElement {
+export class Text implements IntoElement<never> {
   private raw: WitText;
 
   private constructor(text: string) {
@@ -74,7 +74,7 @@ export class Text implements IntoElement {
   }
 
   /** Convert to Element (implements IntoElement) */
-  intoElement(): Element {
+  intoElement(): Element<never> {
     return new Element(WitText.intoElement(this.raw));
   }
 }

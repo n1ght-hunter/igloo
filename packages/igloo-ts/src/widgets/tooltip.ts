@@ -15,11 +15,13 @@ import { Element, toElement, type ElementLike, type IntoElement } from '../eleme
  *   'top',
  * );
  * ```
+ *
+ * @typeParam Msg - The message type of the content and tooltip, inferred from `new`.
  */
-export class Tooltip implements IntoElement {
+export class Tooltip<Msg = never> implements IntoElement<Msg> {
   private raw: WitTooltip;
 
-  private constructor(content: ElementLike, tooltip: ElementLike, position: Position) {
+  private constructor(content: ElementLike<Msg>, tooltip: ElementLike<Msg>, position: Position) {
     this.raw = new WitTooltip(toElement(content).inner, toElement(tooltip).inner, position);
   }
 
@@ -29,7 +31,11 @@ export class Tooltip implements IntoElement {
    * @param tooltip - The tooltip content to display on hover
    * @param position - Where to position the tooltip relative to content
    */
-  static new(content: ElementLike, tooltip: ElementLike, position: Position): Tooltip {
+  static new<const Msg = never>(
+    content: ElementLike<Msg>,
+    tooltip: ElementLike<Msg>,
+    position: Position,
+  ): Tooltip<Msg> {
     return new Tooltip(content, tooltip, position);
   }
 
@@ -52,7 +58,7 @@ export class Tooltip implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitTooltip.intoElement(this.raw));
   }
 }

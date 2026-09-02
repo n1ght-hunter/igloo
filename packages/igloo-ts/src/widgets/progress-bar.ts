@@ -11,7 +11,7 @@ import { Element, type IntoElement } from '../element.js';
  * const progressBar = ProgressBar.new(0, 100, state.progress).length(Length.fill());
  * ```
  */
-export class ProgressBar implements IntoElement {
+export class ProgressBar implements IntoElement<never> {
   private raw: WitProgressBar;
 
   private constructor(rangeStart: number, rangeEnd: number, value: number) {
@@ -47,7 +47,7 @@ export class ProgressBar implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<never> {
     return new Element(WitProgressBar.intoElement(this.raw));
   }
 }

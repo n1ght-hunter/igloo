@@ -16,24 +16,25 @@ import { pushFixed } from '../callbacks.js';
  * Column.new().push(button);
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this button emits; inferred from `onPress`.
  */
-export class Button<Msg> implements IntoElement {
+export class Button<Msg = never> implements IntoElement<Msg> {
   private raw: WitButton;
 
-  private constructor(content: ElementLike) {
+  private constructor(content: ElementLike<never>) {
     this.raw = new WitButton(toElement(content).inner);
   }
 
   /** Create a new Button builder with the given content */
-  static new<Msg>(content: ElementLike): Button<Msg> {
+  static new(content: ElementLike<never>): Button<never> {
     return new Button(content);
   }
 
   /** Set the message to emit when the button is pressed */
-  onPress(msg: () => Msg): this {
+  onPress<const M>(msg: () => M): Button<Msg | M> {
     this.raw.onPress(pushFixed(msg()));
-    return this;
+    // The runtime object is unchanged; only the static type advances to carry M.
+    return this as unknown as Button<Msg | M>;
   }
 
   /** Set the button width */
@@ -61,7 +62,7 @@ export class Button<Msg> implements IntoElement {
   }
 
   /** Convert to Element (implements IntoElement) */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitButton.intoElement(this.raw));
   }
 }

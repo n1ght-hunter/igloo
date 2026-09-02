@@ -54,43 +54,38 @@ const Application = createApp<State, Msg>({
     update: (state, msg) => {
         switch (msg.type) {
             case 'inputChanged':
-                return { ...state, inputText: msg.value }
+                state.inputText = msg.value
+                break
 
-            case 'addTask':
-                if (state.inputText.trim() === '') return state
-                return {
-                    ...state,
-                    tasks: [...state.tasks, {
-                        id: state.nextId,
-                        text: state.inputText.trim(),
-                        completed: false,
-                    }],
-                    inputText: '',
-                    nextId: state.nextId + 1,
-                }
+            case 'addTask': {
+                if (state.inputText.trim() === '') break
+                state.tasks.push({
+                    id: state.nextId,
+                    text: state.inputText.trim(),
+                    completed: false,
+                })
+                state.inputText = ''
+                state.nextId += 1
+                break
+            }
 
-            case 'toggleTask':
-                return {
-                    ...state,
-                    tasks: state.tasks.map(t =>
-                        t.id === msg.id ? { ...t, completed: !t.completed } : t
-                    ),
-                }
+            case 'toggleTask': {
+                const task = state.tasks.find(t => t.id === msg.id)
+                if (task) task.completed = !task.completed
+                break
+            }
 
             case 'deleteTask':
-                return {
-                    ...state,
-                    tasks: state.tasks.filter(t => t.id !== msg.id),
-                }
+                state.tasks = state.tasks.filter(t => t.id !== msg.id)
+                break
 
             case 'setFilter':
-                return { ...state, filter: msg.filter }
+                state.filter = msg.filter
+                break
 
             case 'clearCompleted':
-                return {
-                    ...state,
-                    tasks: state.tasks.filter(t => !t.completed),
-                }
+                state.tasks = state.tasks.filter(t => !t.completed)
+                break
         }
     },
 
@@ -115,12 +110,12 @@ const Application = createApp<State, Msg>({
                     .push(
                         Checkbox.new(task.completed)
                             .label(task.text)
-                            .onToggle(() => ({ type: 'toggleTask' as const, id: task.id }))
+                            .onToggle(() => ({ type: 'toggleTask' , id: task.id }))
                     )
                     .push(Space.new().width(Length.fill()))
                     .push(
                         Button.new(Text.new('×').size(16))
-                            .onPress(() => ({ type: 'deleteTask' as const, id: task.id }))
+                            .onPress(() => ({ type: 'deleteTask' , id: task.id }))
                     )
             )
         }
@@ -130,7 +125,7 @@ const Application = createApp<State, Msg>({
             const isActive = state.filter === filter
             return Button.new(
                 Text.new(label).size(isActive ? 14 : 12)
-            ).onPress(() => ({ type: 'setFilter' as const, filter }))
+            ).onPress(() => ({ type: 'setFilter' , filter }))
         }
 
         return Container.new(
@@ -153,7 +148,7 @@ const Application = createApp<State, Msg>({
                         .spacing(10)
                         .push(
                             TextInput.new('Add a new task...', state.inputText)
-                                .onInput((value) => ({ type: 'inputChanged' as const, value }))
+                                .onInput((value) => ({ type: 'inputChanged' , value }))
                                 .onSubmit(() => ({ type: 'addTask' }))
                                 .width(Length.fill())
                                 .padding(Padding.all(8))

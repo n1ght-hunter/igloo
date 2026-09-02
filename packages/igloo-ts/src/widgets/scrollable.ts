@@ -19,17 +19,17 @@ export type { Direction, Scrollbar } from 'iced:app/scrollable@0.1.0';
  * ).height(Length.fixed(300));
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type of the content plus `onScroll`, inferred from `new`.
  */
-export class Scrollable<Msg> implements IntoElement {
+export class Scrollable<Msg = never> implements IntoElement<Msg> {
   private raw: WitScrollable;
 
-  private constructor(content: ElementLike) {
+  private constructor(content: ElementLike<Msg>) {
     this.raw = new WitScrollable(toElement(content).inner);
   }
 
   /** Create a new Scrollable builder with the given content */
-  static new<Msg>(content: ElementLike): Scrollable<Msg> {
+  static new<const Msg = never>(content: ElementLike<Msg>): Scrollable<Msg> {
     return new Scrollable(content);
   }
 
@@ -46,9 +46,9 @@ export class Scrollable<Msg> implements IntoElement {
   }
 
   /** Set the message to emit when scrolling occurs, given the new viewport */
-  onScroll(mapper: (viewport: Viewport) => Msg): this {
+  onScroll<const M>(mapper: (viewport: Viewport) => M): Scrollable<Msg | M> {
     this.raw.onScroll(pushViewport(mapper));
-    return this;
+    return this as unknown as Scrollable<Msg | M>;
   }
 
   /** Set the scroll direction and scrollbar configuration */
@@ -76,7 +76,7 @@ export class Scrollable<Msg> implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitScrollable.intoElement(this.raw));
   }
 }

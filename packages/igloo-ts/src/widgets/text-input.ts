@@ -17,9 +17,9 @@ import { pushFixed, pushString } from '../callbacks.js';
  *   .onInput((value) => ({ type: 'nameChanged', value }));
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this text input emits; inferred from its handlers.
  */
-export class TextInput<Msg> implements IntoElement {
+export class TextInput<Msg = never> implements IntoElement<Msg> {
   private raw: WitTextInput;
 
   private constructor(placeholder: string, value: string) {
@@ -27,7 +27,7 @@ export class TextInput<Msg> implements IntoElement {
   }
 
   /** Create a new TextInput builder with placeholder and current value */
-  static new<Msg>(placeholder: string, value: string): TextInput<Msg> {
+  static new(placeholder: string, value: string): TextInput<never> {
     return new TextInput(placeholder, value);
   }
 
@@ -38,21 +38,21 @@ export class TextInput<Msg> implements IntoElement {
   }
 
   /** Set the message to emit when the text changes, given the new value */
-  onInput(mapper: (value: string) => Msg): this {
+  onInput<const M>(mapper: (value: string) => M): TextInput<Msg | M> {
     this.raw.onInput(pushString(mapper));
-    return this;
+    return this as unknown as TextInput<Msg | M>;
   }
 
   /** Set the message to emit when the user submits (e.g., presses Enter) */
-  onSubmit(msg: () => Msg): this {
+  onSubmit<const M>(msg: () => M): TextInput<Msg | M> {
     this.raw.onSubmit(pushFixed(msg()));
-    return this;
+    return this as unknown as TextInput<Msg | M>;
   }
 
   /** Set the message to emit when text is pasted, given the pasted value */
-  onPaste(mapper: (value: string) => Msg): this {
+  onPaste<const M>(mapper: (value: string) => M): TextInput<Msg | M> {
     this.raw.onPaste(pushString(mapper));
-    return this;
+    return this as unknown as TextInput<Msg | M>;
   }
 
   /** Set the width */
@@ -86,7 +86,7 @@ export class TextInput<Msg> implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitTextInput.intoElement(this.raw));
   }
 }

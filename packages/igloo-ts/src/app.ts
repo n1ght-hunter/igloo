@@ -14,11 +14,24 @@ export interface App<State, Msg> {
   /** Initialize the application state */
   init(): State;
 
-  /** Update the state based on a message */
-  update(state: State, msg: Msg): State;
+  /** Update the state in place based on a message */
+  update(state: State, msg: Msg): void;
 
   /** Render the current state as an ElementLike (widget or Element) */
-  view(state: State): ElementLike;
+  view(state: State): ElementLike<Msg>;
+}
+
+/**
+ * The host-facing resource shape required by `iced:app/app-instance`. The host
+ * boundary is untyped by design — it deals in {@link WitElement} resources and
+ * {@link CallbackId}s — so this interface carries no message type.
+ */
+export interface IApplication {
+  /** Render the current view as a WitElement */
+  view(): WitElement;
+
+  /** Dispatch a widget interaction */
+  update(id: CallbackId, value: MessageValue): void;
 }
 
 /**
@@ -35,8 +48,8 @@ export interface App<State, Msg> {
  *   init: () => ({ count: 0 }),
  *   update: (state, msg) => {
  *     switch (msg.type) {
- *       case 'increment': return { count: state.count + 1 };
- *       case 'decrement': return { count: state.count - 1 };
+ *       case 'increment': state.count += 1; break;
+ *       case 'decrement': state.count -= 1; break;
  *     }
  *   },
  *   view: (state) =>
@@ -48,7 +61,7 @@ export interface App<State, Msg> {
  * export const appInstance = { Application };
  * ```
  */
-export function createApp<State, Msg>(app: App<State, Msg>) {
+export function createApp<State, Msg>(app: App<State, Msg>): new () => IApplication {
   return class Application {
     private state: State = app.init();
     private current = new Frame<Msg>(0);
@@ -75,7 +88,7 @@ export function createApp<State, Msg>(app: App<State, Msg>) {
       if (cb === undefined) return;
       const msg = resolve(cb, value);
       if (msg !== undefined) {
-        this.state = app.update(this.state, msg);
+        app.update(this.state, msg);
       }
     }
   };

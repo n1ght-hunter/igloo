@@ -16,7 +16,7 @@ export type { Rotation } from 'iced:app/shared@0.1.0';
  *   .contentFit('contain');
  * ```
  */
-export class Image implements IntoElement {
+export class Image implements IntoElement<never> {
   private raw: WitImage;
 
   private constructor(handle: string) {
@@ -77,7 +77,7 @@ export class Image implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<never> {
     return new Element(WitImage.intoElement(this.raw));
   }
 }

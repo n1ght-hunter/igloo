@@ -16,8 +16,14 @@ import { Element, toElement, type IntoElement, type ElementLike } from '../eleme
  *   .push(Text.new('Left'))
  *   .push(Text.new('Right'));
  * ```
+ *
+ * The child message type is inferred and accumulated as elements are pushed;
+ * pass `Row.new<Msg>()` to pin it so each `push` is checked against `Msg`.
+ *
+ * @typeParam Msg - The accumulated message type of the row's children.
+ * @typeParam Bound - Upper bound each child must satisfy; `unknown` when unpinned.
  */
-export class Row implements IntoElement {
+export class Row<Msg = never, Bound = unknown> implements IntoElement<Msg> {
   private raw: WitRow;
 
   private constructor() {
@@ -25,36 +31,41 @@ export class Row implements IntoElement {
   }
 
   /** Create a new empty Row builder */
-  static new(): Row {
+  static new(): Row<never, unknown>;
+  /** Create a new empty Row builder pinned to the message type `B` */
+  static new<B>(): Row<never, B>;
+  static new(): Row<never, unknown> {
     return new Row();
   }
 
   /** Create a Row with the given elements */
-  static with(elements: ElementLike[]): Row {
-    const row = new Row();
-    return row.extend(elements);
+  static with<const M>(elements: ElementLike<M>[]): Row<M, unknown> {
+    return new Row<M, unknown>().extend(elements);
   }
 
   /** Add an element to the row */
-  push(element: ElementLike): this {
+  push<const M extends Bound>(element: ElementLike<M>): Row<Msg | M, Bound> {
     this.raw.push(toElement(element).inner);
-    return this;
+    return this as unknown as Row<Msg | M, Bound>;
   }
 
   /** Add an element conditionally */
-  pushIf(condition: boolean, element: () => ElementLike): this {
+  pushIf<const M extends Bound>(
+    condition: boolean,
+    element: () => ElementLike<M>,
+  ): Row<Msg | M, Bound> {
     if (condition) {
       this.raw.push(toElement(element()).inner);
     }
-    return this;
+    return this as unknown as Row<Msg | M, Bound>;
   }
 
   /** Add multiple elements */
-  extend(elements: ElementLike[]): this {
+  extend<const M extends Bound>(elements: ElementLike<M>[]): Row<Msg | M, Bound> {
     for (const element of elements) {
       this.raw.push(toElement(element).inner);
     }
-    return this;
+    return this as unknown as Row<Msg | M, Bound>;
   }
 
   /** Set the spacing between elements in pixels */
@@ -100,7 +111,7 @@ export class Row implements IntoElement {
   }
 
   /** Convert to Element (implements IntoElement) */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitRow.intoElement(this.raw));
   }
 }

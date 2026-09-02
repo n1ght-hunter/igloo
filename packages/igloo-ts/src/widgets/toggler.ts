@@ -17,9 +17,9 @@ import { pushBool } from '../callbacks.js';
  *   .onToggle((enabled) => ({ type: 'darkModeChanged', enabled }));
  * ```
  *
- * @typeParam Msg - The application message type
+ * @typeParam Msg - The message type this toggler emits; inferred from `onToggle`.
  */
-export class Toggler<Msg> implements IntoElement {
+export class Toggler<Msg = never> implements IntoElement<Msg> {
   private raw: WitToggler;
 
   private constructor(isToggled: boolean) {
@@ -27,7 +27,7 @@ export class Toggler<Msg> implements IntoElement {
   }
 
   /** Create a new Toggler builder with the given toggled state */
-  static new<Msg>(isToggled: boolean): Toggler<Msg> {
+  static new(isToggled: boolean): Toggler<never> {
     return new Toggler(isToggled);
   }
 
@@ -38,9 +38,9 @@ export class Toggler<Msg> implements IntoElement {
   }
 
   /** Set the message to emit when the toggler is toggled, given the new state */
-  onToggle(mapper: (enabled: boolean) => Msg): this {
+  onToggle<const M>(mapper: (enabled: boolean) => M): Toggler<Msg | M> {
     this.raw.onToggle(pushBool(mapper));
-    return this;
+    return this as unknown as Toggler<Msg | M>;
   }
 
   /** Set the toggler size in pixels */
@@ -92,7 +92,7 @@ export class Toggler<Msg> implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<Msg> {
     return new Element(WitToggler.intoElement(this.raw));
   }
 }

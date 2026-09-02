@@ -12,7 +12,7 @@ import { Element, type IntoElement } from '../element.js';
  * const vr = Rule.vertical(2);
  * ```
  */
-export class Rule implements IntoElement {
+export class Rule implements IntoElement<never> {
   private raw: WitRule;
 
   private constructor(isHorizontal: boolean, thickness: Pixels) {
@@ -30,7 +30,7 @@ export class Rule implements IntoElement {
   }
 
   /** Convert to Element */
-  intoElement(): Element {
+  intoElement(): Element<never> {
     return new Element(WitRule.intoElement(this.raw));
   }
 }
