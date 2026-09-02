@@ -4,30 +4,8 @@ package iced:app@0.1.0;
 world app {
     import shared;
     import callbacks;
-    import button;
-    import column;
-    import row;
-    import container;
-    import tooltip;
-    import text;
-    import rule;
-    import space;
-    import svg;
-    import image;
-    import progress-bar;
-    import radio;
-    import checkbox;
-    import toggler;
-    import text-input;
-    import slider;
-    import vertical-slider;
-    import combo-box;
-    import pick-list;
-    import markdown;
-    import float;
-    import grid;
-    import keyed;
-    import scrollable;
+    import task;
+    import widgets;
 
     export app-instance;
 }

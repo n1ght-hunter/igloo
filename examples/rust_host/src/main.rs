@@ -84,30 +84,38 @@ impl IcedApp {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::Plugin(id, msg) => {
-                if let Err(e) = self.plugin_manager.plugin_update(&id, msg) {
+            Message::Plugin(id, msg) => match self.plugin_manager.plugin_update(&id, msg) {
+                Ok(task) => task.map(move |m| Message::Plugin(id.clone(), m)),
+                Err(e) => {
                     tracing::error!("Failed to update plugin {}: {}", id, e);
+                    Task::none()
                 }
-            }
+            },
             Message::ChangePage(page) => {
                 self.current_page = page;
+                Task::none()
             }
             Message::PluginLoaded(result) => {
                 self.plugins_loading = self.plugins_loading.saturating_sub(1);
                 match result {
                     Ok(plugin) => {
                         tracing::info!("Plugin loaded successfully: {}", plugin.name);
-                        if let Err(e) = self.plugin_manager.add_compiled_plugin(plugin) {
-                            tracing::error!("Failed to add plugin: {}", e);
+                        let name = plugin.name.clone();
+                        match self.plugin_manager.add_compiled_plugin(plugin) {
+                            Ok(boot) => boot.map(move |m| Message::Plugin(name.clone(), m)),
+                            Err(e) => {
+                                tracing::error!("Failed to add plugin: {}", e);
+                                Task::none()
+                            }
                         }
                     }
                     Err(e) => {
                         tracing::error!("Failed to load plugin: {}", e);
+                        Task::none()
                     }
                 }
             }
-        };
-        Task::none()
+        }
     }
 
     fn view(&self) -> iced::Element<'_, Message> {

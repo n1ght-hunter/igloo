@@ -6,8 +6,8 @@ use std::{
 };
 
 use crate::{
-    bindings::{App, exports::iced::app::app_instance::MessageValue},
-    widgets::{Message, ToElement, WrapperRenderer, WrapperTheme},
+    bindings::{App, exports::iced::app::app_instance::MessageValue, iced::app::widgets::Node},
+    widgets::{Message, WrapperRenderer, WrapperTheme, build_element},
 };
 use tracing::info;
 use wasmtime::{
@@ -115,13 +115,20 @@ impl PluginManager {
 
     /// Instantiates a component and constructs its `application` resource, which
     /// holds the plugin's state for as long as the plugin lives.
-    fn instantiate(&mut self, component: &Component) -> Result<Plugin> {
+    fn instantiate(&mut self, component: &Component) -> Result<(Plugin, iced::Task<Message>)> {
         let app = App::instantiate(self.store.get_mut(), component, &self.linker)?;
-        let instance = app
-            .iced_app_app_instance()
-            .application()
-            .call_constructor(self.store.get_mut())?;
-        Ok(Plugin { app, instance })
+        let application = app.iced_app_app_instance().application();
+        let instance = application.call_constructor(self.store.get_mut())?;
+        let boot = application.call_boot(self.store.get_mut(), instance)?;
+        let boot = self
+            .store
+            .get_mut()
+            .data_mut()
+            .table
+            .delete(boot)
+            .map_err(wasmtime::Error::from)?
+            .0;
+        Ok((Plugin { app, instance }, boot))
     }
 
     /// Adds a plugin from a file.
@@ -141,7 +148,7 @@ impl PluginManager {
     /// minted ahead of time, plus the raw value for mapper variants. The guest
     /// resolves the id into a real `Application::Message` itself, so this just
     /// forwards to the matching `update-*` entry point.
-    pub fn plugin_update(&mut self, id: &str, msg: Message) -> Result<()> {
+    pub fn plugin_update(&mut self, id: &str, msg: Message) -> Result<iced::Task<Message>> {
         let Some(plugin) = self.plugins.get_mut(id) else {
             return Err(PluginError::NotFound(id.into()));
         };
@@ -156,8 +163,14 @@ impl PluginManager {
         };
         let mut store = self.store.borrow_mut();
         let app = plugin.app.iced_app_app_instance().application();
-        app.call_update(store.deref_mut(), plugin.instance, callback_id, &value)?;
-        Ok(())
+        let task = app.call_update(store.deref_mut(), plugin.instance, callback_id, &value)?;
+        let task = store
+            .data_mut()
+            .table
+            .delete(task)
+            .map_err(wasmtime::Error::from)?
+            .0;
+        Ok(task)
     }
 
     pub fn plugin_view<'a, Theme, Renderer>(
@@ -171,7 +184,7 @@ impl PluginManager {
         let plugin = self.plugins.get(id)?;
 
         let mut store = self.store.borrow_mut();
-        let result = plugin
+        let tree = plugin
             .app
             .iced_app_app_instance()
             .application()
@@ -180,34 +193,32 @@ impl PluginManager {
                 tracing::error!("Failed to call view for plugin {}: {}", id, e);
             })
             .ok()?;
-        let element = store
-            .data_mut()
-            .table
-            .delete(result)
-            .inspect_err(|e| {
-                tracing::error!("Failed to delete element for plugin {}: {}", id, e);
-            })
-            .ok()?;
-        Some(element.to_element(&mut store.data_mut().table))
+        let root = tree.root;
+        let mut nodes: Vec<Option<Node>> = tree.nodes.into_iter().map(Some).collect();
+        Some(build_element(&mut nodes, root))
     }
 
     /// Adds a plugin from pre-loaded bytes.
-    pub fn add_plugin_from_bytes(&mut self, name: &str, bytes: &[u8]) -> Result<()> {
+    pub fn add_plugin_from_bytes(
+        &mut self,
+        name: &str,
+        bytes: &[u8],
+    ) -> Result<iced::Task<Message>> {
         let component = Component::from_binary(&self.engine, bytes)?;
-        let plugin = self.instantiate(&component)?;
+        let (plugin, boot) = self.instantiate(&component)?;
         if self.plugins.insert(name.to_string(), plugin).is_some() {
             info!("Replaced existing plugin: {}", name);
         }
-        Ok(())
+        Ok(boot)
     }
 
-    /// Adds a pre-compiled plugin component.
-    pub fn add_compiled_plugin(&mut self, plugin: CompiledPlugin) -> Result<()> {
-        let instance = self.instantiate(&plugin.component)?;
+    /// Adds a pre-compiled plugin component, returning its boot task.
+    pub fn add_compiled_plugin(&mut self, plugin: CompiledPlugin) -> Result<iced::Task<Message>> {
+        let (instance, boot) = self.instantiate(&plugin.component)?;
         if self.plugins.insert(plugin.name.clone(), instance).is_some() {
             info!("Replaced existing plugin: {}", plugin.name);
         }
-        Ok(())
+        Ok(boot)
     }
 
     /// Returns a clone of the engine for use in async plugin compilation.
@@ -222,7 +233,7 @@ impl PluginManager {
         component: F,
     ) -> Result<()> {
         let component = component(&self.engine)?;
-        let plugin = self.instantiate(&component)?;
+        let (plugin, _boot) = self.instantiate(&component)?;
         if self.plugins.insert(id.clone(), plugin).is_some() {
             info!("Replaced existing plugin: {}", id);
         }

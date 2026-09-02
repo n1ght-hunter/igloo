@@ -3,7 +3,7 @@ use std::borrow::Borrow;
 use iced_core::{Length, Padding, Pixels, text};
 
 use crate::Element;
-use crate::bindings::iced::app::pick_list::PickList as WitPickList;
+use crate::bindings::iced::app::widgets::{Node, PickListNode};
 
 /// A widget for selecting a value from a set of options.
 pub struct PickList<Message> {
@@ -111,38 +111,21 @@ impl<Message: 'static> PickList<Message> {
 
 impl<Message: 'static> From<PickList<Message>> for Element<Message> {
     fn from(pick_list: PickList<Message>) -> Self {
-        Element::new(move |realize| {
-            let mapper = realize.string_mapper(pick_list.on_select);
-            let raw = WitPickList::new(
-                &pick_list.str_options,
-                pick_list.selected.as_deref(),
-                mapper,
-            );
-            if let Some(placeholder) = pick_list.placeholder {
-                raw.placeholder(&placeholder);
-            }
-            if let Some(width) = pick_list.width {
-                raw.width(width.into());
-            }
-            if let Some(padding) = pick_list.padding {
-                raw.padding(padding.into());
-            }
-            if let Some(size) = pick_list.text_size {
-                raw.text_size(size);
-            }
-            if let Some(lh) = pick_list.text_line_height {
-                raw.text_line_height(lh.into());
-            }
-            if let Some(shaping) = pick_list.text_shaping {
-                raw.text_shaping(shaping.into());
-            }
-            if let Some(msg) = pick_list.on_open {
-                raw.on_open(realize.fixed(msg));
-            }
-            if let Some(msg) = pick_list.on_close {
-                raw.on_close(realize.fixed(msg));
-            }
-            WitPickList::into_element(raw)
+        Element::new(move |realize, arena| {
+            let node = PickListNode {
+                options: pick_list.str_options,
+                selected: pick_list.selected,
+                on_select: realize.string_mapper(pick_list.on_select),
+                placeholder: pick_list.placeholder,
+                width: pick_list.width.map(Into::into),
+                padding: pick_list.padding.map(Into::into),
+                text_size: pick_list.text_size,
+                text_line_height: pick_list.text_line_height.map(Into::into),
+                text_shaping: pick_list.text_shaping.map(Into::into),
+                on_open: pick_list.on_open.map(|msg| realize.fixed(msg)),
+                on_close: pick_list.on_close.map(|msg| realize.fixed(msg)),
+            };
+            arena.push(Node::PickList(node))
         })
     }
 }

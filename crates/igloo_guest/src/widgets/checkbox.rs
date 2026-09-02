@@ -1,7 +1,7 @@
 use iced_core::{Length, Pixels, text};
 
 use crate::Element;
-use crate::bindings::iced::app::checkbox::Checkbox as WitCheckbox;
+use crate::bindings::iced::app::widgets::{CheckboxNode, Node};
 
 /// A box that can be checked.
 pub struct Checkbox<Message> {
@@ -84,36 +84,20 @@ impl<Message: 'static> Checkbox<Message> {
 
 impl<Message: 'static> From<Checkbox<Message>> for Element<Message> {
     fn from(checkbox: Checkbox<Message>) -> Self {
-        Element::new(move |realize| {
-            let raw = WitCheckbox::new(checkbox.is_checked);
-            if let Some(label) = checkbox.label {
-                raw.label(&label);
-            }
-            if let Some(on_toggle) = checkbox.on_toggle {
-                raw.on_toggle(realize.bool_mapper(on_toggle));
-            }
-            if let Some(size) = checkbox.size {
-                raw.size(size);
-            }
-            if let Some(width) = checkbox.width {
-                raw.width(width.into());
-            }
-            if let Some(spacing) = checkbox.spacing {
-                raw.spacing(spacing);
-            }
-            if let Some(text_size) = checkbox.text_size {
-                raw.text_size(text_size);
-            }
-            if let Some(lh) = checkbox.text_line_height {
-                raw.text_line_height(lh.into());
-            }
-            if let Some(wrapping) = checkbox.text_wrapping {
-                raw.text_wrapping(wrapping.into());
-            }
-            if let Some(shaping) = checkbox.text_shaping {
-                raw.text_shaping(shaping.into());
-            }
-            WitCheckbox::into_element(raw)
+        Element::new(move |realize, arena| {
+            let node = CheckboxNode {
+                is_checked: checkbox.is_checked,
+                label: checkbox.label,
+                on_toggle: checkbox.on_toggle.map(|f| realize.bool_mapper(f)),
+                size: checkbox.size,
+                width: checkbox.width.map(Into::into),
+                spacing: checkbox.spacing,
+                text_size: checkbox.text_size,
+                text_line_height: checkbox.text_line_height.map(Into::into),
+                text_wrapping: checkbox.text_wrapping.map(Into::into),
+                text_shaping: checkbox.text_shaping.map(Into::into),
+            };
+            arena.push(Node::Checkbox(node))
         })
     }
 }

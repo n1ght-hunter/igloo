@@ -3,9 +3,8 @@ use crate::bindings::iced::app::{
     length::Length,
     message_types,
     padding::Padding,
-    scrollable::{Anchor, Direction, Scrollbar},
     shared::{Color, ContentFit, FilterMethod, Rotation},
-    text::{LineHeight, Shaping, TextAlignment, Wrapping},
+    widgets::{Anchor, Direction, LineHeight, Scrollbar, Shaping, TextAlignment, Wrapping},
 };
 
 impl From<LineHeight> for iced::widget::text::LineHeight {

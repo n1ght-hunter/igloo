@@ -3,7 +3,7 @@ use crate::bindings::iced::app::{
     length::Length,
     padding::Padding,
     shared::{Color, ContentFit, FilterMethod, Rotation},
-    text::{self, LineHeight, Shaping, Wrapping},
+    widgets::{LineHeight, Shaping, TextAlignment, Wrapping},
 };
 
 impl From<iced_core::text::LineHeight> for LineHeight {
@@ -47,14 +47,14 @@ impl From<iced_core::Length> for Length {
     }
 }
 
-impl From<iced_core::text::Alignment> for text::TextAlignment {
+impl From<iced_core::text::Alignment> for TextAlignment {
     fn from(alignment: iced_core::text::Alignment) -> Self {
         match alignment {
-            iced_core::text::Alignment::Default => text::TextAlignment::Default,
-            iced_core::text::Alignment::Left => text::TextAlignment::Left,
-            iced_core::text::Alignment::Center => text::TextAlignment::Center,
-            iced_core::text::Alignment::Right => text::TextAlignment::Right,
-            iced_core::text::Alignment::Justified => text::TextAlignment::Justified,
+            iced_core::text::Alignment::Default => TextAlignment::Default,
+            iced_core::text::Alignment::Left => TextAlignment::Left,
+            iced_core::text::Alignment::Center => TextAlignment::Center,
+            iced_core::text::Alignment::Right => TextAlignment::Right,
+            iced_core::text::Alignment::Justified => TextAlignment::Justified,
         }
     }
 }
@@ -141,9 +141,9 @@ impl From<iced_core::Rotation> for Rotation {
     }
 }
 
-impl From<crate::widgets::tooltip::Position> for crate::bindings::iced::app::tooltip::Position {
+impl From<crate::widgets::tooltip::Position> for crate::bindings::iced::app::widgets::Position {
     fn from(value: crate::widgets::tooltip::Position) -> Self {
-        use crate::bindings::iced::app::tooltip::Position as WitPosition;
+        use crate::bindings::iced::app::widgets::Position as WitPosition;
         match value {
             crate::widgets::tooltip::Position::Top => WitPosition::Top,
             crate::widgets::tooltip::Position::Bottom => WitPosition::Bottom,
@@ -157,7 +157,7 @@ impl From<crate::widgets::tooltip::Position> for crate::bindings::iced::app::too
 // The generated `Scrollbar` type is defined by the `wit_bindgen::generate!` macro,
 // so a `#[derive(Default)]` can't be attached to its declaration directly.
 #[allow(clippy::derivable_impls)]
-impl Default for crate::bindings::iced::app::scrollable::Scrollbar {
+impl Default for crate::bindings::iced::app::widgets::Scrollbar {
     fn default() -> Self {
         Self {
             width: None,

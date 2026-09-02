@@ -1,7 +1,7 @@
 use iced_core::{Length, Pixels, text};
 
 use crate::Element;
-use crate::bindings::iced::app::radio::Radio as WitRadio;
+use crate::bindings::iced::app::widgets::{Node, RadioNode};
 
 /// A circular button representing an alternative.
 pub struct Radio<Message> {
@@ -76,31 +76,20 @@ impl<Message: 'static> Radio<Message> {
 
 impl<Message: 'static> From<Radio<Message>> for Element<Message> {
     fn from(radio: Radio<Message>) -> Self {
-        Element::new(move |realize| {
-            let wit_msg = realize.fixed(radio.on_select);
-            let raw = WitRadio::new(&radio.label, radio.is_selected, wit_msg);
-            if let Some(size) = radio.size {
-                raw.size(size);
-            }
-            if let Some(width) = radio.width {
-                raw.width(width.into());
-            }
-            if let Some(spacing) = radio.spacing {
-                raw.spacing(spacing);
-            }
-            if let Some(text_size) = radio.text_size {
-                raw.text_size(text_size);
-            }
-            if let Some(lh) = radio.text_line_height {
-                raw.text_line_height(lh.into());
-            }
-            if let Some(wrapping) = radio.text_wrapping {
-                raw.text_wrapping(wrapping.into());
-            }
-            if let Some(shaping) = radio.text_shaping {
-                raw.text_shaping(shaping.into());
-            }
-            WitRadio::into_element(raw)
+        Element::new(move |realize, arena| {
+            let node = RadioNode {
+                label: radio.label,
+                is_selected: radio.is_selected,
+                on_select: realize.fixed(radio.on_select),
+                size: radio.size,
+                width: radio.width.map(Into::into),
+                spacing: radio.spacing,
+                text_size: radio.text_size,
+                text_line_height: radio.text_line_height.map(Into::into),
+                text_wrapping: radio.text_wrapping.map(Into::into),
+                text_shaping: radio.text_shaping.map(Into::into),
+            };
+            arena.push(Node::Radio(node))
         })
     }
 }

@@ -3,12 +3,18 @@ use std::marker::PhantomData;
 use iced_core::{Length, Padding, Pixels};
 
 use crate::Element;
-use crate::bindings::iced::app::row::Row as WitRow;
+use crate::bindings::iced::app::widgets::{Node, RowNode};
 
 /// A container that distributes its contents horizontally.
 pub struct Row<Message> {
-    raw: WitRow,
     children: Vec<Element<Message>>,
+    spacing: Option<f32>,
+    padding: Option<Padding>,
+    width: Option<Length>,
+    height: Option<Length>,
+    align_y: Option<iced_core::alignment::Vertical>,
+    clip: Option<bool>,
+    wrap: Option<bool>,
     _message: PhantomData<Message>,
 }
 
@@ -22,8 +28,14 @@ impl<Message> Row<Message> {
     /// Creates an empty [`Row`].
     pub fn new() -> Self {
         Self {
-            raw: WitRow::new(),
             children: Vec::new(),
+            spacing: None,
+            padding: None,
+            width: None,
+            height: None,
+            align_y: None,
+            clip: None,
+            wrap: None,
             _message: PhantomData,
         }
     }
@@ -39,45 +51,45 @@ impl<Message> Row<Message> {
     }
 
     /// Sets the horizontal spacing _between_ elements.
-    pub fn spacing(self, amount: impl Into<Pixels>) -> Self {
-        self.raw.spacing(amount.into().0);
+    pub fn spacing(mut self, amount: impl Into<Pixels>) -> Self {
+        self.spacing = Some(amount.into().0);
         self
     }
 
     /// Sets the [`Padding`] of the [`Row`].
-    pub fn padding(self, padding: impl Into<Padding>) -> Self {
-        self.raw.padding(padding.into().into());
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = Some(padding.into());
         self
     }
 
     /// Sets the width of the [`Row`].
-    pub fn width(self, width: impl Into<Length>) -> Self {
-        self.raw.width(width.into().into());
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = Some(width.into());
         self
     }
 
     /// Sets the height of the [`Row`].
-    pub fn height(self, height: impl Into<Length>) -> Self {
-        self.raw.height(height.into().into());
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = Some(height.into());
         self
     }
 
     /// Sets the vertical alignment of the contents of the [`Row`].
-    pub fn align_y(self, align: impl Into<iced_core::alignment::Vertical>) -> Self {
-        self.raw.align_y(align.into().into());
+    pub fn align_y(mut self, align: impl Into<iced_core::alignment::Vertical>) -> Self {
+        self.align_y = Some(align.into());
         self
     }
 
     /// Sets whether the contents of the [`Row`] should be clipped on overflow.
-    pub fn clip(self, clip: bool) -> Self {
-        self.raw.clip(clip);
+    pub fn clip(mut self, clip: bool) -> Self {
+        self.clip = Some(clip);
         self
     }
 
     /// Turns the [`Row`] into a wrapping row.
     /// The original alignment of the [`Row`] is preserved per row wrapped.
-    pub fn wrap(self) -> Self {
-        self.raw.wrap(true);
+    pub fn wrap(mut self) -> Self {
+        self.wrap = Some(true);
         self
     }
 
@@ -107,11 +119,23 @@ impl<Message> Row<Message> {
 
 impl<Message: 'static> From<Row<Message>> for Element<Message> {
     fn from(row: Row<Message>) -> Self {
-        Element::new(move |realize| {
-            for child in row.children {
-                row.raw.push(child.build(realize));
-            }
-            WitRow::into_element(row.raw)
+        Element::new(move |realize, arena| {
+            let children = row
+                .children
+                .into_iter()
+                .map(|child| child.build(realize, arena))
+                .collect();
+            let node = RowNode {
+                children,
+                spacing: row.spacing,
+                padding: row.padding.map(Into::into),
+                width: row.width.map(Into::into),
+                height: row.height.map(Into::into),
+                align_y: row.align_y.map(Into::into),
+                clip: row.clip,
+                wrap: row.wrap,
+            };
+            arena.push(Node::Row(node))
         })
     }
 }

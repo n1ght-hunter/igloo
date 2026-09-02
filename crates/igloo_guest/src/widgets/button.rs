@@ -1,7 +1,7 @@
 use iced_core::{Length, Padding};
 
 use crate::Element;
-use crate::bindings::iced::app::button::Button as WitButton;
+use crate::bindings::iced::app::widgets::{ButtonNode, Node};
 
 pub struct Button<Message> {
     content: Element<Message>,
@@ -52,26 +52,17 @@ impl<Message: 'static> Button<Message> {
 
 impl<Message: 'static> From<Button<Message>> for Element<Message> {
     fn from(button: Button<Message>) -> Self {
-        Element::new(move |realize| {
-            let content = button.content.build(realize);
-            let raw = WitButton::new(content);
-            if let Some(width) = button.width {
-                raw.width(width.into());
-            }
-            if let Some(height) = button.height {
-                raw.height(height.into());
-            }
-            if let Some(padding) = button.padding {
-                raw.padding(padding.into());
-            }
-            if let Some(msg) = button.on_press {
-                raw.on_press(realize.fixed(msg));
-            }
-            if let Some(clip) = button.clip {
-                raw.clip(clip);
-            }
-            WitButton::into_element(raw)
+        Element::new(move |realize, arena| {
+            let content = button.content.build(realize, arena);
+            let node = ButtonNode {
+                content,
+                on_press: button.on_press.map(|msg| realize.fixed(msg)),
+                width: button.width.map(Into::into),
+                height: button.height.map(Into::into),
+                padding: button.padding.map(Into::into),
+                clip: button.clip,
+            };
+            arena.push(Node::Button(node))
         })
     }
 }
-

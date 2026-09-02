@@ -1,7 +1,8 @@
 use std::rc::Rc;
 
+use crate::arena::Arena;
 use crate::bindings::iced::app::message_types::Viewport;
-use crate::bindings::iced::app::shared::Element as WitElement;
+use crate::bindings::iced::app::widgets::{ExplainNode, Node, NodeId};
 
 /// Turns a widget's deferred callbacks into opaque callback ids.
 ///
@@ -20,35 +21,38 @@ pub(crate) trait Realize<Message> {
     fn viewport_mapper(&self, f: Box<dyn Fn(Viewport) -> Message>) -> u32;
 }
 
-/// A view element whose widget tree and message callbacks are not yet built into
-/// WIT resources.
+/// A view element whose node arena and message callbacks are not yet built.
 ///
 /// Building is deferred until [`crate::ApplicationResource::view`], where the
 /// concrete `Application::Message` type is known and every callback — fixed or
-/// value-carrying — can be turned into a real `message` resource with no type
-/// erasure.
+/// value-carrying — can be turned into a real callback id with no type erasure.
+/// The closure pushes this element's subtree into [`crate::arena`] in post-order
+/// and returns the id of its root node.
 #[allow(missing_debug_implementations)]
 pub struct Element<Message> {
-    build: Box<dyn FnOnce(&dyn Realize<Message>) -> WitElement>,
+    build: Box<dyn FnOnce(&dyn Realize<Message>, &mut Arena) -> NodeId>,
 }
 
 impl<Message: 'static> Element<Message> {
     pub(crate) fn new(
-        build: impl FnOnce(&dyn Realize<Message>) -> WitElement + 'static,
+        build: impl FnOnce(&dyn Realize<Message>, &mut Arena) -> NodeId + 'static,
     ) -> Self {
         Self {
             build: Box::new(build),
         }
     }
 
-    pub(crate) fn build(self, realize: &dyn Realize<Message>) -> WitElement {
-        (self.build)(realize)
+    pub(crate) fn build(self, realize: &dyn Realize<Message>, arena: &mut Arena) -> NodeId {
+        (self.build)(realize, arena)
     }
 
     /// Wraps the element with a debug overlay of the given color.
     pub fn explain(self, color: impl Into<crate::bindings::iced::app::shared::Color>) -> Self {
         let color = color.into();
-        Element::new(move |realize| self.build(realize).explain(color))
+        Element::new(move |realize, arena| {
+            let content = self.build(realize, arena);
+            arena.push(Node::Explain(ExplainNode { content, color }))
+        })
     }
 
     /// Applies `f` to the messages produced by this element's subtree.
@@ -59,16 +63,16 @@ impl<Message: 'static> Element<Message> {
     /// widget — both are composed, not rewritten after the fact.
     pub fn map<B: 'static>(self, f: impl Fn(Message) -> B + 'static) -> Element<B> {
         let f: Rc<dyn Fn(Message) -> B> = Rc::new(f);
-        Element::new(move |realize: &dyn Realize<B>| {
+        Element::new(move |realize: &dyn Realize<B>, arena: &mut Arena| {
             let adapter = MapRealize { inner: realize, f };
-            self.build(&adapter)
+            self.build(&adapter, arena)
         })
     }
 }
 
-struct MapRealize<'a, Message, B> {
-    inner: &'a dyn Realize<B>,
-    f: Rc<dyn Fn(Message) -> B>,
+pub(crate) struct MapRealize<'a, Message, B> {
+    pub(crate) inner: &'a dyn Realize<B>,
+    pub(crate) f: Rc<dyn Fn(Message) -> B>,
 }
 
 impl<Message: 'static, B: 'static> Realize<Message> for MapRealize<'_, Message, B> {

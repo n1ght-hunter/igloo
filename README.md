@@ -88,10 +88,13 @@ Igloo supports plugins written in multiple languages:
 
 1. Create a new Rust library with `crate-type = ["cdylib"]`
 2. Add `igloo_guest` as a dependency
-3. Implement the required traits:
+3. Implement the `Application` trait:
 
 ```rust
-use igloo_guest::*;
+use igloo_guest::{
+    Element, Task,
+    widgets::{button, column, text},
+};
 
 #[derive(Debug, Clone)]
 pub enum MyMessage {
@@ -103,45 +106,33 @@ pub struct MyPlugin {
     counter: u32,
 }
 
-impl MyPlugin {
-    pub fn new() -> Self {
-        Self { counter: 0 }
-    }
+impl igloo_guest::Application for MyPlugin {
+    type Message = MyMessage;
 
-    pub fn update(&mut self, message: MyMessage) {
-        match message {
-            MyMessage::ButtonPressed => {
-                self.counter += 1;
-            }
-        }
-    }
-
-    pub fn view(&self) -> Element {
-        column![
-            text!("Count: {}", self.counter),
-            button("Click me").on_press(MyMessage::ButtonPressed)
-        ].into()
-    }
-}
-
-impl igloo_guest::Application<MyPlugin, MyMessage> for MyPlugin {
-    fn new() -> Self
-    where
-        Self: Sized,
-    {
-        MyPlugin::new()
+    /// Build the initial state and the task to run on startup.
+    fn new() -> (Self, Task<MyMessage>) {
+        (Self { counter: 0 }, Task::none())
     }
 
     fn view(&self) -> Element<MyMessage> {
-        self.view()
+        column()
+            .push(text(format!("Count: {}", self.counter)))
+            .push(button(text("Click me")).on_press(MyMessage::ButtonPressed))
+            .into()
     }
 
-    fn update(&mut self, message: MyMessage) {
-        self.update(message);
+    fn update(&mut self, message: MyMessage) -> Task<MyMessage> {
+        match message {
+            MyMessage::ButtonPressed => {
+                self.counter += 1;
+                Task::none()
+            }
+        }
     }
 }
+
 // Export the plugin
-igloo_guest::export_guest!(MyPlugin, MyMessage);
+igloo_guest::export_guest!(MyPlugin);
 ```
 
 4. Compile to WASM:
@@ -210,13 +201,13 @@ class CounterApp(App[str]):
 ### Loading Plugins in Host
 
 ```rust
-use test_host::plugin_manager::PluginManager;
+use igloo::plugin_manager::PluginManager;
 
 let mut plugin_manager = PluginManager::new()?;
 plugin_manager.add_plugin_from_file("my-plugin", "path/to/plugin.wasm")?;
 
-// In your update loop:
-plugin_manager.plugin_update("my-plugin", message)?;
+// In your update loop: returns an `iced::Task` the plugin asked to run.
+let task = plugin_manager.plugin_update("my-plugin", message)?;
 
 // In your view:
 let plugin_view = plugin_manager.plugin_view("my-plugin")?;

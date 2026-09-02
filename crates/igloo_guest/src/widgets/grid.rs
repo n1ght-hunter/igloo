@@ -3,12 +3,16 @@ use std::marker::PhantomData;
 use iced_core::Pixels;
 
 use crate::Element;
-use crate::bindings::iced::app::grid::Grid as WitGrid;
+use crate::bindings::iced::app::widgets::{GridNode, Node};
 
 /// A container that arranges its contents in a grid.
 pub struct Grid<Message> {
-    raw: WitGrid,
     children: Vec<Element<Message>>,
+    spacing: Option<f32>,
+    width: Option<f32>,
+    height: Option<f32>,
+    columns: Option<u64>,
+    fluid: Option<f32>,
     _message: PhantomData<Message>,
 }
 
@@ -22,8 +26,12 @@ impl<Message> Grid<Message> {
     /// Creates an empty [`Grid`].
     pub fn new() -> Self {
         Self {
-            raw: WitGrid::new(),
             children: Vec::new(),
+            spacing: None,
+            width: None,
+            height: None,
+            columns: None,
+            fluid: None,
             _message: PhantomData,
         }
     }
@@ -55,43 +63,53 @@ impl<Message> Grid<Message> {
     }
 
     /// Sets the spacing between cells in the [`Grid`].
-    pub fn spacing(self, amount: impl Into<Pixels>) -> Self {
-        self.raw.spacing(amount.into().0);
+    pub fn spacing(mut self, amount: impl Into<Pixels>) -> Self {
+        self.spacing = Some(amount.into().0);
         self
     }
 
     /// Sets the width of the [`Grid`].
-    pub fn width(self, width: impl Into<Pixels>) -> Self {
-        self.raw.width(width.into().0);
+    pub fn width(mut self, width: impl Into<Pixels>) -> Self {
+        self.width = Some(width.into().0);
         self
     }
 
     /// Sets the height of the [`Grid`].
-    pub fn height(self, height: impl Into<Pixels>) -> Self {
-        self.raw.height(height.into().0);
+    pub fn height(mut self, height: impl Into<Pixels>) -> Self {
+        self.height = Some(height.into().0);
         self
     }
 
     /// Sets the number of columns of the [`Grid`].
-    pub fn columns(self, columns: u64) -> Self {
-        self.raw.columns(columns);
+    pub fn columns(mut self, columns: u64) -> Self {
+        self.columns = Some(columns);
         self
     }
 
     /// Sets the fluid spacing of the [`Grid`].
-    pub fn fluid(self, amount: impl Into<Pixels>) -> Self {
-        self.raw.fluid(amount.into().0);
+    pub fn fluid(mut self, amount: impl Into<Pixels>) -> Self {
+        self.fluid = Some(amount.into().0);
         self
     }
 }
 
 impl<Message: 'static> From<Grid<Message>> for Element<Message> {
     fn from(grid: Grid<Message>) -> Self {
-        Element::new(move |realize| {
-            for child in grid.children {
-                grid.raw.push(child.build(realize));
-            }
-            WitGrid::into_element(grid.raw)
+        Element::new(move |realize, arena| {
+            let elements = grid
+                .children
+                .into_iter()
+                .map(|child| child.build(realize, arena))
+                .collect();
+            let node = GridNode {
+                elements,
+                spacing: grid.spacing,
+                width: grid.width,
+                height: grid.height,
+                columns: grid.columns,
+                fluid: grid.fluid,
+            };
+            arena.push(Node::Grid(node))
         })
     }
 }

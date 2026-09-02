@@ -1,5 +1,5 @@
 use crate::Element;
-use crate::bindings::iced::app::markdown::Markdown as WitMarkdown;
+use crate::bindings::iced::app::widgets::{MarkdownNode, Node};
 
 /// A widget that can parse and display Markdown.
 pub struct Markdown<Message> {
@@ -23,9 +23,12 @@ impl<Message: 'static> Markdown<Message> {
 
 impl<Message: 'static> From<Markdown<Message>> for Element<Message> {
     fn from(markdown: Markdown<Message>) -> Self {
-        Element::new(move |realize| {
-            let mapper = realize.string_mapper(markdown.on_link_click);
-            WitMarkdown::into_element(WitMarkdown::new(&markdown.content, mapper))
+        Element::new(move |realize, arena| {
+            let node = MarkdownNode {
+                content: markdown.content,
+                on_link_click: realize.string_mapper(markdown.on_link_click),
+            };
+            arena.push(Node::Markdown(node))
         })
     }
 }

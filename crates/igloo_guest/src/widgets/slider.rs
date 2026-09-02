@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 use iced_core::{Length, Pixels};
 
 use crate::Element;
-use crate::bindings::iced::app::slider::Slider as WitSlider;
+use crate::bindings::iced::app::widgets::{Node, SliderNode};
 
 /// An interactive bar for selecting a value from a range.
 pub struct Slider<Message> {
@@ -77,29 +77,22 @@ impl<Message: 'static> Slider<Message> {
 
 impl<Message: 'static> From<Slider<Message>> for Element<Message> {
     fn from(slider: Slider<Message>) -> Self {
-        Element::new(move |realize| {
-            let mapper = realize.f32_mapper(slider.on_change);
+        Element::new(move |realize, arena| {
+            let on_change = realize.f32_mapper(slider.on_change);
             let (start, end) = slider.range;
-            let raw = WitSlider::new(start, end, slider.value, mapper);
-            if let Some(msg) = slider.on_release {
-                raw.on_release(realize.fixed(msg));
-            }
-            if let Some(width) = slider.width {
-                raw.width(width.into());
-            }
-            if let Some(height) = slider.height {
-                raw.height(height.0);
-            }
-            if let Some(step) = slider.step {
-                raw.step(step);
-            }
-            if let Some(step) = slider.shift_step {
-                raw.shift_step(step);
-            }
-            if let Some(value) = slider.default {
-                raw.default(value);
-            }
-            WitSlider::into_element(raw)
+            let node = SliderNode {
+                range_start: start,
+                range_end: end,
+                value: slider.value,
+                on_change,
+                default: slider.default,
+                on_release: slider.on_release.map(|msg| realize.fixed(msg)),
+                width: slider.width.map(Into::into),
+                height: slider.height.map(|h| h.0),
+                step: slider.step,
+                shift_step: slider.shift_step,
+            };
+            arena.push(Node::Slider(node))
         })
     }
 }

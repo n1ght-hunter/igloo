@@ -1,9 +1,0 @@
-interface svg {
-    use shared.{element};
-
-    /// A vector graphics image.
-    resource svg {
-        constructor(path: string);
-        into-element: static func(widget: svg) -> element;
-    }
-}

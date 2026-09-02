@@ -1,3 +1,7 @@
 [tasks.run]
 description = "Run the iced host example"
 run = "cargo run -p rust_host -r"
+
+[tasks.build]
+description = "Build the iced host example"
+run = "cargo build -p rust_host"

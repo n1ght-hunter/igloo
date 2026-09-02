@@ -1,7 +1,7 @@
 use iced_core::Pixels;
 
 use crate::Element;
-use crate::bindings::iced::app::tooltip::Tooltip as WitTooltip;
+use crate::bindings::iced::app::widgets::{Node, TooltipNode};
 
 /// The position of the tooltip. Defaults to following the cursor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -67,20 +67,18 @@ impl<Message> Tooltip<Message> {
 
 impl<Message: 'static> From<Tooltip<Message>> for Element<Message> {
     fn from(tooltip: Tooltip<Message>) -> Self {
-        Element::new(move |realize| {
-            let content = tooltip.content.build(realize);
-            let tooltip_content = tooltip.tooltip.build(realize);
-            let raw = WitTooltip::new(content, tooltip_content, tooltip.position.into());
-            if let Some(gap) = tooltip.gap {
-                raw.gap(gap);
-            }
-            if let Some(padding) = tooltip.padding {
-                raw.padding(padding);
-            }
-            if let Some(snap) = tooltip.snap_within_viewport {
-                raw.snap_within_viewport(snap);
-            }
-            WitTooltip::into_element(raw)
+        Element::new(move |realize, arena| {
+            let content = tooltip.content.build(realize, arena);
+            let tooltip_content = tooltip.tooltip.build(realize, arena);
+            let node = TooltipNode {
+                content,
+                tooltip: tooltip_content,
+                position: tooltip.position.into(),
+                gap: tooltip.gap,
+                padding: tooltip.padding,
+                snap_within_viewport: tooltip.snap_within_viewport,
+            };
+            arena.push(Node::Tooltip(node))
         })
     }
 }

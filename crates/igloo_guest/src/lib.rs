@@ -1,7 +1,9 @@
 //! Wasm bindings for iced client
 
+pub mod arena;
 pub mod element;
 pub mod mappers;
+pub mod task;
 mod utils;
 pub mod widgets;
 
@@ -15,20 +17,29 @@ pub mod bindings;
 pub use wit_bindgen;
 
 pub use element::Element;
+pub use task::Task;
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
 
 use element::Realize;
-use mappers::Frame;
+use mappers::{Callback, Frame};
+
+type WitTask = bindings::iced::app::task::Task;
+
+/// Ids for task-emitted messages carry this bit, keeping them clear of the
+/// frame-scoped widget callback ids (which count up from zero).
+const TASK_ID_BIT: u32 = 1 << 31;
 
 pub trait Application: 'static {
     type Message: 'static;
 
-    fn new() -> Self
+    /// Build the initial state and the task to run on startup.
+    fn new() -> (Self, Task<Self::Message>)
     where
         Self: Sized;
     fn view(&self) -> Element<Self::Message>;
-    fn update(&mut self, message: Self::Message);
+    fn update(&mut self, message: Self::Message) -> Task<Self::Message>;
 }
 
 /// The [`Realize`] implementation used at the root of a view tree, where the
@@ -84,31 +95,77 @@ pub struct ApplicationResource<A: Application> {
     state: RefCell<A>,
     current: RefCell<Frame<A::Message>>,
     previous: RefCell<Frame<A::Message>>,
+    /// Callbacks for the messages a task will emit, keyed by the id handed to
+    /// the host. Removed on delivery; a miss (late or duplicate) is ignored,
+    /// like a stale widget callback.
+    pending: RefCell<HashMap<u32, Callback<A::Message>>>,
+    next_task_id: Cell<u32>,
+    /// The startup task, taken by the first `boot` call.
+    boot: RefCell<Option<Task<A::Message>>>,
 }
 
 impl<A: Application + 'static> ApplicationResource<A> {
     pub(crate) fn new() -> Self {
+        let (state, boot) = A::new();
         Self {
-            state: RefCell::new(A::new()),
+            state: RefCell::new(state),
             current: RefCell::new(Frame::new(0)),
             previous: RefCell::new(Frame::new(0)),
+            pending: RefCell::new(HashMap::new()),
+            next_task_id: Cell::new(0),
+            boot: RefCell::new(Some(boot)),
         }
     }
 
-    pub(crate) fn view(&self) -> bindings::iced::app::shared::Element {
+    pub(crate) fn view(&self) -> bindings::iced::app::widgets::ViewTree {
+        let mut arena = arena::Arena::new();
         let next = RefCell::new(Frame::new(self.current.borrow().next_base()));
         let realize = RootRealize::<A> { frame: &next };
-        let element = self.state.borrow().view().build(&realize);
-        self.previous.replace(self.current.replace(next.into_inner()));
-        element
+        let root = self.state.borrow().view().build(&realize, &mut arena);
+        self.previous
+            .replace(self.current.replace(next.into_inner()));
+        bindings::iced::app::widgets::ViewTree {
+            root,
+            nodes: arena.into_nodes(),
+        }
+    }
+
+    pub(crate) fn boot(&self) -> WitTask {
+        match self.boot.borrow_mut().take() {
+            Some(task) => self.realize_task(task),
+            None => WitTask::none(),
+        }
+    }
+
+    fn realize_task(&self, task: Task<A::Message>) -> WitTask {
+        let realize = PendingRealize::<A> { app: self };
+        task.build(&realize)
+    }
+
+    /// Stashes `cb` in the pending registry under a fresh task-scoped id.
+    fn register_pending(&self, cb: Callback<A::Message>) -> u32 {
+        let raw = self.next_task_id.get();
+        self.next_task_id.set(raw.wrapping_add(1) & !TASK_ID_BIT);
+        let id = TASK_ID_BIT | raw;
+        self.pending.borrow_mut().insert(id, cb);
+        id
     }
 
     /// Resolves `id` against `current`, then `previous`, and dispatches the
     /// `Application::Message` it (and `value`) produce, if any. A miss — an id
     /// from further back than one generation, or a variant/callback kind
     /// mismatch — is ignored rather than treated as an error.
-    pub(crate) fn update(&self, id: u32, value: bindings::exports::iced::app::app_instance::MessageValue) {
-        let msg = if let Some(cb) = self.current.borrow_mut().get_mut(id) {
+    pub(crate) fn update(
+        &self,
+        id: u32,
+        value: bindings::exports::iced::app::app_instance::MessageValue,
+    ) -> WitTask {
+        let msg = if id & TASK_ID_BIT != 0 {
+            self.pending
+                .borrow_mut()
+                .remove(&id)
+                .and_then(|mut cb| Self::resolve(&mut cb, value))
+        } else if let Some(cb) = self.current.borrow_mut().get_mut(id) {
             Self::resolve(cb, value)
         } else if let Some(cb) = self.previous.borrow_mut().get_mut(id) {
             Self::resolve(cb, value)
@@ -116,8 +173,12 @@ impl<A: Application + 'static> ApplicationResource<A> {
             None
         };
 
-        if let Some(msg) = msg {
-            self.state.borrow_mut().update(msg);
+        match msg {
+            Some(msg) => {
+                let task = self.state.borrow_mut().update(msg);
+                self.realize_task(task)
+            }
+            None => WitTask::none(),
         }
     }
 
@@ -145,6 +206,47 @@ impl<A: Application + 'static> ApplicationResource<A> {
     }
 }
 
+/// The [`Realize`] implementation used at the root of a task tree. Unlike
+/// [`RootRealize`], a task's output can land many frames after it was built, so
+/// its callbacks go into the resource's frame-independent pending registry
+/// under task-scoped ids rather than into a frame.
+struct PendingRealize<'a, A: Application> {
+    app: &'a ApplicationResource<A>,
+}
+
+impl<A: Application + 'static> Realize<A::Message> for PendingRealize<'_, A> {
+    fn fixed(&self, msg: A::Message) -> u32 {
+        self.app.register_pending(Callback::Fixed(Some(msg)))
+    }
+
+    fn bool_mapper(&self, f: Box<dyn Fn(bool) -> A::Message>) -> u32 {
+        self.app.register_pending(Callback::Bool(f))
+    }
+
+    fn f32_mapper(&self, f: Box<dyn Fn(f32) -> A::Message>) -> u32 {
+        self.app.register_pending(Callback::F32(f))
+    }
+
+    fn f64_mapper(&self, f: Box<dyn Fn(f64) -> A::Message>) -> u32 {
+        self.app.register_pending(Callback::F64(f))
+    }
+
+    fn u64_mapper(&self, f: Box<dyn Fn(u64) -> A::Message>) -> u32 {
+        self.app.register_pending(Callback::U64(f))
+    }
+
+    fn string_mapper(&self, f: Box<dyn Fn(String) -> A::Message>) -> u32 {
+        self.app.register_pending(Callback::Str(f))
+    }
+
+    fn viewport_mapper(
+        &self,
+        f: Box<dyn Fn(bindings::iced::app::message_types::Viewport) -> A::Message>,
+    ) -> u32 {
+        self.app.register_pending(Callback::Viewport(f))
+    }
+}
+
 impl<A: Application + 'static> bindings::exports::iced::app::app_instance::GuestApplication
     for ApplicationResource<A>
 {
@@ -152,12 +254,20 @@ impl<A: Application + 'static> bindings::exports::iced::app::app_instance::Guest
         ApplicationResource::new()
     }
 
-    fn view(&self) -> bindings::iced::app::shared::Element {
+    fn boot(&self) -> WitTask {
+        ApplicationResource::boot(self)
+    }
+
+    fn view(&self) -> bindings::iced::app::widgets::ViewTree {
         ApplicationResource::view(self)
     }
 
-    fn update(&self, id: u32, value: bindings::exports::iced::app::app_instance::MessageValue) {
-        ApplicationResource::update(self, id, value);
+    fn update(
+        &self,
+        id: u32,
+        value: bindings::exports::iced::app::app_instance::MessageValue,
+    ) -> WitTask {
+        ApplicationResource::update(self, id, value)
     }
 }
 
@@ -172,11 +282,11 @@ macro_rules! export_guest {
             #[allow(missing_debug_implementations)]
             pub struct GuestComponent;
 
-            impl igloo_guest::bindings::exports::iced::app::app_instance::Guest for GuestComponent {
-                type Application = igloo_guest::ApplicationResource<super::$app>;
+            impl $crate::bindings::exports::iced::app::app_instance::Guest for GuestComponent {
+                type Application = $crate::ApplicationResource<super::$app>;
             }
 
-            igloo_guest::bindings::export!(GuestComponent with_types_in igloo_guest::bindings);
+            $crate::bindings::export!(GuestComponent with_types_in $crate::bindings);
         }
     };
 }

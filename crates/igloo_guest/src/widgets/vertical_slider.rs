@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 use iced_core::{Length, Pixels};
 
 use crate::Element;
-use crate::bindings::iced::app::vertical_slider::VerticalSlider as WitVerticalSlider;
+use crate::bindings::iced::app::widgets::{Node, VerticalSliderNode};
 
 /// An interactive vertical bar for selecting a value from a range.
 pub struct VerticalSlider<Message> {
@@ -77,29 +77,22 @@ impl<Message: 'static> VerticalSlider<Message> {
 
 impl<Message: 'static> From<VerticalSlider<Message>> for Element<Message> {
     fn from(slider: VerticalSlider<Message>) -> Self {
-        Element::new(move |realize| {
-            let mapper = realize.f32_mapper(slider.on_change);
+        Element::new(move |realize, arena| {
+            let on_change = realize.f32_mapper(slider.on_change);
             let (start, end) = slider.range;
-            let raw = WitVerticalSlider::new(start, end, slider.value, mapper);
-            if let Some(msg) = slider.on_release {
-                raw.on_release(realize.fixed(msg));
-            }
-            if let Some(width) = slider.width {
-                raw.width(width.0);
-            }
-            if let Some(height) = slider.height {
-                raw.height(height.into());
-            }
-            if let Some(step) = slider.step {
-                raw.step(step);
-            }
-            if let Some(step) = slider.shift_step {
-                raw.shift_step(step);
-            }
-            if let Some(value) = slider.default {
-                raw.default(value);
-            }
-            WitVerticalSlider::into_element(raw)
+            let node = VerticalSliderNode {
+                range_start: start,
+                range_end: end,
+                value: slider.value,
+                on_change,
+                default: slider.default,
+                on_release: slider.on_release.map(|msg| realize.fixed(msg)),
+                width: slider.width.map(|w| w.0),
+                height: slider.height.map(Into::into),
+                step: slider.step,
+                shift_step: slider.shift_step,
+            };
+            arena.push(Node::VerticalSlider(node))
         })
     }
 }

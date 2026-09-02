@@ -1,0 +1,47 @@
+/// A host-side `iced::Task`: an asynchronous effect the host runs after `update`
+/// returns. The guest builds one by calling these constructors and combinators;
+/// the task itself, and the futures it drives, live entirely on the host.
+interface task {
+    use callbacks.{callback-id};
+    use message-types.{message-value};
+
+    resource task {
+        /// A task that does nothing.
+        none: static func() -> task;
+
+        /// Emit a message immediately. The host feeds `message` straight back
+        /// into `update`, so this is `iced::Task::done`.
+        done: static func(message: callback-id) -> task;
+
+        /// Run every task in the list concurrently.
+        batch: static func(tasks: list<task>) -> task;
+
+        /// Emit `on-complete` after `millis` milliseconds. Backed by the host
+        /// executor, so the wait never blocks the UI thread.
+        sleep: static func(millis: u64, on-complete: callback-id) -> task;
+
+        /// Await a value delivered through `value`, then dispatch `on-complete`
+        /// carrying it. The write end is filled by whoever created the future —
+        /// today that is always the host (a capability import such as a timer or
+        /// an HTTP fetch); a guest that writes its own `async {}` block needs an
+        /// async `update` export, which is a separate step.
+        perform: static func(value: future<message-value>, on-complete: callback-id) -> task;
+
+        /// Dispatch `on-complete` once for every value written to `values`, until
+        /// the stream is closed. Same producer constraint as `perform`.
+        run: static func(values: stream<message-value>, on-complete: callback-id) -> task;
+
+        /// Read the system clipboard, then emit `on-complete` carrying its
+        /// contents (an empty string when the clipboard holds no text).
+        read-clipboard: static func(on-complete: callback-id) -> task;
+
+        /// Write `contents` to the system clipboard.
+        write-clipboard: static func(contents: string) -> task;
+
+        /// Close the host application.
+        exit: static func() -> task;
+
+        /// Run `self` to completion, then `next`.
+        chain: func(next: task) -> task;
+    }
+}

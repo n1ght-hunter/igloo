@@ -1,0 +1,368 @@
+/// The flat node arena that `view` returns.
+///
+/// WIT has no recursive types, so the widget tree is expressed as a `list<node>`
+/// with `node-id` (a `u32` index into that list) standing in for every
+/// parent->child edge. The guest builds the arena in one pass and hands it back
+/// by value; the host walks it once to build the real `iced::Element` tree.
+interface widgets {
+    use callbacks.{callback-id};
+    use length.{length};
+    use padding.{padding};
+    use alignment.{horizontal, vertical, alignment};
+    use shared.{color, content-fit, filter-method, rotation};
+
+    /// Index into `view-tree.nodes`.
+    type node-id = u32;
+
+    variant text-alignment {
+        default,
+        left,
+        center,
+        right,
+        justified,
+    }
+
+    variant line-height {
+        relative(f32),
+        absolute(f32),
+    }
+
+    enum shaping {
+        basic,
+        advanced,
+        auto,
+    }
+
+    enum wrapping {
+        none,
+        word,
+        glyph,
+        word-or-glyph,
+    }
+
+    enum position {
+        top,
+        bottom,
+        left,
+        right,
+        follow-cursor,
+    }
+
+    /// The anchor of the scroller of a scrollable relative to its viewport.
+    enum anchor {
+        start,
+        end,
+    }
+
+    record scrollbar {
+        width: option<f32>,
+        margin: option<f32>,
+        scroller-width: option<f32>,
+        anchor: option<anchor>,
+        spacing: option<f32>,
+    }
+
+    variant direction {
+        vertical(scrollbar),
+        horizontal(scrollbar),
+        both(tuple<scrollbar, scrollbar>),
+    }
+
+    /// A translation applied to floating content.
+    record translation {
+        x: f32,
+        y: f32,
+    }
+
+    record text-node {
+        content: string,
+        size: option<f32>,
+        line-height: option<line-height>,
+        width: option<length>,
+        height: option<length>,
+        center: bool,
+        align-x: option<text-alignment>,
+        align-y: option<vertical>,
+        color: option<color>,
+    }
+
+    record column-node {
+        children: list<node-id>,
+        spacing: option<f32>,
+        padding: option<padding>,
+        width: option<length>,
+        height: option<length>,
+        max-width: option<f32>,
+        align-x: option<horizontal>,
+        clip: option<bool>,
+    }
+
+    record row-node {
+        children: list<node-id>,
+        spacing: option<f32>,
+        padding: option<padding>,
+        width: option<length>,
+        height: option<length>,
+        align-y: option<vertical>,
+        clip: option<bool>,
+        wrap: option<bool>,
+    }
+
+    record container-node {
+        content: node-id,
+        padding: option<padding>,
+        width: option<length>,
+        height: option<length>,
+        max-width: option<f32>,
+        max-height: option<f32>,
+        align-x: option<horizontal>,
+        align-y: option<vertical>,
+        clip: option<bool>,
+        center-x: option<length>,
+        center-y: option<length>,
+        center: option<length>,
+        align-left: option<length>,
+        align-right: option<length>,
+        align-top: option<length>,
+        align-bottom: option<length>,
+    }
+
+    record tooltip-node {
+        content: node-id,
+        tooltip: node-id,
+        position: position,
+        gap: option<f32>,
+        padding: option<f32>,
+        snap-within-viewport: option<bool>,
+    }
+
+    record button-node {
+        content: node-id,
+        on-press: option<callback-id>,
+        width: option<length>,
+        height: option<length>,
+        padding: option<padding>,
+        clip: option<bool>,
+    }
+
+    record rule-node {
+        is-horizontal: bool,
+        thickness: f32,
+    }
+
+    record space-node {
+        width: option<length>,
+        height: option<length>,
+    }
+
+    record svg-node {
+        path: string,
+    }
+
+    record image-node {
+        handle: string,
+        width: option<length>,
+        height: option<length>,
+        expand: option<bool>,
+        content-fit: option<content-fit>,
+        filter-method: option<filter-method>,
+        rotation: option<rotation>,
+        opacity: option<f32>,
+        scale: option<f32>,
+    }
+
+    record progress-bar-node {
+        range-start: f32,
+        range-end: f32,
+        value: f32,
+        length: option<length>,
+        girth: option<length>,
+        vertical: option<bool>,
+    }
+
+    record radio-node {
+        label: string,
+        is-selected: bool,
+        on-select: callback-id,
+        size: option<f32>,
+        width: option<length>,
+        spacing: option<f32>,
+        text-size: option<f32>,
+        text-line-height: option<line-height>,
+        text-wrapping: option<wrapping>,
+        text-shaping: option<shaping>,
+    }
+
+    record checkbox-node {
+        is-checked: bool,
+        label: option<string>,
+        on-toggle: option<callback-id>,
+        size: option<f32>,
+        width: option<length>,
+        spacing: option<f32>,
+        text-size: option<f32>,
+        text-line-height: option<line-height>,
+        text-wrapping: option<wrapping>,
+        text-shaping: option<shaping>,
+    }
+
+    record toggler-node {
+        is-toggled: bool,
+        label: option<string>,
+        on-toggle: option<callback-id>,
+        size: option<f32>,
+        width: option<length>,
+        text-size: option<f32>,
+        text-line-height: option<line-height>,
+        text-alignment: option<horizontal>,
+        text-shaping: option<shaping>,
+        text-wrapping: option<wrapping>,
+        spacing: option<f32>,
+    }
+
+    record text-input-node {
+        placeholder: string,
+        value: string,
+        secure: option<bool>,
+        on-input: option<callback-id>,
+        on-submit: option<callback-id>,
+        on-paste: option<callback-id>,
+        width: option<length>,
+        padding: option<padding>,
+        size: option<f32>,
+        line-height: option<line-height>,
+        align-x: option<horizontal>,
+    }
+
+    record slider-node {
+        range-start: f32,
+        range-end: f32,
+        value: f32,
+        on-change: callback-id,
+        default: option<f32>,
+        on-release: option<callback-id>,
+        width: option<length>,
+        height: option<f32>,
+        step: option<f32>,
+        shift-step: option<f32>,
+    }
+
+    record vertical-slider-node {
+        range-start: f32,
+        range-end: f32,
+        value: f32,
+        on-change: callback-id,
+        default: option<f32>,
+        on-release: option<callback-id>,
+        width: option<f32>,
+        height: option<length>,
+        step: option<f32>,
+        shift-step: option<f32>,
+    }
+
+    record combo-box-node {
+        options: list<string>,
+        placeholder: string,
+        selected: option<string>,
+        on-selected: callback-id,
+        on-input: option<callback-id>,
+        on-option-hovered: option<callback-id>,
+        on-open: option<callback-id>,
+        on-close: option<callback-id>,
+        padding: option<padding>,
+        size: option<f32>,
+        line-height: option<line-height>,
+        width: option<length>,
+    }
+
+    record pick-list-node {
+        options: list<string>,
+        selected: option<string>,
+        on-select: callback-id,
+        placeholder: option<string>,
+        width: option<length>,
+        padding: option<padding>,
+        text-size: option<f32>,
+        text-line-height: option<line-height>,
+        text-shaping: option<shaping>,
+        on-open: option<callback-id>,
+        on-close: option<callback-id>,
+    }
+
+    record markdown-node {
+        content: string,
+        on-link-click: callback-id,
+    }
+
+    record float-node {
+        content: node-id,
+        scale: option<f32>,
+        translation: option<translation>,
+    }
+
+    record grid-node {
+        elements: list<node-id>,
+        spacing: option<f32>,
+        width: option<f32>,
+        height: option<f32>,
+        columns: option<u64>,
+        fluid: option<f32>,
+    }
+
+    record keyed-column-node {
+        keys: list<u64>,
+        children: list<node-id>,
+        spacing: option<f32>,
+        padding: option<padding>,
+        width: option<length>,
+        height: option<length>,
+        max-width: option<f32>,
+        align-items: option<alignment>,
+    }
+
+    record scrollable-node {
+        content: node-id,
+        width: option<length>,
+        height: option<length>,
+        direction: option<direction>,
+        on-scroll: option<callback-id>,
+    }
+
+    record explain-node {
+        content: node-id,
+        color: color,
+    }
+
+    variant node {
+        text(text-node),
+        column(column-node),
+        row(row-node),
+        container(container-node),
+        tooltip(tooltip-node),
+        button(button-node),
+        rule(rule-node),
+        space(space-node),
+        svg(svg-node),
+        image(image-node),
+        progress-bar(progress-bar-node),
+        radio(radio-node),
+        checkbox(checkbox-node),
+        toggler(toggler-node),
+        text-input(text-input-node),
+        slider(slider-node),
+        vertical-slider(vertical-slider-node),
+        combo-box(combo-box-node),
+        pick-list(pick-list-node),
+        markdown(markdown-node),
+        float(float-node),
+        grid(grid-node),
+        keyed-column(keyed-column-node),
+        scrollable(scrollable-node),
+        explain(explain-node),
+    }
+
+    record view-tree {
+        root: node-id,
+        nodes: list<node>,
+    }
+}

@@ -1,9 +1,0 @@
-interface rule {
-    use shared.{pixels, element};
-
-    /// A horizontal or vertical rule used for dividing content.
-    resource rule {
-        constructor(is-horizontal: bool, thickness: pixels);
-        into-element: static func(widget: rule) -> element;
-    }
-}

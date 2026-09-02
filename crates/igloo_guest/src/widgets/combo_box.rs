@@ -1,7 +1,7 @@
 use iced_core::{Length, Padding, text};
 
 use crate::Element;
-use crate::bindings::iced::app::combo_box::ComboBox as WitComboBox;
+use crate::bindings::iced::app::widgets::{ComboBoxNode, Node};
 
 #[derive(Debug, Clone)]
 pub struct State<T> {
@@ -124,7 +124,7 @@ impl<T: std::fmt::Display + Clone + 'static, Message: 'static> From<ComboBox<T, 
     for Element<Message>
 {
     fn from(combo_box: ComboBox<T, Message>) -> Self {
-        Element::new(move |realize| {
+        Element::new(move |realize, arena| {
             let lookup = combo_box.options.clone();
             let on_selected = combo_box.on_selected;
             let on_selected_mapper = realize.string_mapper(Box::new(move |value| {
@@ -134,46 +134,31 @@ impl<T: std::fmt::Display + Clone + 'static, Message: 'static> From<ComboBox<T, 
                 on_selected(selected)
             }));
 
-            let raw = WitComboBox::new(
-                combo_box.options.str_options(),
-                &combo_box.placeholder,
-                combo_box.selected.as_deref(),
-                on_selected_mapper,
-            );
-
-            if let Some(on_input) = combo_box.on_input {
-                raw.on_input(realize.string_mapper(on_input));
-            }
-            if let Some(on_option_hovered) = combo_box.on_option_hovered {
+            let on_option_hovered = combo_box.on_option_hovered.map(|on_option_hovered| {
                 let lookup = combo_box.options.clone();
-                let mapper = realize.string_mapper(Box::new(move |value| {
+                realize.string_mapper(Box::new(move |value| {
                     let hovered = lookup
                         .from_str(&value)
                         .expect("combo box produced an unknown option");
                     on_option_hovered(hovered)
-                }));
-                raw.on_option_hovered(mapper);
-            }
-            if let Some(msg) = combo_box.on_open {
-                raw.on_open(realize.fixed(msg));
-            }
-            if let Some(msg) = combo_box.on_close {
-                raw.on_close(realize.fixed(msg));
-            }
-            if let Some(padding) = combo_box.padding {
-                raw.padding(padding.into());
-            }
-            if let Some(size) = combo_box.size {
-                raw.size(size);
-            }
-            if let Some(line_height) = combo_box.line_height {
-                raw.line_height(line_height.into());
-            }
-            if let Some(width) = combo_box.width {
-                raw.width(width.into());
-            }
+                }))
+            });
 
-            WitComboBox::into_element(raw)
+            let node = ComboBoxNode {
+                options: combo_box.options.str_options().clone(),
+                placeholder: combo_box.placeholder,
+                selected: combo_box.selected,
+                on_selected: on_selected_mapper,
+                on_input: combo_box.on_input.map(|f| realize.string_mapper(f)),
+                on_option_hovered,
+                on_open: combo_box.on_open.map(|msg| realize.fixed(msg)),
+                on_close: combo_box.on_close.map(|msg| realize.fixed(msg)),
+                padding: combo_box.padding.map(Into::into),
+                size: combo_box.size,
+                line_height: combo_box.line_height.map(Into::into),
+                width: combo_box.width.map(Into::into),
+            };
+            arena.push(Node::ComboBox(node))
         })
     }
 }

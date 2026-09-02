@@ -3,15 +3,20 @@ use std::marker::PhantomData;
 use iced_core::{Length, Padding, Pixels, alignment};
 
 use crate::Element;
-use crate::bindings::iced::app::keyed::KeyedColumn as WitKeyedColumn;
+use crate::bindings::iced::app::widgets::{KeyedColumnNode, Node};
 
 /// The key of a keyed element.
 pub type Key = u64;
 
 /// A container that keeps track of its children by key, minimizing rebuilds.
 pub struct KeyedColumn<Message> {
-    raw: WitKeyedColumn,
     children: Vec<(Key, Element<Message>)>,
+    spacing: Option<f32>,
+    padding: Option<Padding>,
+    width: Option<Length>,
+    height: Option<Length>,
+    max_width: Option<f32>,
+    align_items: Option<alignment::Alignment>,
     _message: PhantomData<Message>,
 }
 
@@ -25,8 +30,13 @@ impl<Message> KeyedColumn<Message> {
     /// Creates an empty [`KeyedColumn`].
     pub fn new() -> Self {
         Self {
-            raw: WitKeyedColumn::new(),
             children: Vec::new(),
+            spacing: None,
+            padding: None,
+            width: None,
+            height: None,
+            max_width: None,
+            align_items: None,
             _message: PhantomData,
         }
     }
@@ -62,49 +72,62 @@ impl<Message> KeyedColumn<Message> {
     }
 
     /// Sets the spacing between elements in the [`KeyedColumn`].
-    pub fn spacing(self, spacing: impl Into<Pixels>) -> Self {
-        self.raw.spacing(spacing.into().0);
+    pub fn spacing(mut self, spacing: impl Into<Pixels>) -> Self {
+        self.spacing = Some(spacing.into().0);
         self
     }
 
     /// Sets the padding of the [`KeyedColumn`].
-    pub fn padding(self, padding: impl Into<Padding>) -> Self {
-        self.raw.padding(padding.into().into());
+    pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+        self.padding = Some(padding.into());
         self
     }
 
     /// Sets the width of the [`KeyedColumn`].
-    pub fn width(self, width: impl Into<Length>) -> Self {
-        self.raw.width(width.into().into());
+    pub fn width(mut self, width: impl Into<Length>) -> Self {
+        self.width = Some(width.into());
         self
     }
 
     /// Sets the height of the [`KeyedColumn`].
-    pub fn height(self, height: impl Into<Length>) -> Self {
-        self.raw.height(height.into().into());
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = Some(height.into());
         self
     }
 
     /// Sets the maximum width of the [`KeyedColumn`].
-    pub fn max_width(self, max_width: impl Into<Pixels>) -> Self {
-        self.raw.max_width(max_width.into().0);
+    pub fn max_width(mut self, max_width: impl Into<Pixels>) -> Self {
+        self.max_width = Some(max_width.into().0);
         self
     }
 
     /// Sets the alignment of the elements in the [`KeyedColumn`].
-    pub fn align_items(self, align: impl Into<alignment::Alignment>) -> Self {
-        self.raw.align_items(align.into().into());
+    pub fn align_items(mut self, align: impl Into<alignment::Alignment>) -> Self {
+        self.align_items = Some(align.into());
         self
     }
 }
 
 impl<Message: 'static> From<KeyedColumn<Message>> for Element<Message> {
     fn from(column: KeyedColumn<Message>) -> Self {
-        Element::new(move |realize| {
+        Element::new(move |realize, arena| {
+            let mut keys = Vec::with_capacity(column.children.len());
+            let mut children = Vec::with_capacity(column.children.len());
             for (key, child) in column.children {
-                column.raw.push(key, child.build(realize));
+                keys.push(key);
+                children.push(child.build(realize, arena));
             }
-            WitKeyedColumn::into_element(column.raw)
+            let node = KeyedColumnNode {
+                keys,
+                children,
+                spacing: column.spacing,
+                padding: column.padding.map(Into::into),
+                width: column.width.map(Into::into),
+                height: column.height.map(Into::into),
+                max_width: column.max_width,
+                align_items: column.align_items.map(Into::into),
+            };
+            arena.push(Node::KeyedColumn(node))
         })
     }
 }

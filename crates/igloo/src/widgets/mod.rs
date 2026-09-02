@@ -1,4 +1,5 @@
 use crate::{bindings::iced::app, plugin_manager::MyState};
+
 pub mod button;
 pub mod checkbox;
 pub mod column;
@@ -23,6 +24,8 @@ pub mod text_input;
 pub mod toggler;
 pub mod tooltip;
 pub mod vertical_slider;
+
+use app::widgets::Node;
 
 /// Message wraps either an opaque callback id the guest minted ahead of time
 /// (fixed callbacks like `on_press`), or a mapper callback id paired with the
@@ -61,91 +64,14 @@ pub enum Message {
     },
 }
 
-// Empty marker trait impls for interfaces with no host functions
+// Empty marker trait impls for the imported type-only interfaces.
 impl app::shared::Host for MyState {}
-impl app::button::Host for MyState {}
-impl app::column::Host for MyState {}
-impl app::row::Host for MyState {}
-impl app::container::Host for MyState {}
-impl app::tooltip::Host for MyState {}
-impl app::text::Host for MyState {}
+impl app::callbacks::Host for MyState {}
 impl app::length::Host for MyState {}
 impl app::padding::Host for MyState {}
 impl app::alignment::Host for MyState {}
 impl app::message_types::Host for MyState {}
-impl app::callbacks::Host for MyState {}
-impl app::rule::Host for MyState {}
-impl app::space::Host for MyState {}
-impl app::svg::Host for MyState {}
-impl app::image::Host for MyState {}
-impl app::progress_bar::Host for MyState {}
-impl app::radio::Host for MyState {}
-impl app::checkbox::Host for MyState {}
-impl app::toggler::Host for MyState {}
-impl app::text_input::Host for MyState {}
-impl app::slider::Host for MyState {}
-impl app::vertical_slider::Host for MyState {}
-impl app::combo_box::Host for MyState {}
-impl app::pick_list::Host for MyState {}
-impl app::markdown::Host for MyState {}
-impl app::float::Host for MyState {}
-impl app::grid::Host for MyState {}
-impl app::keyed::Host for MyState {}
-impl app::scrollable::Host for MyState {}
-
-impl app::shared::HostElement for MyState {
-    fn drop(&mut self, rep: wasmtime::component::Resource<Element>) -> wasmtime::Result<()> {
-        self.table.delete(rep)?;
-        Ok(())
-    }
-
-    fn noop(&mut self, _rep: wasmtime::component::Resource<Element>) {
-        // Dummy function required for jco componentize to generate the Element class.
-        // See: https://github.com/bytecodealliance/ComponentizeJS/issues/221
-    }
-
-    fn explain(
-        &mut self,
-        self_: wasmtime::component::Resource<Element>,
-        color: app::shared::Color,
-    ) -> wasmtime::component::Resource<Element> {
-        let inner = self.table.delete(self_).unwrap();
-        self.table
-            .push(Element::Explain(Box::new(inner), color))
-            .unwrap()
-    }
-}
-
-/// The host-side element enum. Each variant holds a resource struct
-/// that stores the builder state accumulated from guest widget calls.
-#[derive(Debug)]
-pub enum Element {
-    Text(text::TextResource),
-    Column(column::ColumnResource),
-    Row(row::RowResource),
-    Container(container::ContainerResource),
-    Tooltip(tooltip::TooltipResource),
-    Button(button::ButtonResource),
-    Rule(rule::RuleResource),
-    Space(space::SpaceResource),
-    Svg(svg::SvgResource),
-    Image(image::ImageResource),
-    ProgressBar(progress_bar::ProgressBarResource),
-    Radio(radio::RadioResource),
-    Checkbox(checkbox::CheckboxResource),
-    Toggler(toggler::TogglerResource),
-    TextInput(text_input::TextInputResource),
-    Slider(slider::SliderResource),
-    VerticalSlider(vertical_slider::VerticalSliderResource),
-    ComboBox(combo_box::ComboBoxResource),
-    PickList(pick_list::PickListResource),
-    Markdown(markdown::MarkdownResource),
-    Float(float::FloatResource),
-    Grid(grid::GridResource),
-    Keyed(keyed::KeyedColumnResource),
-    Scrollable(scrollable::ScrollableResource),
-    Explain(Box<Element>, app::shared::Color),
-}
+impl app::widgets::Host for MyState {}
 
 pub trait WrapperTheme:
     iced::widget::text::Catalog
@@ -201,51 +127,73 @@ impl<T> WrapperRenderer for T where
 {
 }
 
-pub trait ToElement {
-    fn to_element<'a, Theme, Renderer>(
-        self,
-        resource_table: &mut wasmtime::component::ResourceTable,
-    ) -> iced::Element<'a, Message, Theme, Renderer>
-    where
-        Theme: WrapperTheme + 'a,
-        Renderer: WrapperRenderer + 'a;
-}
+/// Recursively builds an `iced::Element` from the node at `id` in `tree`.
+///
+/// Each parent resolves its children first, then hands the built elements to the
+/// matching widget builder. Child ids that fall outside `tree.nodes` are treated
+/// as an empty space so a malformed tree degrades instead of panicking.
+pub fn build_element<'a, Theme, Renderer>(
+    tree: &mut Vec<Option<Node>>,
+    id: u32,
+) -> iced::Element<'a, Message, Theme, Renderer>
+where
+    Theme: WrapperTheme + 'a,
+    Renderer: WrapperRenderer + 'a,
+{
+    let Some(node) = tree.get_mut(id as usize).and_then(Option::take) else {
+        return iced::widget::Space::new().into();
+    };
 
-impl ToElement for Element {
-    fn to_element<'a, Theme, Renderer>(
-        self,
-        resource_table: &mut wasmtime::component::ResourceTable,
-    ) -> iced::Element<'a, Message, Theme, Renderer>
-    where
-        Theme: WrapperTheme + 'a,
-        Renderer: WrapperRenderer + 'a,
-    {
-        match self {
-            Element::Text(txt) => txt.to_iced_element(),
-            Element::Column(col) => col.to_iced_element(resource_table),
-            Element::Row(row) => row.to_iced_element(resource_table),
-            Element::Container(container) => container.to_iced_element(resource_table),
-            Element::Tooltip(tooltip) => tooltip.to_iced_element(resource_table),
-            Element::Button(btn) => btn.to_iced_element(resource_table),
-            Element::Rule(rule) => rule.to_iced_element(),
-            Element::Space(space) => space.to_iced_element(),
-            Element::Svg(svg) => svg.to_iced_element(),
-            Element::Image(image) => image.to_iced_element(),
-            Element::ProgressBar(bar) => bar.to_iced_element(),
-            Element::Radio(radio) => radio.to_iced_element(),
-            Element::Checkbox(checkbox) => checkbox.to_iced_element(),
-            Element::Toggler(toggler) => toggler.to_iced_element(),
-            Element::TextInput(text_input) => text_input.to_iced_element(),
-            Element::Slider(slider) => slider.to_iced_element(),
-            Element::VerticalSlider(slider) => slider.to_iced_element(),
-            Element::ComboBox(combo_box) => combo_box.to_iced_element(),
-            Element::PickList(pick_list) => pick_list.to_iced_element(),
-            Element::Markdown(markdown) => markdown.to_iced_element(),
-            Element::Float(float) => float.to_iced_element(resource_table),
-            Element::Grid(grid) => grid.to_iced_element(resource_table),
-            Element::Keyed(keyed) => keyed.to_iced_element(resource_table),
-            Element::Scrollable(scrollable) => scrollable.to_iced_element(resource_table),
-            Element::Explain(element, color) => element.to_element(resource_table).explain(color),
+    let build_child_elements = |children: Vec<u32>,
+                                tree: &mut Vec<Option<Node>>|
+     -> Vec<iced::Element<'a, Message, Theme, Renderer>> {
+        children
+            .into_iter()
+            .map(|c| build_element(tree, c))
+            .collect()
+    };
+
+    match node {
+        Node::Text(n) => text::build(n),
+        Node::Column(mut n) => {
+            let children = std::mem::take(&mut n.children);
+            column::build(n, build_child_elements(children, tree))
         }
+        Node::Row(mut n) => {
+            let children = std::mem::take(&mut n.children);
+            row::build(n, build_child_elements(children, tree))
+        }
+        Node::Container(n) => container::build(n, build_element(tree, n.content)),
+        Node::Tooltip(n) => tooltip::build(
+            n,
+            build_element(tree, n.content),
+            build_element(tree, n.tooltip),
+        ),
+        Node::Button(n) => button::build(n, build_element(tree, n.content)),
+        Node::Rule(n) => rule::build(n),
+        Node::Space(n) => space::build(n),
+        Node::Svg(n) => svg::build(n),
+        Node::Image(n) => image::build(n),
+        Node::ProgressBar(n) => progress_bar::build(n),
+        Node::Radio(n) => radio::build(n),
+        Node::Checkbox(n) => checkbox::build(n),
+        Node::Toggler(n) => toggler::build(n),
+        Node::TextInput(n) => text_input::build(n),
+        Node::Slider(n) => slider::build(n),
+        Node::VerticalSlider(n) => vertical_slider::build(n),
+        Node::ComboBox(n) => combo_box::build(n),
+        Node::PickList(n) => pick_list::build(n),
+        Node::Markdown(n) => markdown::build(n),
+        Node::Float(n) => float::build(n, build_element(tree, n.content)),
+        Node::Grid(mut n) => {
+            let children = std::mem::take(&mut n.elements);
+            grid::build(n, build_child_elements(children, tree))
+        }
+        Node::KeyedColumn(mut n) => {
+            let children = std::mem::take(&mut n.children);
+            keyed::build(n, build_child_elements(children, tree))
+        }
+        Node::Scrollable(n) => scrollable::build(n, build_element(tree, n.content)),
+        Node::Explain(n) => build_element(tree, n.content).explain(iced::Color::from(n.color)),
     }
 }

@@ -4,7 +4,7 @@ use iced_core::{
 };
 
 use crate::Element;
-use crate::bindings::iced::app::container::Container as WitContainer;
+use crate::bindings::iced::app::widgets::{ContainerNode, Node};
 
 /// A box that contains another element.
 pub struct Container<Message> {
@@ -144,55 +144,27 @@ impl<Message: 'static> Container<Message> {
 
 impl<Message: 'static> From<Container<Message>> for Element<Message> {
     fn from(container: Container<Message>) -> Self {
-        Element::new(move |realize| {
-            let content = container.content.build(realize);
-            let raw = WitContainer::new(content);
-            if let Some(padding) = container.padding {
-                raw.padding(padding.into());
-            }
-            if let Some(width) = container.width {
-                raw.width(width.into());
-            }
-            if let Some(height) = container.height {
-                raw.height(height.into());
-            }
-            if let Some(max_width) = container.max_width {
-                raw.max_width(max_width);
-            }
-            if let Some(max_height) = container.max_height {
-                raw.max_height(max_height);
-            }
-            if let Some(width) = container.center_x {
-                raw.center_x(width.into());
-            }
-            if let Some(height) = container.center_y {
-                raw.center_y(height.into());
-            }
-            if let Some(length) = container.center {
-                raw.center(length.into());
-            }
-            if let Some(width) = container.align_left {
-                raw.align_left(width.into());
-            }
-            if let Some(width) = container.align_right {
-                raw.align_right(width.into());
-            }
-            if let Some(height) = container.align_top {
-                raw.align_top(height.into());
-            }
-            if let Some(height) = container.align_bottom {
-                raw.align_bottom(height.into());
-            }
-            if let Some(align) = container.align_x {
-                raw.align_x(align.into());
-            }
-            if let Some(align) = container.align_y {
-                raw.align_y(align.into());
-            }
-            if let Some(clip) = container.clip {
-                raw.clip(clip);
-            }
-            WitContainer::into_element(raw)
+        Element::new(move |realize, arena| {
+            let content = container.content.build(realize, arena);
+            let node = ContainerNode {
+                content,
+                padding: container.padding.map(Into::into),
+                width: container.width.map(Into::into),
+                height: container.height.map(Into::into),
+                max_width: container.max_width,
+                max_height: container.max_height,
+                align_x: container.align_x.map(Into::into),
+                align_y: container.align_y.map(Into::into),
+                clip: container.clip,
+                center_x: container.center_x.map(Into::into),
+                center_y: container.center_y.map(Into::into),
+                center: container.center.map(Into::into),
+                align_left: container.align_left.map(Into::into),
+                align_right: container.align_right.map(Into::into),
+                align_top: container.align_top.map(Into::into),
+                align_bottom: container.align_bottom.map(Into::into),
+            };
+            arena.push(Node::Container(node))
         })
     }
 }

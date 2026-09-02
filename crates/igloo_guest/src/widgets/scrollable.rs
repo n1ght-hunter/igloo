@@ -2,9 +2,7 @@ use iced_core::{Length, Pixels};
 
 use crate::Element;
 use crate::bindings::iced::app::message_types::Viewport;
-use crate::bindings::iced::app::scrollable::{
-    Anchor, Direction, Scrollable as WitScrollable, Scrollbar,
-};
+use crate::bindings::iced::app::widgets::{Anchor, Direction, Node, ScrollableNode, Scrollbar};
 
 /// A scrollable container.
 pub struct Scrollable<Message> {
@@ -138,22 +136,16 @@ impl<Message: 'static> Scrollable<Message> {
 
 impl<Message: 'static> From<Scrollable<Message>> for Element<Message> {
     fn from(scrollable: Scrollable<Message>) -> Self {
-        Element::new(move |realize| {
-            let content = scrollable.content.build(realize);
-            let raw = WitScrollable::new(content);
-            if let Some(direction) = scrollable.direction {
-                raw.direction(direction);
-            }
-            if let Some(width) = scrollable.width {
-                raw.width(width.into());
-            }
-            if let Some(height) = scrollable.height {
-                raw.height(height.into());
-            }
-            if let Some(on_scroll) = scrollable.on_scroll {
-                raw.on_scroll(realize.viewport_mapper(on_scroll));
-            }
-            WitScrollable::into_element(raw)
+        Element::new(move |realize, arena| {
+            let content = scrollable.content.build(realize, arena);
+            let node = ScrollableNode {
+                content,
+                width: scrollable.width.map(Into::into),
+                height: scrollable.height.map(Into::into),
+                direction: scrollable.direction,
+                on_scroll: scrollable.on_scroll.map(|f| realize.viewport_mapper(f)),
+            };
+            arena.push(Node::Scrollable(node))
         })
     }
 }

@@ -1,5 +1,5 @@
 use crate::Element;
-use crate::bindings::iced::app::float::{Float as WitFloat, Translation};
+use crate::bindings::iced::app::widgets::{FloatNode, Node, Translation};
 
 /// Displays floating content on top of the application.
 pub struct Float<Message> {
@@ -33,16 +33,14 @@ impl<Message: 'static> Float<Message> {
 
 impl<Message: 'static> From<Float<Message>> for Element<Message> {
     fn from(float: Float<Message>) -> Self {
-        Element::new(move |realize| {
-            let content = float.content.build(realize);
-            let raw = WitFloat::new(content);
-            if let Some(scale) = float.scale {
-                raw.scale(scale);
-            }
-            if let Some((x, y)) = float.translation {
-                raw.translation(Translation { x, y });
-            }
-            WitFloat::into_element(raw)
+        Element::new(move |realize, arena| {
+            let content = float.content.build(realize, arena);
+            let node = FloatNode {
+                content,
+                scale: float.scale,
+                translation: float.translation.map(|(x, y)| Translation { x, y }),
+            };
+            arena.push(Node::Float(node))
         })
     }
 }
