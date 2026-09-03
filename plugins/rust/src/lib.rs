@@ -1,5 +1,7 @@
+use std::time::Duration;
+
 use igloo_guest::{
-    Element, Task,
+    Element, Subscription, Task, time,
     widgets::{button, checkbox, column, text, text_input},
 };
 
@@ -13,6 +15,11 @@ pub enum Message {
     CopyClipboard,
     PasteClipboard,
     ClipboardPasted(String),
+    Tick(u64),
+    RunPerform,
+    Performed(u64),
+    RunStream,
+    Streamed(u64),
 }
 
 #[allow(missing_debug_implementations)]
@@ -21,6 +28,9 @@ pub struct App {
     checked: bool,
     pings: u32,
     clipboard: String,
+    ticks: u32,
+    performed: Option<u64>,
+    stream_sum: u64,
 }
 
 impl igloo_guest::Application for App {
@@ -33,6 +43,9 @@ impl igloo_guest::Application for App {
                 checked: false,
                 pings: 0,
                 clipboard: String::new(),
+                ticks: 0,
+                performed: None,
+                stream_sum: 0,
             },
             Task::none(),
         )
@@ -49,6 +62,14 @@ impl igloo_guest::Application for App {
             )
             .push(inner_checkbox(self.checked).map(InnerMessage::into_message))
             .push(text(format!("Pings: {}", self.pings)))
+            .push(text(format!("Ticks: {}", self.ticks)))
+            .push(text(match self.performed {
+                Some(value) => format!("Performed: {value}"),
+                None => "Performed: -".to_string(),
+            }))
+            .push(button(text("Perform")).on_press(Message::RunPerform))
+            .push(text(format!("Stream sum: {}", self.stream_sum)))
+            .push(button(text("Run stream")).on_press(Message::RunStream))
             .push(button(text("Ping in 2s")).on_press(Message::DelayedPing))
             .push(text_input("Clipboard text", &self.clipboard).on_input(Message::ClipboardChanged))
             .push(button(text("Copy")).on_press(Message::CopyClipboard))
@@ -67,7 +88,7 @@ impl igloo_guest::Application for App {
                 self.checked = value;
                 Task::none()
             }
-            Message::DelayedPing => Task::sleep(2000, Message::Pinged),
+            Message::DelayedPing => Task::sleep(Duration::from_secs(2), Message::Pinged),
             Message::Pinged => {
                 self.pings += 1;
                 Task::none()
@@ -77,12 +98,32 @@ impl igloo_guest::Application for App {
                 Task::none()
             }
             Message::CopyClipboard => Task::write_clipboard(self.clipboard.clone()),
-            Message::PasteClipboard => Task::read_clipboard(Message::ClipboardPasted),
+            Message::PasteClipboard => Task::read_clipboard(|result| {
+                Message::ClipboardPasted(result.ok().flatten().unwrap_or_default())
+            }),
             Message::ClipboardPasted(value) => {
                 self.clipboard = value;
                 Task::none()
             }
+            Message::Tick(_) => {
+                self.ticks += 1;
+                Task::none()
+            }
+            Message::RunPerform => Task::perform(async { 6 * 7 }, Message::Performed),
+            Message::Performed(value) => {
+                self.performed = Some(value);
+                Task::none()
+            }
+            Message::RunStream => Task::run(futures::stream::iter(1..=5u64), Message::Streamed),
+            Message::Streamed(value) => {
+                self.stream_sum += value;
+                Task::none()
+            }
         }
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        time::every(Duration::from_secs(1)).map(Message::Tick)
     }
 }
 

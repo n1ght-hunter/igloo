@@ -6,7 +6,12 @@ include = ["src/**/*", "wit/**/*", "README.md", "LICENSE"]
 
 [dependencies]
 iced_core.workspace = true
-wit-bindgen.workspace = true
+futures.workspace = true
+wit-bindgen = { workspace = true, features = [
+    "async-spawn",
+    "futures-stream",
+    "inter-task-wakeup",
+] }
 
 
 [lints]

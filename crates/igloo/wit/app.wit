@@ -1,17 +1,54 @@
 interface app-instance {
     use callbacks.{callback-id};
     use message-types.{message-value};
-    use task.{task};
     use widgets.{view-tree};
 
-    /// A running plugin instance. Owns the plugin's state and every callback it has handed
-    /// to the host for the current frame.
+    /// App-local token. Consumed once by update; never reused in an instance.
+    type message-id = u64;
+
+    record callback-event {
+        id: callback-id,
+        value: message-value,
+    }
+
+    variant event {
+        callback(callback-event),
+        message(message-id),
+    }
+
+    variant job-error {
+        already-started,
+        cancelled,
+        failed(string),
+    }
+
+    record execution {
+        messages: stream<message-id>,
+        completion: future<result<_, job-error>>,
+    }
+
+    /// Owns a producer. Dropping it cancels pending work and undelivered tokens.
+    resource job {
+        /// Returns handles promptly; the async scope keeps its producer alive.
+        start: async func() -> result<execution, job-error>;
+        /// Idempotent, including before start and after completion.
+        cancel: func();
+    }
+
+    record subscription {
+        key: string,
+        revision: u64,
+        job: job,
+    }
+
+    /// Owns application state and the tokens its jobs produce.
     resource application {
         constructor();
-        /// The task to run right after construction — the analogue of iced's
-        /// `new() -> (State, Task)`.
-        boot: func() -> task;
+        boot: func() -> option<job>;
         view: func() -> view-tree;
-        update: func(id: callback-id, value: message-value) -> task;
+        update: func(event: event) -> option<job>;
+        /// Duplicate keys are invalid. Finished jobs stay finished until removed
+        /// or revised; unchanged entries keep their original captured state.
+        subscription: func() -> list<subscription>;
     }
 }

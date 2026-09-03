@@ -11,6 +11,7 @@ igloo_guest = { path = "crates/igloo_guest" }
 igloo = { path = "crates/igloo" }
 
 anyhow = "1"
+futures = "0.3"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 tokio = { version = "1" }
 
@@ -23,6 +24,7 @@ iced = { version = "0.15.0-dev", features = [
 ] }
 iced_core = { version = "0.15.0-dev" }
 iced_widget = { version = "0.15.0-dev", default-features = false }
+stabby = "72.1.16"
 wit-bindgen = "0.62.0"
 wasmtime = "48.0.1"
 wasmtime-wasi = "48.0.1"

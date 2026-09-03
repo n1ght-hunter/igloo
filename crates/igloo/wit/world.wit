@@ -1,10 +1,10 @@
-package iced:app@0.1.0;
+package iced:app@0.2.0;
 
 
 world app {
     import shared;
     import callbacks;
-    import task;
+    import capabilities;
     import widgets;
 
     export app-instance;

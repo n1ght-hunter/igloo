@@ -6,8 +6,8 @@ include = ["src/**/*", "wit/**/*", "README.md", "LICENSE"]
 
 [dependencies]
 anyhow = "1"
-tokio = { version = "1", features = ["full"] }
-futures = "0.3"
+tokio = { workspace = true, features = ["full"] }
+futures.workspace = true
 wasmtime = { workspace = true, features = ["async", "component-model-async"] }
 wasmtime-wasi = { workspace = true }
 
@@ -15,7 +15,7 @@ iced.workspace = true
 iced_core.workspace = true
 tracing.workspace = true
 thiserror.workspace = true
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+stabby = { workspace = true, features = ["libloading"] }
 
 [lints]
 workspace = true

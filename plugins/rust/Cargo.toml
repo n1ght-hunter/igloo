@@ -7,8 +7,13 @@ publish = false
 [lib]
 crate-type = ["cdylib"]
 
+[[example]]
+name = "async_probe"
+crate-type = ["cdylib"]
+
 [dependencies]
 igloo_guest.workspace = true
+futures.workspace = true
 
 
 [lints]

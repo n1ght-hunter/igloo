@@ -1,93 +1,182 @@
-//! The guest view of an `iced::Task`.
-//!
-//! Like [`crate::Element`], a `Task` is a deferred builder: it records what the
-//! plugin asked for and only turns into host resources in
-//! [`crate::ApplicationResource`], where the concrete `Application::Message` is
-//! known. Each message a task will emit is stashed in that resource's pending
-//! registry through the shared [`Realize`] trait and handed to the host as an
-//! opaque id, exactly as widget callbacks are.
+//! Lazy guest work. Only an exported job polls a task; composition has no effects.
 
-use std::rc::Rc;
+use crate::bindings::exports::iced::app::app_instance::JobError;
+use crate::bindings::iced::app::capabilities;
+use futures::{Stream, StreamExt, stream::LocalBoxStream};
+use std::future::Future;
 
-use crate::bindings::iced::app::task::Task as WitTask;
-use crate::element::{MapRealize, Realize};
+pub use capabilities::CapabilityError;
+type Output<M> = Result<M, JobError>;
+pub(crate) type Factory<M> = Box<dyn FnOnce() -> LocalBoxStream<'static, Output<M>>>;
 
-/// A deferred `iced::Task` whose message callbacks are not yet registered with
-/// the host.
-#[allow(missing_debug_implementations)]
+/// Work executed once by the host through an owned job.
 pub struct Task<Message> {
-    build: Box<dyn FnOnce(&dyn Realize<Message>) -> WitTask>,
+    pub(crate) make: Option<Factory<Message>>,
 }
 
-impl<Message: 'static> Task<Message> {
-    fn new(build: impl FnOnce(&dyn Realize<Message>) -> WitTask + 'static) -> Self {
+impl<M> std::fmt::Debug for Task<M> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Task")
+            .field("empty", &self.make.is_none())
+            .finish()
+    }
+}
+
+impl<M: 'static> Task<M> {
+    pub(crate) fn new(make: impl FnOnce() -> LocalBoxStream<'static, Output<M>> + 'static) -> Self {
         Self {
-            build: Box::new(build),
+            make: Some(Box::new(make)),
         }
     }
 
-    pub(crate) fn build(self, realize: &dyn Realize<Message>) -> WitTask {
-        (self.build)(realize)
+    pub(crate) fn into_stream(self) -> LocalBoxStream<'static, Output<M>> {
+        match self.make {
+            Some(make) => make(),
+            None => futures::stream::empty().boxed_local(),
+        }
     }
 
-    /// A task that does nothing.
     pub fn none() -> Self {
-        Self::new(|_| WitTask::none())
+        Self { make: None }
+    }
+    pub fn done(message: M) -> Self {
+        Self::new(move || futures::stream::once(async move { Ok(message) }).boxed_local())
     }
 
-    /// Emit `msg` immediately.
-    pub fn done(msg: Message) -> Self {
-        Self::new(move |realize| WitTask::done(realize.fixed(msg)))
+    pub fn perform<T: 'static>(
+        future: impl Future<Output = T> + 'static,
+        map: impl FnOnce(T) -> M + 'static,
+    ) -> Self {
+        Self::new(move || futures::stream::once(async move { Ok(map(future.await)) }).boxed_local())
     }
 
-    /// Emit `on_complete` after `millis` milliseconds, without blocking the UI.
-    pub fn sleep(millis: u64, on_complete: Message) -> Self {
-        Self::new(move |realize| WitTask::sleep(millis, realize.fixed(on_complete)))
+    pub fn run<T: 'static>(
+        stream: impl Stream<Item = T> + 'static,
+        map: impl Fn(T) -> M + 'static,
+    ) -> Self {
+        Self::new(move || stream.map(move |value| Ok(map(value))).boxed_local())
     }
 
-    /// Read the system clipboard, then emit the message `on_complete` maps its
-    /// contents to (empty string when the clipboard is empty).
-    pub fn read_clipboard(on_complete: impl Fn(String) -> Message + 'static) -> Self {
-        Self::new(move |realize| {
-            WitTask::read_clipboard(realize.string_mapper(Box::new(on_complete)))
+    pub fn batch(tasks: impl IntoIterator<Item = Self>) -> Self {
+        let tasks: Vec<_> = tasks.into_iter().collect();
+        Self::new(move || {
+            futures::stream::select_all(tasks.into_iter().map(Self::into_stream)).boxed_local()
         })
     }
 
-    /// Write `contents` to the system clipboard.
+    /// Starts the next task only after this task's output and effects finish.
+    pub fn chain(self, next: Self) -> Self {
+        Self::new(move || {
+            self.into_stream()
+                .chain(futures::stream::once(async move { next.into_stream() }).flatten())
+                .boxed_local()
+        })
+    }
+
+    pub fn map<B: 'static>(self, map: impl Fn(M) -> B + 'static) -> Task<B> {
+        Task::new(move || {
+            self.into_stream()
+                .map(move |value| value.map(&map))
+                .boxed_local()
+        })
+    }
+
+    pub fn sleep(delay: std::time::Duration, message: M) -> Self {
+        Self::new(move || {
+            futures::stream::once(async move {
+                capabilities::sleep(crate::duration(delay))
+                    .await
+                    .map(|()| message)
+                    .map_err(failed)
+            })
+            .boxed_local()
+        })
+    }
+
+    pub fn read_clipboard(
+        map: impl FnOnce(Result<Option<String>, CapabilityError>) -> M + 'static,
+    ) -> Self {
+        Self::perform(capabilities::read_clipboard(), map)
+    }
+
     pub fn write_clipboard(contents: impl Into<String>) -> Self {
         let contents = contents.into();
-        Self::new(move |_| WitTask::write_clipboard(&contents))
+        Self::effect(async move { capabilities::write_clipboard(contents).await })
     }
 
-    /// Close the host application.
     pub fn exit() -> Self {
-        Self::new(|_| WitTask::exit())
+        Self::effect(capabilities::exit())
     }
 
-    /// Run several tasks concurrently.
-    pub fn batch(tasks: impl IntoIterator<Item = Task<Message>>) -> Self {
-        let tasks: Vec<Task<Message>> = tasks.into_iter().collect();
-        Self::new(move |realize| {
-            let handles: Vec<WitTask> = tasks.into_iter().map(|task| task.build(realize)).collect();
-            WitTask::batch(handles)
+    fn effect(future: impl Future<Output = Result<(), CapabilityError>> + 'static) -> Self {
+        Self::new(move || {
+            futures::stream::once(async move { future.await.err().map(failed) })
+                .filter_map(|error| async move { error.map(Err) })
+                .boxed_local()
         })
     }
+}
 
-    /// Run `self` to completion, then `next`.
-    pub fn chain(self, next: Task<Message>) -> Self {
-        Self::new(move |realize| {
-            let first = self.build(realize);
-            let next = next.build(realize);
-            first.chain(next)
-        })
+pub(crate) fn failed(error: CapabilityError) -> JobError {
+    JobError::Failed(format!("{error:?}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{cell::Cell, rc::Rc};
+
+    #[test]
+    fn chain_does_not_poll_second_future_until_first_stream_finishes() {
+        let started = Rc::new(Cell::new(false));
+        let observed = started.clone();
+        let task = Task::run(futures::stream::iter([1, 2]), |value| value).chain(Task::perform(
+            async move {
+                observed.set(true);
+                3
+            },
+            |value| value,
+        ));
+        assert!(!started.get());
+        let mut stream = task.into_stream();
+        assert!(!started.get());
+        futures::executor::block_on(async {
+            assert_eq!(stream.next().await.unwrap().unwrap(), 1);
+            assert!(!started.get());
+            assert_eq!(stream.next().await.unwrap().unwrap(), 2);
+            assert!(!started.get());
+            assert_eq!(stream.next().await.unwrap().unwrap(), 3);
+            assert!(started.get());
+            assert!(stream.next().await.is_none());
+        });
     }
 
-    /// Transform the messages this task emits.
-    pub fn map<B: 'static>(self, f: impl Fn(Message) -> B + 'static) -> Task<B> {
-        let f: Rc<dyn Fn(Message) -> B> = Rc::new(f);
-        Task::new(move |realize: &dyn Realize<B>| {
-            let adapter = MapRealize { inner: realize, f };
-            self.build(&adapter)
-        })
+    #[test]
+    fn nested_mapping_covers_batch_and_chain() {
+        let task = Task::batch([Task::done(1), Task::done(2)])
+            .chain(Task::done(3))
+            .map(|value| value * 2)
+            .map(|value| value + 1);
+        let values = futures::executor::block_on(task.into_stream().collect::<Vec<_>>());
+        let mut values: Vec<_> = values.into_iter().map(Result::unwrap).collect();
+        assert_eq!(values.pop(), Some(7));
+        values.sort();
+        assert_eq!(values, [3, 5]);
+    }
+
+    #[test]
+    fn dropping_unpolled_work_releases_captured_state() {
+        let value = Rc::new(());
+        let captured = value.clone();
+        let task = Task::perform(
+            async move {
+                drop(captured);
+                1
+            },
+            |value| value,
+        );
+        assert_eq!(Rc::strong_count(&value), 2);
+        drop(task);
+        assert_eq!(Rc::strong_count(&value), 1);
     }
 }

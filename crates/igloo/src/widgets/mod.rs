@@ -35,6 +35,13 @@ use app::widgets::Node;
 /// [`crate::plugin_manager::PluginManager::plugin_update`].
 #[derive(Debug, Clone)]
 pub enum Message {
+    /// A token emitted by a job in this plugin instance.
+    Job {
+        generation: u64,
+        id: u64,
+    },
+    /// An asynchronous host effect requested by a guest job.
+    Effect(crate::plugin_manager::SharedEffect),
     Fixed {
         rep: u32,
     },

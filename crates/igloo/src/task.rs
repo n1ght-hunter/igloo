@@ -1,100 +1,181 @@
-//! Host-side backing for the `iced:app/task` interface.
-//!
-//! Each guest call maps straight onto the matching `iced::Task` constructor or
-//! combinator. The task is stashed in the [`ResourceTable`] like any widget
-//! resource and taken back out by
-//! [`crate::plugin_manager::PluginManager::plugin_update`] once the guest hands
-//! the handle back.
-
-use std::time::Duration;
-
-use wasmtime::component::Resource;
+//! Host capabilities used by guest-owned jobs.
 
 use crate::{
-    bindings::iced::app::task::{self, HostTask as HostTaskTrait},
+    bindings::iced::app::capabilities::{self, CapabilityError, Duration, KeyEvent},
     plugin_manager::MyState,
-    widgets::Message,
+};
+use futures::StreamExt;
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+    time::{SystemTime, UNIX_EPOCH},
+};
+use wasmtime::{
+    StoreContextMut,
+    component::{Accessor, Destination, StreamProducer, StreamReader, StreamResult},
 };
 
-/// A pending `iced::Task` a guest built during `update` or `boot`.
-#[derive(Debug)]
-pub struct HostTask(pub iced::Task<Message>);
-
-impl task::Host for MyState {}
-
-impl HostTaskTrait for MyState {
-    fn none(&mut self) -> Resource<HostTask> {
-        self.table.push(HostTask(iced::Task::none())).unwrap()
+fn duration(value: Duration, nonzero: bool) -> Result<std::time::Duration, CapabilityError> {
+    if value.nanoseconds >= 1_000_000_000 {
+        return Err(CapabilityError::InvalidArgument(
+            "nanoseconds must be below 1e9".into(),
+        ));
     }
-
-    fn done(&mut self, message: u32) -> Resource<HostTask> {
-        self.table
-            .push(HostTask(iced::Task::done(Message::Fixed { rep: message })))
-            .unwrap()
+    let value = std::time::Duration::new(value.seconds, value.nanoseconds);
+    if tokio::time::Instant::now().checked_add(value).is_none() {
+        return Err(CapabilityError::InvalidArgument(
+            "duration exceeds clock range".into(),
+        ));
     }
-
-    /// Not wired up yet: reading the guest-facing `FutureReader` needs the store's
-    /// concurrent event loop plus a wake path back into iced. Until that lands
-    /// this behaves like [`iced::Task::none`], and the future/stream is dropped.
-    fn perform(
-        &mut self,
-        _value: wasmtime::component::FutureReader<task::MessageValue>,
-        _on_complete: task::CallbackId,
-    ) -> Resource<HostTask> {
-        self.table.push(HostTask(iced::Task::none())).unwrap()
+    if nonzero && value.is_zero() {
+        return Err(CapabilityError::InvalidArgument(
+            "interval must be positive".into(),
+        ));
     }
+    Ok(value)
+}
 
-    /// Not wired up yet, for the same reason as [`Self::perform`]; the stream is
-    /// dropped and this behaves like [`iced::Task::none`].
-    fn run(
-        &mut self,
-        _values: wasmtime::component::StreamReader<task::MessageValue>,
-        _on_complete: task::CallbackId,
-    ) -> Resource<HostTask> {
-        self.table.push(HostTask(iced::Task::none())).unwrap()
+pub(crate) struct Producer<T> {
+    pub stream: futures::stream::BoxStream<'static, T>,
+    pub cleanup: Option<Box<dyn FnOnce() + Send>>,
+}
+impl<T> Drop for Producer<T> {
+    fn drop(&mut self) {
+        if let Some(cleanup) = self.cleanup.take() {
+            cleanup();
+        }
     }
-
-    fn batch(&mut self, tasks: Vec<Resource<HostTask>>) -> Resource<HostTask> {
-        let tasks: Vec<iced::Task<Message>> = tasks
-            .into_iter()
-            .map(|handle| self.table.delete(handle).unwrap().0)
-            .collect();
-        self.table.push(HostTask(iced::Task::batch(tasks))).unwrap()
+}
+impl<T: wasmtime::component::ComponentType + Send + Unpin + 'static> StreamProducer<MyState>
+    for Producer<T>
+{
+    type Item = T;
+    type Buffer = Option<T>;
+    fn poll_produce<'a>(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        _store: StoreContextMut<'a, MyState>,
+        mut destination: Destination<'a, T, Option<T>>,
+        finish: bool,
+    ) -> Poll<wasmtime::Result<StreamResult>> {
+        match self.stream.poll_next_unpin(cx) {
+            Poll::Ready(Some(value)) => {
+                destination.set_buffer(Some(value));
+                Poll::Ready(Ok(StreamResult::Completed))
+            }
+            Poll::Ready(None) => Poll::Ready(Ok(StreamResult::Dropped)),
+            Poll::Pending if finish => Poll::Ready(Ok(StreamResult::Cancelled)),
+            Poll::Pending => Poll::Pending,
+        }
     }
+}
 
-    fn sleep(&mut self, millis: u64, on_complete: u32) -> Resource<HostTask> {
-        let task = iced::Task::future(async move {
-            tokio::time::sleep(Duration::from_millis(millis)).await;
-        })
-        .map(move |()| Message::Fixed { rep: on_complete });
-        self.table.push(HostTask(task)).unwrap()
+impl capabilities::Host for MyState {}
+impl capabilities::HostWithStore<MyState> for wasmtime::component::HasSelf<MyState> {
+    async fn sleep(
+        _access: &Accessor<MyState, Self>,
+        delay: Duration,
+    ) -> wasmtime::Result<Result<(), CapabilityError>> {
+        match duration(delay, false) {
+            Ok(delay) => {
+                tokio::time::sleep(delay).await;
+                Ok(Ok(()))
+            }
+            Err(error) => Ok(Err(error)),
+        }
     }
-
-    fn read_clipboard(&mut self, on_complete: u32) -> Resource<HostTask> {
-        let task = iced::clipboard::read_text().map(move |contents| Message::String {
-            mapper: on_complete,
-            value: contents.map(|text| (*text).clone()).unwrap_or_default(),
+    async fn read_clipboard(
+        access: &Accessor<MyState, Self>,
+    ) -> wasmtime::Result<Result<Option<String>, CapabilityError>> {
+        let (tx, rx) = futures::channel::oneshot::channel();
+        access.with(|mut store| {
+            store
+                .data_mut()
+                .effects
+                .unbounded_send(crate::plugin_manager::Effect::Read(tx))
+        })?;
+        Ok(rx
+            .await
+            .unwrap_or(Err(CapabilityError::Failed("host closed".into()))))
+    }
+    async fn write_clipboard(
+        access: &Accessor<MyState, Self>,
+        contents: String,
+    ) -> wasmtime::Result<Result<(), CapabilityError>> {
+        let (tx, rx) = futures::channel::oneshot::channel();
+        access.with(|mut store| {
+            store
+                .data_mut()
+                .effects
+                .unbounded_send(crate::plugin_manager::Effect::Write(contents, tx))
+        })?;
+        Ok(rx
+            .await
+            .unwrap_or_else(|_| Err(CapabilityError::Failed("host closed".into()))))
+    }
+    async fn exit(
+        access: &Accessor<MyState, Self>,
+    ) -> wasmtime::Result<Result<(), CapabilityError>> {
+        let (tx, rx) = futures::channel::oneshot::channel();
+        access.with(|mut store| {
+            store
+                .data_mut()
+                .effects
+                .unbounded_send(crate::plugin_manager::Effect::Exit(tx))
+        })?;
+        Ok(rx
+            .await
+            .unwrap_or_else(|_| Err(CapabilityError::Failed("host closed".into()))))
+    }
+    fn timer(
+        mut access: wasmtime::component::Access<'_, MyState>,
+        interval: Duration,
+    ) -> wasmtime::Result<Result<StreamReader<u64>, CapabilityError>> {
+        let interval = match duration(interval, true) {
+            Ok(interval) => interval,
+            Err(error) => return Ok(Err(error)),
+        };
+        let recipe = iced::advanced::subscription::into_recipes(iced::time::every(interval))
+            .pop()
+            .expect("timer recipe");
+        let stream = recipe
+            .stream(futures::stream::pending().boxed())
+            .map(|_| {
+                u64::try_from(
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_millis(),
+                )
+                .unwrap_or(u64::MAX)
+            })
+            .boxed();
+        Ok(Ok(StreamReader::new(
+            &mut access,
+            Producer {
+                stream,
+                cleanup: None,
+            },
+        )?))
+    }
+    fn keyboard(
+        mut access: wasmtime::component::Access<'_, MyState>,
+        event: KeyEvent,
+    ) -> wasmtime::Result<Result<StreamReader<String>, CapabilityError>> {
+        let (tx, rx) = futures::channel::mpsc::channel(1);
+        let keys = access.data_mut().keys.clone();
+        keys.lock().unwrap().push((event, tx.clone()));
+        let cleanup = Box::new(move || {
+            keys.lock()
+                .unwrap()
+                .retain(|(_, sender)| !sender.same_receiver(&tx));
         });
-        self.table.push(HostTask(task)).unwrap()
-    }
-
-    fn write_clipboard(&mut self, contents: String) -> Resource<HostTask> {
-        let task = iced::clipboard::write(contents).discard();
-        self.table.push(HostTask(task)).unwrap()
-    }
-
-    fn exit(&mut self) -> Resource<HostTask> {
-        self.table.push(HostTask(iced::exit())).unwrap()
-    }
-
-    fn chain(&mut self, self_: Resource<HostTask>, next: Resource<HostTask>) -> Resource<HostTask> {
-        let first = self.table.delete(self_).unwrap().0;
-        let next = self.table.delete(next).unwrap().0;
-        self.table.push(HostTask(first.chain(next))).unwrap()
-    }
-
-    fn drop(&mut self, rep: Resource<HostTask>) -> wasmtime::Result<()> {
-        self.table.delete(rep)?;
-        Ok(())
+        Ok(Ok(StreamReader::new(
+            &mut access,
+            Producer {
+                stream: rx.boxed(),
+                cleanup: Some(cleanup),
+            },
+        )?))
     }
 }

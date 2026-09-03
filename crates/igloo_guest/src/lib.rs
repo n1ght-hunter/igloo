@@ -1,45 +1,52 @@
-//! Wasm bindings for iced client
+//! Rust guest bindings for the iced component API.
 
 pub mod arena;
 pub mod element;
+mod job;
+pub mod keyboard;
 pub mod mappers;
+pub mod subscription;
 pub mod task;
+pub mod time;
 mod utils;
 pub mod widgets;
 
 pub use iced_core::*;
-
 #[doc(hidden)]
 #[allow(unsafe_code)]
 pub mod bindings;
-
+pub use element::Element;
+#[doc(hidden)]
+pub use job::JobResource;
+pub use subscription::Subscription;
+pub use task::Task;
 #[doc(hidden)]
 pub use wit_bindgen;
 
-pub use element::Element;
-pub use task::Task;
-
-use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
-
+use bindings::exports::iced::app::app_instance::{
+    self as api, Event as JobEvent, GuestApplication, Job,
+};
 use element::Realize;
-use mappers::{Callback, Frame};
-
-type WitTask = bindings::iced::app::task::Task;
-
-/// Ids for task-emitted messages carry this bit, keeping them clear of the
-/// frame-scoped widget callback ids (which count up from zero).
-const TASK_ID_BIT: u32 = 1 << 31;
+use mappers::Frame;
+use std::{cell::RefCell, rc::Rc};
 
 pub trait Application: 'static {
     type Message: 'static;
-
-    /// Build the initial state and the task to run on startup.
     fn new() -> (Self, Task<Self::Message>)
     where
         Self: Sized;
     fn view(&self) -> Element<Self::Message>;
     fn update(&mut self, message: Self::Message) -> Task<Self::Message>;
+    fn subscription(&self) -> Subscription<Self::Message> {
+        Subscription::none()
+    }
+}
+
+pub(crate) fn duration(value: std::time::Duration) -> bindings::iced::app::capabilities::Duration {
+    bindings::iced::app::capabilities::Duration {
+        seconds: value.as_secs(),
+        nanoseconds: value.subsec_nanos(),
+    }
 }
 
 /// The [`Realize`] implementation used at the root of a view tree, where the
@@ -82,41 +89,37 @@ impl<A: Application + 'static> Realize<A::Message> for RootRealize<'_, A> {
     }
 }
 
-/// The `application` resource: owns the plugin's state for as long as the
-/// plugin lives, replacing the old process-global `StateManager`.
-///
-/// `current` and `previous` are the last two frames of callbacks minted by
-/// `view()`. Keeping two generations covers a dispatch that races a
-/// re-render; anything older misses instead of resolving to a stale or wrong
-/// callback. Dropping the outgoing `previous` on each rotation is what frees
-/// the closures — the fix for the old design's per-frame leak.
-#[allow(missing_debug_implementations)]
+/// Owns application state, widget callbacks and the messages its jobs emit.
 pub struct ApplicationResource<A: Application> {
     state: RefCell<A>,
     current: RefCell<Frame<A::Message>>,
     previous: RefCell<Frame<A::Message>>,
-    /// Callbacks for the messages a task will emit, keyed by the id handed to
-    /// the host. Removed on delivery; a miss (late or duplicate) is ignored,
-    /// like a stale widget callback.
-    pending: RefCell<HashMap<u32, Callback<A::Message>>>,
-    next_task_id: Cell<u32>,
-    /// The startup task, taken by the first `boot` call.
+    pending: Rc<job::Registry<A::Message>>,
     boot: RefCell<Option<Task<A::Message>>>,
 }
 
-impl<A: Application + 'static> ApplicationResource<A> {
-    pub(crate) fn new() -> Self {
+impl<A: Application> std::fmt::Debug for ApplicationResource<A> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ApplicationResource")
+            .finish_non_exhaustive()
+    }
+}
+
+impl<A: Application> ApplicationResource<A> {
+    fn new() -> Self {
         let (state, boot) = A::new();
         Self {
             state: RefCell::new(state),
             current: RefCell::new(Frame::new(0)),
             previous: RefCell::new(Frame::new(0)),
-            pending: RefCell::new(HashMap::new()),
-            next_task_id: Cell::new(0),
+            pending: Rc::new(job::Registry::default()),
             boot: RefCell::new(Some(boot)),
         }
     }
-
+    fn realize_task(&self, task: Task<A::Message>) -> Option<Job> {
+        task.make
+            .map(|make| Job::new(JobResource::new(make, self.pending.clone())))
+    }
     pub(crate) fn view(&self) -> bindings::iced::app::widgets::ViewTree {
         let mut arena = arena::Arena::new();
         let next = RefCell::new(Frame::new(self.current.borrow().next_base()));
@@ -130,58 +133,45 @@ impl<A: Application + 'static> ApplicationResource<A> {
         }
     }
 
-    pub(crate) fn boot(&self) -> WitTask {
-        match self.boot.borrow_mut().take() {
-            Some(task) => self.realize_task(task),
-            None => WitTask::none(),
-        }
+    fn subscription(&self) -> Vec<api::Subscription> {
+        self.state
+            .borrow()
+            .subscription()
+            .entries
+            .into_iter()
+            .filter_map(|entry| {
+                self.realize_task(entry.task).map(|job| api::Subscription {
+                    key: entry.key,
+                    revision: entry.revision,
+                    job,
+                })
+            })
+            .collect()
     }
-
-    fn realize_task(&self, task: Task<A::Message>) -> WitTask {
-        let realize = PendingRealize::<A> { app: self };
-        task.build(&realize)
+    fn boot(&self) -> Option<Job> {
+        self.boot
+            .borrow_mut()
+            .take()
+            .and_then(|task| self.realize_task(task))
     }
-
-    /// Stashes `cb` in the pending registry under a fresh task-scoped id.
-    fn register_pending(&self, cb: Callback<A::Message>) -> u32 {
-        let raw = self.next_task_id.get();
-        self.next_task_id.set(raw.wrapping_add(1) & !TASK_ID_BIT);
-        let id = TASK_ID_BIT | raw;
-        self.pending.borrow_mut().insert(id, cb);
-        id
-    }
-
-    /// Resolves `id` against `current`, then `previous`, and dispatches the
-    /// `Application::Message` it (and `value`) produce, if any. A miss — an id
-    /// from further back than one generation, or a variant/callback kind
-    /// mismatch — is ignored rather than treated as an error.
-    pub(crate) fn update(
-        &self,
-        id: u32,
-        value: bindings::exports::iced::app::app_instance::MessageValue,
-    ) -> WitTask {
-        let msg = if id & TASK_ID_BIT != 0 {
-            self.pending
-                .borrow_mut()
-                .remove(&id)
-                .and_then(|mut cb| Self::resolve(&mut cb, value))
-        } else if let Some(cb) = self.current.borrow_mut().get_mut(id) {
-            Self::resolve(cb, value)
-        } else if let Some(cb) = self.previous.borrow_mut().get_mut(id) {
-            Self::resolve(cb, value)
-        } else {
-            None
-        };
-
-        match msg {
-            Some(msg) => {
-                let task = self.state.borrow_mut().update(msg);
-                self.realize_task(task)
+    fn update(&self, event: JobEvent) -> Option<Job> {
+        let message = match event {
+            JobEvent::Message(id) => self.pending.take(id),
+            JobEvent::Callback(event) => {
+                if let Some(callback) = self.current.borrow_mut().get_mut(event.id) {
+                    Self::resolve(callback, event.value)
+                } else if let Some(callback) = self.previous.borrow_mut().get_mut(event.id) {
+                    Self::resolve(callback, event.value)
+                } else {
+                    None
+                }
             }
-            None => WitTask::none(),
-        }
+        };
+        message.and_then(|message| {
+            let task = self.state.borrow_mut().update(message);
+            self.realize_task(task)
+        })
     }
-
     /// Matches a callback against the value the interaction produced, calling it
     /// (or taking it, for `Fixed`) if the kinds line up. A mismatch — which
     /// should not happen, since the host always pairs an id with the value kind
@@ -206,86 +196,36 @@ impl<A: Application + 'static> ApplicationResource<A> {
     }
 }
 
-/// The [`Realize`] implementation used at the root of a task tree. Unlike
-/// [`RootRealize`], a task's output can land many frames after it was built, so
-/// its callbacks go into the resource's frame-independent pending registry
-/// under task-scoped ids rather than into a frame.
-struct PendingRealize<'a, A: Application> {
-    app: &'a ApplicationResource<A>,
-}
-
-impl<A: Application + 'static> Realize<A::Message> for PendingRealize<'_, A> {
-    fn fixed(&self, msg: A::Message) -> u32 {
-        self.app.register_pending(Callback::Fixed(Some(msg)))
-    }
-
-    fn bool_mapper(&self, f: Box<dyn Fn(bool) -> A::Message>) -> u32 {
-        self.app.register_pending(Callback::Bool(f))
-    }
-
-    fn f32_mapper(&self, f: Box<dyn Fn(f32) -> A::Message>) -> u32 {
-        self.app.register_pending(Callback::F32(f))
-    }
-
-    fn f64_mapper(&self, f: Box<dyn Fn(f64) -> A::Message>) -> u32 {
-        self.app.register_pending(Callback::F64(f))
-    }
-
-    fn u64_mapper(&self, f: Box<dyn Fn(u64) -> A::Message>) -> u32 {
-        self.app.register_pending(Callback::U64(f))
-    }
-
-    fn string_mapper(&self, f: Box<dyn Fn(String) -> A::Message>) -> u32 {
-        self.app.register_pending(Callback::Str(f))
-    }
-
-    fn viewport_mapper(
-        &self,
-        f: Box<dyn Fn(bindings::iced::app::message_types::Viewport) -> A::Message>,
-    ) -> u32 {
-        self.app.register_pending(Callback::Viewport(f))
-    }
-}
-
-impl<A: Application + 'static> bindings::exports::iced::app::app_instance::GuestApplication
-    for ApplicationResource<A>
-{
+impl<A: Application> GuestApplication for ApplicationResource<A> {
     fn new() -> Self {
-        ApplicationResource::new()
+        Self::new()
     }
-
-    fn boot(&self) -> WitTask {
-        ApplicationResource::boot(self)
+    fn boot(&self) -> Option<Job> {
+        self.boot()
     }
-
     fn view(&self) -> bindings::iced::app::widgets::ViewTree {
-        ApplicationResource::view(self)
+        self.view()
     }
-
-    fn update(
-        &self,
-        id: u32,
-        value: bindings::exports::iced::app::app_instance::MessageValue,
-    ) -> WitTask {
-        ApplicationResource::update(self, id, value)
+    fn update(&self, event: JobEvent) -> Option<Job> {
+        self.update(event)
+    }
+    fn subscription(&self) -> Vec<api::Subscription> {
+        self.subscription()
     }
 }
 
-/// Export macro — generates the WIT component glue for a guest application.
+/// Exports the application and its owned jobs as a component.
 #[macro_export]
 macro_rules! export_guest {
     ($app:ident) => {
         #[doc(hidden)]
         #[allow(missing_debug_implementations, unsafe_code)]
         mod guest_impl {
-            #[doc(hidden)]
-            #[allow(missing_debug_implementations)]
             pub struct GuestComponent;
-
             impl $crate::bindings::exports::iced::app::app_instance::Guest for GuestComponent {
                 type Application = $crate::ApplicationResource<super::$app>;
+                type Job = $crate::JobResource<<super::$app as $crate::Application>::Message>;
             }
-
             $crate::bindings::export!(GuestComponent with_types_in $crate::bindings);
         }
     };

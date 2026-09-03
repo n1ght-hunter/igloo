@@ -1,0 +1,27 @@
+/// Effects supplied by the host. Errors are distinct from an absent value.
+interface capabilities {
+    record duration {
+        seconds: u64,
+        nanoseconds: u32,
+    }
+
+    variant capability-error {
+        denied,
+        unsupported,
+        invalid-argument(string),
+        failed(string),
+    }
+
+    enum key-event {
+        press,
+        release,
+    }
+
+    sleep: async func(delay: duration) -> result<_, capability-error>;
+    read-clipboard: async func() -> result<option<string>, capability-error>;
+    write-clipboard: async func(contents: string) -> result<_, capability-error>;
+    exit: async func() -> result<_, capability-error>;
+    /// Nonzero intervals emit epoch milliseconds. Nanoseconds must be below 1e9.
+    timer: func(interval: duration) -> result<stream<u64>, capability-error>;
+    keyboard: func(event: key-event) -> result<stream<string>, capability-error>;
+}

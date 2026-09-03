@@ -24,5 +24,5 @@ where
         settings,
         <Theme as iced::theme::Base>::default(iced::theme::Mode::default()),
     )
-        .map(move |uri| Message::String { mapper, value: uri })
+    .map(move |uri| Message::String { mapper, value: uri })
 }

@@ -3,3 +3,7 @@
 [tasks.build]
 description = "Build the Rust guest plugin to WASM"
 run = "cargo build -p rust_guest --target wasm32-wasip2 -r"
+
+[tasks.build-async-probe]
+description = "Build the component used by async lifecycle integration tests"
+run = "cargo build -p rust_guest --example async_probe --target wasm32-wasip2 -r"
