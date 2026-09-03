@@ -2,11 +2,6 @@
 
 monorepo_root = true
 
-[settings]
-# Run every task's commands through nushell on all platforms.
-windows_default_inline_shell_args = "nu -c"
-unix_default_inline_shell_args = "nu -c"
-
 [monorepo]
 config_roots = [
     "packages/igloo-ts",
