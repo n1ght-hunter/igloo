@@ -10,6 +10,7 @@ config_roots = [
     "plugins/python",
     "plugins/rust",
     "examples/rust_host",
+    "crates/igloo_native",
 ]
 
 [tools]

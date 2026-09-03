@@ -13,6 +13,8 @@ wasmtime-wasi = { workspace = true }
 tracing-subscriber.workspace = true
 iced.workspace = true
 igloo.workspace = true
+igloo_native = { workspace = true, features = ["host"] }
+libloading.workspace = true
 tracing.workspace = true
 
 

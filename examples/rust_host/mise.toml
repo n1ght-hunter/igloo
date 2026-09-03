@@ -1,5 +1,6 @@
 [tasks.run]
 description = "Run the iced host example"
+depends = ["//crates/igloo_native:build"]
 run = "cargo run -p rust_host -r"
 
 [tasks.build]

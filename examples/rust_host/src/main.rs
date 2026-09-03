@@ -11,20 +11,24 @@ fn main() -> Result<()> {
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
         .init();
 
-    iced::application(IcedApp::new, IcedApp::update, IcedApp::view).run()?;
+    iced::application(IcedApp::new, IcedApp::update, IcedApp::view)
+        .subscription(IcedApp::subscription)
+        .run()?;
     Ok(())
 }
 
 struct IcedApp {
     plugin_manager: PluginManager,
+    native: igloo_native::NativePluginManager,
     current_page: String,
     plugins_loading: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum Message {
     Plugin(String, igloo::Message),
     ChangePage(String),
+    Native(igloo_native::plugin_manager::Message),
     PluginLoaded(std::result::Result<CompiledPlugin, String>),
 }
 
@@ -32,6 +36,24 @@ impl IcedApp {
     pub fn new() -> (Self, Task<Message>) {
         let plugin_manager = PluginManager::new().unwrap();
         let engine = plugin_manager.engine();
+        let mut native = igloo_native::NativePluginManager::new();
+        let native_path = PathBuf::from("../../target/debug")
+            .join(libloading::library_filename("native_counter"));
+        let native_boot = if native_path.exists() {
+            match native.load(
+                "native-counter",
+                native_path,
+                igloo_native::Permissions::empty(),
+            ) {
+                Ok(task) => task.map(Message::Native),
+                Err(error) => {
+                    tracing::error!(%error, "Failed to load native counter");
+                    Task::none()
+                }
+            }
+        } else {
+            Task::none()
+        };
 
         let available_plugins = [
             (
@@ -70,11 +92,12 @@ impl IcedApp {
             .collect();
 
         // Batch all tasks together
-        let load_task = Task::batch(tasks);
+        let load_task = Task::batch(tasks.into_iter().chain([native_boot]));
 
         (
             Self {
                 plugin_manager,
+                native,
                 current_page: "Home".to_string(),
                 plugins_loading,
             },
@@ -82,8 +105,20 @@ impl IcedApp {
         )
     }
 
+    fn subscription(&self) -> iced::Subscription<Message> {
+        iced::Subscription::batch([
+            iced::Subscription::batch([
+                self.plugin_manager.wake_subscription(),
+                self.plugin_manager.subscriptions(),
+            ])
+            .map(|(id, m)| Message::Plugin(id, m)),
+            self.native.subscriptions().map(Message::Native),
+        ])
+    }
+
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
+            Message::Native(message) => self.native.update(message).map(Message::Native),
             Message::Plugin(id, msg) => match self.plugin_manager.plugin_update(&id, msg) {
                 Ok(task) => task.map(move |m| Message::Plugin(id.clone(), m)),
                 Err(e) => {
@@ -126,8 +161,12 @@ impl IcedApp {
             .into_iter()
             .for_each(|id| pages.push(id));
 
+        pages.extend(self.native.ids().map(str::to_owned));
+
         let pages = Row::from_iter(pages.into_iter().map(|page| {
-            iced::Element::from(button(text(page.clone())).on_press(Message::ChangePage(page)))
+            iced::Element::from(
+                button(text(page.clone())).on_press_with(move || Message::ChangePage(page.clone())),
+            )
         }));
 
         let page: iced::Element<'_, Message> = match self.current_page.as_str() {
@@ -139,6 +178,11 @@ impl IcedApp {
                     widget::Text::new("Home").into()
                 }
             }
+            id if self.native.ids().any(|name| name == id) => self
+                .native
+                .view(id)
+                .map(|view| view.map(Message::Native))
+                .unwrap_or_else(|| widget::Text::new("Unknown native plugin").into()),
             id => self
                 .plugin_manager
                 .plugin_view(id)

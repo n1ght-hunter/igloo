@@ -1,0 +1,15 @@
+[package]
+name = "native_counter"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+igloo_native = { workspace = true, features = ["guest"] }
+stabby.workspace = true
+
+[lints]
+workspace = true

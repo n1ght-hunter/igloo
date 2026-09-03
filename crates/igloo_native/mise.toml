@@ -1,0 +1,18 @@
+[tasks.build]
+description = "Build native host bindings and counter plugin"
+run = ["cargo build -p igloo_native -p native_counter"]
+
+[tasks.build-guest]
+description = "Build standalone native guest bindings"
+run = "cargo build -p igloo_native --no-default-features --features guest"
+
+[tasks.check]
+run = "cargo check -p igloo_native -p native_counter --all-targets"
+
+[tasks.clippy]
+run = "cargo clippy -p igloo_native -p native_counter --all-targets"
+
+[tasks.run]
+description = "Run the native plugin example"
+depends = [":build"]
+run = "cargo run -p igloo_native --example basic"
