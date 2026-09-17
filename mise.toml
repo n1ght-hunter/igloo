@@ -28,7 +28,7 @@ windows-x64 = { bin = "wkg.exe" }
 
 node = "22"
 pnpm = "latest"
-"npm:@bytecodealliance/jco" = "latest"
+"npm:@bytecodealliance/jco" = "1.34.0"
 uv = "latest"
 "aqua:nushell/nushell" = "0.115.1"
 

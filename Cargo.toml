@@ -3,12 +3,7 @@ edition = "2024"
 
 [workspace]
 resolver = "3"
-members = [
-    "crates/igloo_guest",
-    "crates/igloo",
-    "examples/*",
-    "plugins/rust",
-]
+members = ["crates/igloo_guest", "crates/igloo", "examples/*", "plugins/rust"]
 
 
 [workspace.dependencies]
@@ -19,20 +14,25 @@ anyhow = "1"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 tokio = { version = "1" }
 
-iced = { version = "0.14.0", features = [
+iced = { version = "0.15.0-dev", features = [
     "advanced",
     "tokio",
     "image",
     "markdown",
     "svg",
 ] }
-iced_core = { version = "0.14.0" }
-iced_widget = { version = "0.14.2", default-features = false }
-wit-bindgen = "0.61.1"
+iced_core = { version = "0.15.0-dev" }
+iced_widget = { version = "0.15.0-dev", default-features = false }
+wit-bindgen = "0.62.0"
 wasmtime = "48.0.1"
 wasmtime-wasi = "48.0.1"
 tracing = "0.1.44"
 thiserror = "2.0.20"
+
+[patch.crates-io]
+iced = { git = "https://github.com/n1ght-hunter/iced.git", rev = "211cb23" }
+iced_core = { git = "https://github.com/n1ght-hunter/iced.git", rev = "211cb23" }
+iced_widget = { git = "https://github.com/n1ght-hunter/iced.git", rev = "211cb23" }
 
 [workspace.lints.rust]
 missing_debug_implementations = "deny"
