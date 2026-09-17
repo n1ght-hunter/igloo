@@ -188,9 +188,9 @@ interface widgets {
         width: option<length>,
         spacing: option<f32>,
         text-size: option<f32>,
-        text-line-height: option<line-height>,
-        text-wrapping: option<wrapping>,
-        text-shaping: option<shaping>,
+        line-height: option<line-height>,
+        wrapping: option<wrapping>,
+        shaping: option<shaping>,
     }
 
     record checkbox-node {
@@ -201,9 +201,9 @@ interface widgets {
         width: option<length>,
         spacing: option<f32>,
         text-size: option<f32>,
-        text-line-height: option<line-height>,
-        text-wrapping: option<wrapping>,
-        text-shaping: option<shaping>,
+        line-height: option<line-height>,
+        wrapping: option<wrapping>,
+        shaping: option<shaping>,
     }
 
     record toggler-node {
@@ -213,10 +213,10 @@ interface widgets {
         size: option<f32>,
         width: option<length>,
         text-size: option<f32>,
-        text-line-height: option<line-height>,
-        text-alignment: option<horizontal>,
-        text-shaping: option<shaping>,
-        text-wrapping: option<wrapping>,
+        line-height: option<line-height>,
+        alignment: option<horizontal>,
+        shaping: option<shaping>,
+        wrapping: option<wrapping>,
         spacing: option<f32>,
     }
 
@@ -283,8 +283,8 @@ interface widgets {
         width: option<length>,
         padding: option<padding>,
         text-size: option<f32>,
-        text-line-height: option<line-height>,
-        text-shaping: option<shaping>,
+        line-height: option<line-height>,
+        shaping: option<shaping>,
         on-open: option<callback-id>,
         on-close: option<callback-id>,
     }

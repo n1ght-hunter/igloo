@@ -26,18 +26,18 @@ where
     if let Some(text_size) = node.text_size {
         toggler = toggler.text_size(text_size);
     }
-    if let Some(lh) = node.text_line_height {
-        toggler = toggler.text_line_height(lh);
+    if let Some(lh) = node.line_height {
+        toggler = toggler.line_height(lh);
     }
-    if let Some(alignment) = node.text_alignment {
+    if let Some(alignment) = node.alignment {
         let alignment: iced::alignment::Horizontal = alignment.into();
-        toggler = toggler.text_alignment(alignment);
+        toggler = toggler.alignment(alignment);
     }
-    if let Some(shaping) = node.text_shaping {
-        toggler = toggler.text_shaping(shaping.into());
+    if let Some(shaping) = node.shaping {
+        toggler = toggler.shaping(shaping.into());
     }
-    if let Some(wrapping) = node.text_wrapping {
-        toggler = toggler.text_wrapping(wrapping.into());
+    if let Some(wrapping) = node.wrapping {
+        toggler = toggler.wrapping(wrapping.into());
     }
     if let Some(spacing) = node.spacing {
         toggler = toggler.spacing(spacing);

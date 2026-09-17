@@ -1,4 +1,4 @@
-use iced::{theme, widget::markdown as iced_markdown};
+use iced::widget::markdown as iced_markdown;
 
 use crate::{
     bindings::iced::app::widgets::MarkdownNode,
@@ -16,11 +16,13 @@ where
     // is rebuilt fresh from guest state on every `view()` call.
     let items_vec: Vec<_> = iced_markdown::parse(&node.content).collect();
     let items: &'static [iced_markdown::Item] = Box::leak(items_vec.into_boxed_slice());
-    let settings = iced_markdown::Settings::with_style(iced_markdown::Style::from_palette(
-        theme::Palette::LIGHT,
-    ));
+    let settings = iced_markdown::Settings::default();
 
     let mapper = node.on_link_click;
-    iced_markdown::view(items.iter(), settings)
+    iced_markdown::view(
+        items,
+        settings,
+        <Theme as iced::theme::Base>::default(iced::theme::Mode::default()),
+    )
         .map(move |uri| Message::String { mapper, value: uri })
 }

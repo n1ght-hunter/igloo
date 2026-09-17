@@ -11,10 +11,11 @@ where
 {
     let on_select = node.on_select;
     let mut pick_list =
-        iced::widget::PickList::new(node.options, node.selected, move |value| Message::String {
-            mapper: on_select,
-            value,
-        });
+        iced::widget::PickList::new(node.selected, node.options, |value: &String| value.clone())
+            .on_select(move |value| Message::String {
+                mapper: on_select,
+                value,
+            });
 
     if let Some(placeholder) = node.placeholder {
         pick_list = pick_list.placeholder(placeholder);
@@ -28,11 +29,11 @@ where
     if let Some(text_size) = node.text_size {
         pick_list = pick_list.text_size(text_size);
     }
-    if let Some(text_line_height) = node.text_line_height {
-        pick_list = pick_list.text_line_height(text_line_height);
+    if let Some(line_height) = node.line_height {
+        pick_list = pick_list.line_height(line_height);
     }
-    if let Some(text_shaping) = node.text_shaping {
-        pick_list = pick_list.text_shaping(text_shaping.into());
+    if let Some(shaping) = node.shaping {
+        pick_list = pick_list.shaping(shaping.into());
     }
     if let Some(rep) = node.on_open {
         pick_list = pick_list.on_open(Message::Fixed { rep });

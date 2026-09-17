@@ -19,8 +19,8 @@ where
     if let Some(girth) = node.girth {
         bar = bar.girth(girth);
     }
-    if let Some(true) = node.vertical {
-        bar = bar.vertical();
+    if let Some(vertical) = node.vertical {
+        bar = bar.vertical(vertical);
     }
     bar.into()
 }

@@ -179,7 +179,7 @@ impl PluginManager {
     ) -> Option<iced::Element<'a, Message, Theme, Renderer>>
     where
         Theme: WrapperTheme + 'a,
-        Renderer: WrapperRenderer + 'a,
+        Renderer: WrapperRenderer + 'a + 'static,
     {
         let plugin = self.plugins.get(id)?;
 

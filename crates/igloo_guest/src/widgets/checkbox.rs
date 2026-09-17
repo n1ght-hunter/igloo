@@ -12,9 +12,9 @@ pub struct Checkbox<Message> {
     width: Option<Length>,
     spacing: Option<f32>,
     text_size: Option<f32>,
-    text_line_height: Option<text::LineHeight>,
-    text_wrapping: Option<text::Wrapping>,
-    text_shaping: Option<text::Shaping>,
+    line_height: Option<text::LineHeight>,
+    wrapping: Option<text::Wrapping>,
+    shaping: Option<text::Shaping>,
 }
 
 impl<Message: 'static> Checkbox<Message> {
@@ -28,9 +28,9 @@ impl<Message: 'static> Checkbox<Message> {
             width: None,
             spacing: None,
             text_size: None,
-            text_line_height: None,
-            text_wrapping: None,
-            text_shaping: None,
+            line_height: None,
+            wrapping: None,
+            shaping: None,
         }
     }
 
@@ -66,18 +66,18 @@ impl<Message: 'static> Checkbox<Message> {
         self
     }
 
-    pub fn text_line_height(mut self, line_height: impl Into<text::LineHeight>) -> Self {
-        self.text_line_height = Some(line_height.into());
+    pub fn line_height(mut self, line_height: impl Into<text::LineHeight>) -> Self {
+        self.line_height = Some(line_height.into());
         self
     }
 
-    pub fn text_wrapping(mut self, wrapping: impl Into<text::Wrapping>) -> Self {
-        self.text_wrapping = Some(wrapping.into());
+    pub fn wrapping(mut self, wrapping: impl Into<text::Wrapping>) -> Self {
+        self.wrapping = Some(wrapping.into());
         self
     }
 
-    pub fn text_shaping(mut self, shaping: impl Into<text::Shaping>) -> Self {
-        self.text_shaping = Some(shaping.into());
+    pub fn shaping(mut self, shaping: impl Into<text::Shaping>) -> Self {
+        self.shaping = Some(shaping.into());
         self
     }
 }
@@ -93,9 +93,9 @@ impl<Message: 'static> From<Checkbox<Message>> for Element<Message> {
                 width: checkbox.width.map(Into::into),
                 spacing: checkbox.spacing,
                 text_size: checkbox.text_size,
-                text_line_height: checkbox.text_line_height.map(Into::into),
-                text_wrapping: checkbox.text_wrapping.map(Into::into),
-                text_shaping: checkbox.text_shaping.map(Into::into),
+                line_height: checkbox.line_height.map(Into::into),
+                wrapping: checkbox.wrapping.map(Into::into),
+                shaping: checkbox.shaping.map(Into::into),
             };
             arena.push(Node::Checkbox(node))
         })

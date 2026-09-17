@@ -36,13 +36,50 @@ impl From<iced_core::text::Wrapping> for Wrapping {
     }
 }
 
+impl From<iced_core::length::Bounds> for crate::bindings::iced::app::length::Bounds {
+    fn from(value: iced_core::length::Bounds) -> Self {
+        use crate::bindings::iced::app::length::Bounds as WitBounds;
+        match value {
+            iced_core::length::Bounds::Min(min) => WitBounds::Min(min),
+            iced_core::length::Bounds::Max(max) => WitBounds::Max(max),
+            iced_core::length::Bounds::Both { min, max } => WitBounds::Both((min, max)),
+        }
+    }
+}
+
+impl From<iced_core::length::Sizing> for crate::bindings::iced::app::length::Sizing {
+    fn from(value: iced_core::length::Sizing) -> Self {
+        use crate::bindings::iced::app::length::Sizing as WitSizing;
+        match value {
+            iced_core::length::Sizing::Fit => WitSizing::Fit,
+            iced_core::length::Sizing::Fill(portion) => WitSizing::Fill(portion),
+            iced_core::length::Sizing::Shrink => WitSizing::Shrink,
+        }
+    }
+}
+
+impl From<iced_core::length::Constraint> for crate::bindings::iced::app::length::Constraint {
+    fn from(value: iced_core::length::Constraint) -> Self {
+        use crate::bindings::iced::app::length::Constraint as WitConstraint;
+        match value {
+            iced_core::length::Constraint::Min(min) => WitConstraint::Min(min),
+            iced_core::length::Constraint::Max => WitConstraint::Max,
+        }
+    }
+}
+
 impl From<iced_core::Length> for Length {
     fn from(length: iced_core::Length) -> Self {
         match length {
+            iced_core::Length::Fit => Length::Fit,
             iced_core::Length::Fixed(value) => Length::Fixed(value),
             iced_core::Length::Fill => Length::Fill,
             iced_core::Length::Shrink => Length::Shrink,
             iced_core::Length::FillPortion(portion) => Length::FillPortion(portion),
+            iced_core::Length::Bounded { bounds, sizing } => {
+                Length::Bounded((bounds.into(), sizing.into()))
+            }
+            iced_core::Length::Fluid(constraint) => Length::Fluid(constraint.into()),
         }
     }
 }

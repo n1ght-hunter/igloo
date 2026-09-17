@@ -19,14 +19,15 @@ where
     if let Some(padding) = node.padding {
         col = col.padding(padding);
     }
-    if let Some(w) = node.width {
+    let mut width: Option<iced::Length> = node.width.map(Into::into);
+    if let Some(max) = node.max_width {
+        width = Some(width.unwrap_or(iced::Length::Shrink).max(max));
+    }
+    if let Some(w) = width {
         col = col.width(w);
     }
     if let Some(h) = node.height {
         col = col.height(h);
-    }
-    if let Some(max) = node.max_width {
-        col = col.max_width(max);
     }
     if let Some(align) = node.align_x {
         col = col.align_x(align);

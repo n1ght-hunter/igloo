@@ -1,6 +1,6 @@
 use crate::bindings::iced::app::{
     alignment::{Alignment, Horizontal, Vertical},
-    length::Length,
+    length::{Bounds, Constraint, Length, Sizing},
     message_types,
     padding::Padding,
     shared::{Color, ContentFit, FilterMethod, Rotation},
@@ -37,13 +37,48 @@ impl From<Wrapping> for iced::widget::text::Wrapping {
     }
 }
 
+impl From<Bounds> for iced_core::length::Bounds {
+    fn from(value: Bounds) -> Self {
+        match value {
+            Bounds::Min(min) => iced_core::length::Bounds::Min(min),
+            Bounds::Max(max) => iced_core::length::Bounds::Max(max),
+            Bounds::Both((min, max)) => iced_core::length::Bounds::Both { min, max },
+        }
+    }
+}
+
+impl From<Sizing> for iced_core::length::Sizing {
+    fn from(value: Sizing) -> Self {
+        match value {
+            Sizing::Fit => iced_core::length::Sizing::Fit,
+            Sizing::Fill(portion) => iced_core::length::Sizing::Fill(portion),
+            Sizing::Shrink => iced_core::length::Sizing::Shrink,
+        }
+    }
+}
+
+impl From<Constraint> for iced_core::length::Constraint {
+    fn from(value: Constraint) -> Self {
+        match value {
+            Constraint::Min(min) => iced_core::length::Constraint::Min(min),
+            Constraint::Max => iced_core::length::Constraint::Max,
+        }
+    }
+}
+
 impl From<Length> for iced::Length {
     fn from(value: Length) -> Self {
         match value {
+            Length::Fit => iced::Length::Fit,
             Length::Fill => iced::Length::Fill,
             Length::FillPortion(value) => iced::Length::FillPortion(value),
             Length::Shrink => iced::Length::Shrink,
             Length::Fixed(value) => iced::Length::Fixed(value),
+            Length::Bounded((bounds, sizing)) => iced::Length::Bounded {
+                bounds: bounds.into(),
+                sizing: sizing.into(),
+            },
+            Length::Fluid(constraint) => iced::Length::Fluid(constraint.into()),
         }
     }
 }

@@ -1,6 +1,38 @@
 interface length {
+    /// The limit of a `fluid` length.
+    variant constraint {
+        /// Fill available space, but never shrink below the given amount.
+        min(f32),
+        /// Fill available space, but never beyond the size the element resolves to on its own.
+        max,
+    }
+
+    /// The space limits of a `bounded` length.
+    variant bounds {
+        /// The length must be at least a certain amount of pixels.
+        min(f32),
+        /// The length must not exceed a certain amount of pixels.
+        max(f32),
+        /// The length must be inside a range of pixels.
+        both(tuple<f32, f32>),
+    }
+
+    /// The growth strategy of a `bounded` length.
+    variant sizing {
+        /// Equivalent to `length::fit`.
+        fit,
+        /// Equivalent to `length::fill-portion`.
+        fill(u16),
+        /// Equivalent to `length::shrink`.
+        shrink,
+    }
+
     /// The strategy used to fill space in a specific dimension.
     variant length {
+        /// Fill the minimum amount of space based on the intrinsic size of the
+        /// element; normally defined by its contents.
+        fit,
+
         /// Fill all the remaining space
         fill,
 
@@ -13,10 +45,16 @@ interface length {
         /// `Length::Fill` is equivalent to `Length::FillPortion(1)`.
         fill-portion(u16),
 
-        /// Fill the least amount of space
+        /// Fill the least amount of space; compressing contents if possible.
         shrink,
 
         /// Fill a fixed amount of space
         fixed(f32),
+
+        /// Fill a certain amount of space inside the given bounds with some sizing strategy.
+        bounded(tuple<bounds, sizing>),
+
+        /// Fill the remaining space like `fill`, but subject to a single open-ended constraint.
+        fluid(constraint),
     }
 }

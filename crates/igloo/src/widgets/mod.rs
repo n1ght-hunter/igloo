@@ -74,7 +74,8 @@ impl app::message_types::Host for MyState {}
 impl app::widgets::Host for MyState {}
 
 pub trait WrapperTheme:
-    iced::widget::text::Catalog
+    iced::theme::Base
+    + iced::widget::text::Catalog
     + iced::widget::button::Catalog
     + iced::widget::progress_bar::Catalog
     + iced::widget::rule::Catalog
@@ -93,7 +94,7 @@ pub trait WrapperTheme:
 }
 
 pub trait WrapperRenderer:
-    iced::advanced::text::Renderer<Font = iced::Font>
+    iced::advanced::text::Renderer
     + iced::advanced::Renderer
     + iced::advanced::image::Renderer<Handle = iced::advanced::image::Handle>
     + iced::advanced::svg::Renderer
@@ -101,7 +102,8 @@ pub trait WrapperRenderer:
 }
 
 impl<T> WrapperTheme for T where
-    T: iced::widget::text::Catalog
+    T: iced::theme::Base
+        + iced::widget::text::Catalog
         + iced::widget::button::Catalog
         + iced::widget::progress_bar::Catalog
         + iced::widget::rule::Catalog
@@ -120,7 +122,7 @@ impl<T> WrapperTheme for T where
 }
 
 impl<T> WrapperRenderer for T where
-    T: iced::advanced::text::Renderer<Font = iced::Font>
+    T: iced::advanced::text::Renderer
         + iced::advanced::Renderer
         + iced::advanced::image::Renderer<Handle = iced::advanced::image::Handle>
         + iced::advanced::svg::Renderer
@@ -138,7 +140,7 @@ pub fn build_element<'a, Theme, Renderer>(
 ) -> iced::Element<'a, Message, Theme, Renderer>
 where
     Theme: WrapperTheme + 'a,
-    Renderer: WrapperRenderer + 'a,
+    Renderer: WrapperRenderer + 'a + 'static,
 {
     let Some(node) = tree.get_mut(id as usize).and_then(Option::take) else {
         return iced::widget::Space::new().into();

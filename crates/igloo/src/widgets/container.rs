@@ -17,17 +17,19 @@ where
     if let Some(padding) = node.padding {
         container = container.padding(padding);
     }
-    if let Some(width) = node.width {
+    let mut width: Option<iced::Length> = node.width.map(Into::into);
+    if let Some(max_width) = node.max_width {
+        width = Some(width.unwrap_or(iced::Length::Shrink).max(max_width));
+    }
+    if let Some(width) = width {
         container = container.width(width);
     }
-    if let Some(height) = node.height {
-        container = container.height(height);
-    }
-    if let Some(max_width) = node.max_width {
-        container = container.max_width(max_width);
-    }
+    let mut height: Option<iced::Length> = node.height.map(Into::into);
     if let Some(max_height) = node.max_height {
-        container = container.max_height(max_height);
+        height = Some(height.unwrap_or(iced::Length::Shrink).max(max_height));
+    }
+    if let Some(height) = height {
+        container = container.height(height);
     }
     if let Some(align_x) = node.align_x {
         container = container.align_x(align_x);

@@ -9,9 +9,9 @@ pub fn build<'a, Theme, Renderer>(
 ) -> iced::Element<'a, Message, Theme, Renderer>
 where
     Theme: WrapperTheme + 'a,
-    Renderer: WrapperRenderer + 'a,
+    Renderer: WrapperRenderer + 'a + 'static,
 {
-    let mut input = iced::widget::TextInput::new(&node.placeholder, &node.value);
+    let mut input = iced::widget::TextInput::new(node.placeholder, node.value);
 
     if let Some(secure) = node.secure {
         input = input.secure(secure);
@@ -38,6 +38,7 @@ where
         input = input.line_height(line_height);
     }
     if let Some(align_x) = node.align_x {
+        let align_x: iced::alignment::Horizontal = align_x.into();
         input = input.align_x(align_x);
     }
     input.into()

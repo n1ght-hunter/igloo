@@ -29,14 +29,14 @@ where
     if let Some(text_size) = node.text_size {
         checkbox = checkbox.text_size(text_size);
     }
-    if let Some(lh) = node.text_line_height {
-        checkbox = checkbox.text_line_height(lh);
+    if let Some(lh) = node.line_height {
+        checkbox = checkbox.line_height(lh);
     }
-    if let Some(wrapping) = node.text_wrapping {
-        checkbox = checkbox.text_wrapping(wrapping.into());
+    if let Some(wrapping) = node.wrapping {
+        checkbox = checkbox.wrapping(wrapping.into());
     }
-    if let Some(shaping) = node.text_shaping {
-        checkbox = checkbox.text_shaping(shaping.into());
+    if let Some(shaping) = node.shaping {
+        checkbox = checkbox.shaping(shaping.into());
     }
     checkbox.into()
 }

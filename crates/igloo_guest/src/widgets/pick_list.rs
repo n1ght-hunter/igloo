@@ -14,8 +14,8 @@ pub struct PickList<Message> {
     width: Option<Length>,
     padding: Option<Padding>,
     text_size: Option<f32>,
-    text_line_height: Option<text::LineHeight>,
-    text_shaping: Option<text::Shaping>,
+    line_height: Option<text::LineHeight>,
+    shaping: Option<text::Shaping>,
     on_open: Option<Message>,
     on_close: Option<Message>,
 }
@@ -58,8 +58,8 @@ impl<Message: 'static> PickList<Message> {
             width: None,
             padding: None,
             text_size: None,
-            text_line_height: None,
-            text_shaping: None,
+            line_height: None,
+            shaping: None,
             on_open: None,
             on_close: None,
         }
@@ -86,13 +86,13 @@ impl<Message: 'static> PickList<Message> {
         self
     }
 
-    pub fn text_line_height(mut self, line_height: impl Into<text::LineHeight>) -> Self {
-        self.text_line_height = Some(line_height.into());
+    pub fn line_height(mut self, line_height: impl Into<text::LineHeight>) -> Self {
+        self.line_height = Some(line_height.into());
         self
     }
 
-    pub fn text_shaping(mut self, shaping: impl Into<text::Shaping>) -> Self {
-        self.text_shaping = Some(shaping.into());
+    pub fn shaping(mut self, shaping: impl Into<text::Shaping>) -> Self {
+        self.shaping = Some(shaping.into());
         self
     }
 
@@ -120,8 +120,8 @@ impl<Message: 'static> From<PickList<Message>> for Element<Message> {
                 width: pick_list.width.map(Into::into),
                 padding: pick_list.padding.map(Into::into),
                 text_size: pick_list.text_size,
-                text_line_height: pick_list.text_line_height.map(Into::into),
-                text_shaping: pick_list.text_shaping.map(Into::into),
+                line_height: pick_list.line_height.map(Into::into),
+                shaping: pick_list.shaping.map(Into::into),
                 on_open: pick_list.on_open.map(|msg| realize.fixed(msg)),
                 on_close: pick_list.on_close.map(|msg| realize.fixed(msg)),
             };

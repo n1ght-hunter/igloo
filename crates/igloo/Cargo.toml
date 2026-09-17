@@ -12,6 +12,7 @@ wasmtime = { workspace = true, features = ["async", "component-model-async"] }
 wasmtime-wasi = { workspace = true }
 
 iced.workspace = true
+iced_core.workspace = true
 tracing.workspace = true
 thiserror.workspace = true
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }

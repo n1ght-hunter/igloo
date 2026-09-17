@@ -71,17 +71,16 @@ impl HostTaskTrait for MyState {
     }
 
     fn read_clipboard(&mut self, on_complete: u32) -> Resource<HostTask> {
-        let task = iced::clipboard::read().map(move |contents| Message::String {
+        let task = iced::clipboard::read_text().map(move |contents| Message::String {
             mapper: on_complete,
-            value: contents.unwrap_or_default(),
+            value: contents.map(|text| (*text).clone()).unwrap_or_default(),
         });
         self.table.push(HostTask(task)).unwrap()
     }
 
     fn write_clipboard(&mut self, contents: String) -> Resource<HostTask> {
-        self.table
-            .push(HostTask(iced::clipboard::write(contents)))
-            .unwrap()
+        let task = iced::clipboard::write(contents).discard();
+        self.table.push(HostTask(task)).unwrap()
     }
 
     fn exit(&mut self) -> Resource<HostTask> {

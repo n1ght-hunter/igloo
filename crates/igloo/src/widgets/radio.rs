@@ -29,14 +29,14 @@ where
     if let Some(text_size) = node.text_size {
         radio = radio.text_size(text_size);
     }
-    if let Some(lh) = node.text_line_height {
-        radio = radio.text_line_height(lh);
+    if let Some(lh) = node.line_height {
+        radio = radio.line_height(lh);
     }
-    if let Some(wrapping) = node.text_wrapping {
-        radio = radio.text_wrapping(wrapping.into());
+    if let Some(wrapping) = node.wrapping {
+        radio = radio.wrapping(wrapping.into());
     }
-    if let Some(shaping) = node.text_shaping {
-        radio = radio.text_shaping(shaping.into());
+    if let Some(shaping) = node.shaping {
+        radio = radio.shaping(shaping.into());
     }
     radio.into()
 }

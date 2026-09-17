@@ -7,7 +7,7 @@ use crate::{
 pub fn build<'a, Theme, Renderer>(node: ComboBoxNode) -> iced::Element<'a, Message, Theme, Renderer>
 where
     Theme: WrapperTheme + 'a,
-    Renderer: WrapperRenderer + 'a,
+    Renderer: WrapperRenderer + 'a + 'static,
 {
     // Leaked deliberately: iced's `ComboBox` widget borrows its `State` for
     // the lifetime of the returned element, and this element is rebuilt
@@ -18,7 +18,7 @@ where
     let on_selected = node.on_selected;
     let mut combo_box = iced::widget::ComboBox::new(
         state,
-        &node.placeholder,
+        node.placeholder,
         node.selected.as_ref(),
         move |value| Message::String {
             mapper: on_selected,
