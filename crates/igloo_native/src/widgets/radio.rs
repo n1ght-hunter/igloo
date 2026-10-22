@@ -40,7 +40,7 @@ impl std::fmt::Debug for RadioNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(radio: RadioNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(radio: RadioNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let selected = if radio.is_selected { Some(()) } else { None };
     let emit = std::rc::Rc::new(radio.on_select);
     let mut widget =
@@ -69,7 +69,7 @@ pub(crate) fn build(radio: RadioNode) -> iced::Element<'static, crate::widgets::
     if let Some(shaping) = Option::<Shaping>::from(radio.shaping) {
         widget = widget.shaping(iced::widget::text::Shaping::from(shaping));
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`RadioNode`].

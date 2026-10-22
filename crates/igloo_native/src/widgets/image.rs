@@ -22,7 +22,7 @@ pub struct ImageNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(image: ImageNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(image: ImageNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let handle = iced::advanced::image::Handle::from_path(std::string::String::from(image.handle));
     let mut widget = iced::widget::Image::new(handle);
     if let Some(width) = Option::<Length>::from(image.width) {
@@ -49,7 +49,7 @@ pub(crate) fn build(image: ImageNode) -> iced::Element<'static, crate::widgets::
     if let Some(scale) = Option::<f32>::from(image.scale) {
         widget = widget.scale(scale);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for an [`ImageNode`].

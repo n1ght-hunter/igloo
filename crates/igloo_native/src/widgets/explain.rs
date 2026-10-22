@@ -1,5 +1,8 @@
 //! Wraps a node with a debug overlay showing its layout bounds.
 
+#[cfg(feature = "host")]
+use iced::Widget as _;
+
 use crate::widgets::element::{Arena, Realize};
 use crate::widgets::types::Color;
 use crate::widgets::{Node, NodeId};
@@ -16,7 +19,7 @@ pub struct ExplainNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     explain: ExplainNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let content = crate::widgets::build_node(nodes, explain.content);
     content.explain(iced::Color::from(explain.color))
 }

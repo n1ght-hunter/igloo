@@ -524,8 +524,13 @@ mod host {
                 absolute_offset: viewport.absolute_offset().into(),
                 absolute_offset_reversed: viewport.absolute_offset_reversed().into(),
                 relative_offset: viewport.relative_offset().into(),
-                bounds: viewport.bounds().into(),
-                content_bounds: viewport.content_bounds().into(),
+                bounds: viewport.bounds.into(),
+                content_bounds: Rectangle {
+                    x: viewport.bounds.x,
+                    y: viewport.bounds.y,
+                    width: viewport.content.width,
+                    height: viewport.content.height,
+                },
             }
         }
     }

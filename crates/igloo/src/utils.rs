@@ -179,8 +179,13 @@ impl From<iced::widget::scrollable::Viewport> for message_types::Viewport {
             absolute_offset: value.absolute_offset().into(),
             absolute_offset_reversed: value.absolute_offset_reversed().into(),
             relative_offset: value.relative_offset().into(),
-            bounds: value.bounds().into(),
-            content_bounds: value.content_bounds().into(),
+            bounds: value.bounds.into(),
+            content_bounds: message_types::Rectangle {
+                x: value.bounds.x,
+                y: value.bounds.y,
+                width: value.content.width,
+                height: value.content.height,
+            },
         }
     }
 }

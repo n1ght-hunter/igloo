@@ -11,9 +11,9 @@ pub struct SvgNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(svg: SvgNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(svg: SvgNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let handle = iced::advanced::svg::Handle::from_path(std::string::String::from(svg.path));
-    iced::widget::Svg::new(handle).into()
+    iced::widget::Svg::new(handle)
 }
 
 /// A builder for an [`SvgNode`].

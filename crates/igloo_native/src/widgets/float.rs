@@ -19,7 +19,7 @@ pub struct FloatNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     float: FloatNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let content = crate::widgets::build_node(nodes, float.content);
     let mut widget = iced::widget::Float::new(content);
     if let Some(scale) = Option::<f32>::from(float.scale) {
@@ -28,7 +28,7 @@ pub(crate) fn build<'a>(
     if let Some(translation) = Option::<Translation>::from(float.translation) {
         widget = widget.translate(move |_, _| iced::Vector::new(translation.x, translation.y));
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`FloatNode`].

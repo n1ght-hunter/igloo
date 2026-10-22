@@ -24,7 +24,7 @@ pub struct RowNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     row: RowNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> iced::widget::Row<iced::Element<'a, crate::widgets::Emitted>> {
     use crate::widgets::Length;
 
     let children: std::vec::Vec<_> = row
@@ -51,10 +51,7 @@ pub(crate) fn build<'a>(
     if let Some(clip) = Option::<bool>::from(row.clip) {
         widget = widget.clip(clip);
     }
-    if let Some(true) = Option::<bool>::from(row.wrap) {
-        return widget.wrap().into();
-    }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`RowNode`].

@@ -43,7 +43,7 @@ impl std::fmt::Debug for PickListNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(node: PickListNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(node: PickListNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let options: std::vec::Vec<std::string::String> = node
         .options
         .into_iter()
@@ -89,7 +89,7 @@ pub(crate) fn build(node: PickListNode) -> iced::Element<'static, crate::widgets
         widget = widget.on_close(crate::widgets::Emitted::fixed(&emit));
     }
 
-    widget.into()
+    widget
 }
 
 /// A builder for a [`PickListNode`].

@@ -6,8 +6,8 @@ use crate::{
 /// Builds an `iced::Button` from its node and its already-built content element.
 pub fn build<'a, Theme, Renderer>(
     node: ButtonNode,
-    content: iced::Element<'a, Message, Theme, Renderer>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+    content: impl iced::Widget<Message, Theme, Renderer> + 'a,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -29,5 +29,5 @@ where
     if let Some(clip) = node.clip {
         button = button.clip(clip);
     }
-    button.into()
+    button
 }

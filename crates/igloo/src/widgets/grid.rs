@@ -7,7 +7,7 @@ use crate::{
 pub fn build<'a, Theme, Renderer>(
     node: GridNode,
     children: Vec<iced::Element<'a, Message, Theme, Renderer>>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -30,5 +30,5 @@ where
         grid = grid.fluid(fluid);
     }
 
-    grid.into()
+    grid
 }

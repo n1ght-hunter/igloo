@@ -4,17 +4,14 @@ use crate::{
 };
 
 /// Builds an `iced::ComboBox` from its node.
-pub fn build<'a, Theme, Renderer>(node: ComboBoxNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: ComboBoxNode,
+    state: &'a iced::widget::combo_box::State<String>,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a + 'static,
 {
-    // Leaked deliberately: iced's `ComboBox` widget borrows its `State` for
-    // the lifetime of the returned element, and this element is rebuilt
-    // fresh from guest state on every `view()` call.
-    let state: &'static iced::widget::combo_box::State<String> =
-        Box::leak(Box::new(iced::widget::combo_box::State::new(node.options)));
-
     let on_selected = node.on_selected;
     let mut combo_box = iced::widget::ComboBox::new(
         state,
@@ -51,5 +48,5 @@ where
         combo_box = combo_box.width(width);
     }
 
-    combo_box.into()
+    combo_box
 }

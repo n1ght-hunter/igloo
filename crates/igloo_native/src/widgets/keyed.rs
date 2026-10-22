@@ -27,7 +27,7 @@ pub struct KeyedColumnNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     column: KeyedColumnNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let keys: std::vec::Vec<_> = column.keys.into_iter().collect();
     let children: std::vec::Vec<_> = column
         .children
@@ -54,7 +54,7 @@ pub(crate) fn build<'a>(
     if let Some(align_items) = Option::<Alignment>::from(column.align_items) {
         widget = widget.align_items(iced::alignment::Alignment::from(align_items));
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`KeyedColumnNode`].

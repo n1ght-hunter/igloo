@@ -22,7 +22,7 @@ pub struct TextNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(text: TextNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(text: TextNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let mut widget = iced::widget::text(std::string::String::from(text.content));
     if let Some(size) = Option::<f32>::from(text.size) {
         widget = widget.size(size);
@@ -48,7 +48,7 @@ pub(crate) fn build(text: TextNode) -> iced::Element<'static, crate::widgets::Em
     if let Some(color) = Option::<Color>::from(text.color) {
         widget = widget.color(iced::Color::from(color));
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`TextNode`].

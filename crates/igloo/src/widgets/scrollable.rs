@@ -6,8 +6,8 @@ use crate::{
 /// Builds an `iced::Scrollable` from its node and its already-built content element.
 pub fn build<'a, Theme, Renderer>(
     node: ScrollableNode,
-    content: iced::Element<'a, Message, Theme, Renderer>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+    content: impl iced::Widget<Message, Theme, Renderer> + 'a,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -23,10 +23,13 @@ where
         scrollable = scrollable.direction(direction);
     }
     if let Some(mapper) = node.on_scroll {
-        scrollable = scrollable.on_scroll(move |v| Message::Viewport {
-            mapper,
-            value: v.into(),
-        });
+        scrollable =
+            scrollable.on_scroll(
+                move |v: iced::widget::scrollable::Scroll| Message::Viewport {
+                    mapper,
+                    value: v.viewport.into(),
+                },
+            );
     }
-    scrollable.into()
+    scrollable
 }

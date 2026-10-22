@@ -40,7 +40,9 @@ impl std::fmt::Debug for VerticalSliderNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(slider: VerticalSliderNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(
+    slider: VerticalSliderNode,
+) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let emit = std::rc::Rc::new(slider.on_change);
     let mut widget =
         iced::widget::VerticalSlider::new(slider.range_start..=slider.range_end, slider.value, {
@@ -66,7 +68,7 @@ pub(crate) fn build(slider: VerticalSliderNode) -> iced::Element<'static, crate:
     if let Some(shift_step) = Option::<f32>::from(slider.shift_step) {
         widget = widget.shift_step(shift_step);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`VerticalSliderNode`].

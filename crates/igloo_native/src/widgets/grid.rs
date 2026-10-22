@@ -21,7 +21,7 @@ pub struct GridNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     grid: GridNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let children: std::vec::Vec<_> = grid
         .elements
         .into_iter()
@@ -43,7 +43,7 @@ pub(crate) fn build<'a>(
     if let Some(fluid) = Option::<f32>::from(grid.fluid) {
         widget = widget.fluid(fluid);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`GridNode`].

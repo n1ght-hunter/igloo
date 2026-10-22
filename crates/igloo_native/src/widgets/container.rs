@@ -32,7 +32,7 @@ pub struct ContainerNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     container: ContainerNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let content = crate::widgets::build_node(nodes, container.content);
     let mut widget = iced::widget::Container::new(content);
     if let Some(padding) = Option::<Padding>::from(container.padding) {
@@ -82,7 +82,7 @@ pub(crate) fn build<'a>(
     if let Some(clip) = Option::<bool>::from(container.clip) {
         widget = widget.clip(clip);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`ContainerNode`].

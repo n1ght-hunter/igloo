@@ -18,24 +18,23 @@ impl From<Position> for iced::widget::tooltip::Position {
 /// Builds an `iced::Tooltip` from its node and its already-built content and overlay elements.
 pub fn build<'a, Theme, Renderer>(
     node: TooltipNode,
-    content: iced::Element<'a, Message, Theme, Renderer>,
-    tooltip_content: iced::Element<'a, Message, Theme, Renderer>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+    content: impl iced::Widget<Message, Theme, Renderer> + 'a,
+    tooltip_content: impl iced::Widget<Message, Theme, Renderer> + 'a,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
 {
+    let tooltip_content =
+        iced::widget::Container::new(tooltip_content).padding(node.padding.unwrap_or(0.0));
     let mut tooltip = iced::widget::Tooltip::new(content, tooltip_content, node.position.into());
 
     if let Some(gap) = node.gap {
         tooltip = tooltip.gap(gap);
     }
-    if let Some(padding) = node.padding {
-        tooltip = tooltip.padding(padding);
-    }
     if let Some(snap) = node.snap_within_viewport {
         tooltip = tooltip.snap_within_viewport(snap);
     }
 
-    tooltip.into()
+    tooltip
 }

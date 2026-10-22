@@ -6,7 +6,7 @@ use crate::{
 /// Builds an `iced::TextInput` from its node.
 pub fn build<'a, Theme, Renderer>(
     node: TextInputNode,
-) -> iced::Element<'a, Message, Theme, Renderer>
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a + 'static,
@@ -41,5 +41,5 @@ where
         let align_x: iced::alignment::Horizontal = align_x.into();
         input = input.align_x(align_x);
     }
-    input.into()
+    input
 }

@@ -35,7 +35,7 @@ impl std::fmt::Debug for ButtonNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     button: ButtonNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let content = crate::widgets::build_node(nodes, button.content);
     let mut widget = iced::widget::button(content);
     if let Some(emit) = Option::from(button.on_press) {
@@ -54,7 +54,7 @@ pub(crate) fn build<'a>(
     if let Some(clip) = Option::<bool>::from(button.clip) {
         widget = widget.clip(clip);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`ButtonNode`].

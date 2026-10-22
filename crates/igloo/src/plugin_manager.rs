@@ -9,7 +9,7 @@ use crate::{
             widgets::ViewTree,
         },
     },
-    widgets::{Message, WrapperRenderer, WrapperTheme, build_element},
+    widgets::{Message, PreparedView, WrapperRenderer, WrapperTheme},
 };
 use futures::{
     FutureExt, StreamExt,
@@ -134,12 +134,9 @@ impl SharedEffect {
 }
 
 enum Request {
-    View {
-        reply: std::sync::mpsc::Sender<Option<ViewTree>>,
-    },
     Update {
         event: Event,
-        reply: std::sync::mpsc::Sender<Result<iced::Task<Message>>>,
+        reply: std::sync::mpsc::Sender<Result<(iced::Task<Message>, ViewTree)>>,
     },
     Shutdown,
 }
@@ -147,6 +144,7 @@ struct PluginHandle {
     req: UnboundedSender<Request>,
     worker: Option<JoinHandle<()>>,
     generation: u64,
+    prepared: PreparedView,
 }
 
 /// Each component owns a concurrent worker; UI methods send it application calls.
@@ -226,26 +224,23 @@ impl PluginManager {
         };
         let (tx, rx) = std::sync::mpsc::channel();
         self.send(id, Request::Update { event, reply: tx })?;
-        rx.recv().map_err(|_| PluginError::WorkerGone)?
+        let (task, tree) = rx.recv().map_err(|_| PluginError::WorkerGone)??;
+        self.plugins
+            .get_mut(id)
+            .ok_or_else(|| PluginError::NotFound(id.into()))?
+            .prepared
+            .refresh(tree);
+        Ok(task)
     }
     pub fn plugin_view<'a, Theme, Renderer>(
-        &self,
+        &'a self,
         id: &str,
-    ) -> Option<iced::Element<'a, Message, Theme, Renderer>>
+    ) -> Option<impl iced::Widget<Message, Theme, Renderer> + 'a>
     where
         Theme: WrapperTheme + 'a,
         Renderer: WrapperRenderer + 'a + 'static,
     {
-        let (tx, rx) = std::sync::mpsc::channel();
-        self.plugins
-            .get(id)?
-            .req
-            .unbounded_send(Request::View { reply: tx })
-            .ok()?;
-        let tree = rx.recv().ok()??;
-        let root = tree.root;
-        let mut nodes = tree.nodes.into_iter().map(Some).collect();
-        Some(build_element(&mut nodes, root))
+        Some(self.plugins.get(id)?.prepared.render())
     }
 
     /// Adds a plugin from a file, discarding its boot task.
@@ -330,7 +325,7 @@ impl PluginManager {
             })
             .map_err(|e| PluginError::UpdateFailed(e.to_string()))?;
 
-        let boot = boot_rx.recv().map_err(|_| PluginError::WorkerGone)??;
+        let (boot, tree) = boot_rx.recv().map_err(|_| PluginError::WorkerGone)??;
 
         if let Some(mut old) = self.plugins.remove(&name) {
             let _ = old.req.unbounded_send(Request::Shutdown);
@@ -344,6 +339,7 @@ impl PluginManager {
                 req: req_tx,
                 worker: Some(worker),
                 generation,
+                prepared: PreparedView::new(tree),
             },
         );
         if !self.ids.contains(&name) {
@@ -657,7 +653,7 @@ struct Worker {
     wake: UnboundedSender<WakeMessage>,
     keys: Keys,
     generation: u64,
-    boot_reply: std::sync::mpsc::Sender<Result<iced::Task<Message>>>,
+    boot_reply: std::sync::mpsc::Sender<Result<(iced::Task<Message>, ViewTree)>>,
 }
 
 fn run_plugin_worker(worker: Worker) {
@@ -699,21 +695,17 @@ fn run_plugin_worker(worker: Worker) {
             let result: Result<()> = async {
                 if let Some(job) = application.call_boot(acc, instance).await? { jobs.start(acc, &app, job).await?; }
                 jobs.reconcile(acc, &app, instance).await?;
-                if let Some(reply) = boot_reply.take() { let _ = reply.send(Ok(iced::Task::none())); }
+                let tree = application.call_view(acc, instance).await?;
+                if let Some(reply) = boot_reply.take() { let _ = reply.send(Ok((iced::Task::none(), tree))); }
                 loop {
                     futures::select! {
                         request = requests.next() => match request {
-                            Some(Request::View { reply }) => {
-                                let tree = application.call_view(acc, instance).await;
-                                let failed = tree.is_err();
-                                let _ = reply.send(tree.ok());
-                                if failed { return Err(PluginError::UpdateFailed("view trapped".into())); }
-                            }
                             Some(Request::Update { event, reply }) => {
-                                let result: Result<iced::Task<Message>> = async {
+                                let result: Result<(iced::Task<Message>, ViewTree)> = async {
                                     if let Some(job) = application.call_update(acc, instance, event).await? { jobs.start(acc, &app, job).await?; }
                                     jobs.reconcile(acc, &app, instance).await?;
-                                    Ok(iced::Task::none())
+                                    let tree = application.call_view(acc, instance).await?;
+                                    Ok((iced::Task::none(), tree))
                                 }.await;
                                 let failed = result.is_err();
                                 let _ = reply.send(result);
@@ -810,9 +802,7 @@ mod tests {
         drop(manager);
     }
     fn view(manager: &PluginManager) -> ViewTree {
-        let (reply, receiver) = std::sync::mpsc::channel();
-        manager.send("probe", Request::View { reply }).unwrap();
-        receiver.recv().unwrap().unwrap()
+        manager.plugins["probe"].prepared.tree().clone()
     }
 
     fn click(manager: &mut PluginManager, label: &str) {

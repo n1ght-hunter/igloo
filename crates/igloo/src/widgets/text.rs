@@ -4,7 +4,9 @@ use crate::{
 };
 
 /// Builds an `iced::Text` from its node.
-pub fn build<'a, Theme, Renderer>(node: TextNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: TextNode,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -33,5 +35,5 @@ where
     }
     // TODO: color requires Theme::Class<'a>: From<StyleFn<'a, Theme>> bound
     // which is more complex to wire through generics
-    text.into()
+    text
 }

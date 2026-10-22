@@ -8,8 +8,8 @@ use crate::{
 /// Builds an `iced::Float` from its node and its already-built content element.
 pub fn build<'a, Theme, Renderer>(
     node: FloatNode,
-    content: iced::Element<'a, Message, Theme, Renderer>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+    content: impl iced::Widget<Message, Theme, Renderer> + 'a,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -24,5 +24,5 @@ where
         float = float.translate(move |_, _| Vector::new(translation.x, translation.y));
     }
 
-    float.into()
+    float
 }

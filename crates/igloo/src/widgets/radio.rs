@@ -4,7 +4,9 @@ use crate::{
 };
 
 /// Builds an `iced::Radio` from its node.
-pub fn build<'a, Theme, Renderer>(node: RadioNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: RadioNode,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -38,5 +40,5 @@ where
     if let Some(shaping) = node.shaping {
         radio = radio.shaping(shaping.into());
     }
-    radio.into()
+    radio
 }

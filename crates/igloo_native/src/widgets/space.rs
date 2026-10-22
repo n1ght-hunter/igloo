@@ -15,7 +15,7 @@ pub struct SpaceNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(space: SpaceNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(space: SpaceNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let mut widget = iced::widget::Space::new();
     if let Some(width) = Option::<Length>::from(space.width) {
         widget = widget.width(iced::Length::from(width));
@@ -23,7 +23,7 @@ pub(crate) fn build(space: SpaceNode) -> iced::Element<'static, crate::widgets::
     if let Some(height) = Option::<Length>::from(space.height) {
         widget = widget.height(iced::Length::from(height));
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`SpaceNode`].

@@ -1,5 +1,6 @@
 //! Host routing for native plugins, independent of the WASM manager.
 use crate::{NativePlugin, NativePluginError, Permissions, abi};
+use iced::Widget as _;
 use std::collections::BTreeMap;
 
 /// A native event tagged with the originating plugin instance.
@@ -53,7 +54,7 @@ impl NativePluginManager {
             None => iced::Task::none(),
         }
     }
-    pub fn view(&self, name: &str) -> Option<iced::Element<'_, Message>> {
+    pub fn view(&self, name: &str) -> Option<impl iced::Widget<Message> + '_> {
         self.plugins.get(name).map(|(plugin, _)| {
             let instance = plugin.instance;
             plugin.view().map(move |value| Message { instance, value })

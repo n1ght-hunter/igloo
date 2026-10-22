@@ -51,7 +51,7 @@ impl std::fmt::Debug for ComboBoxNode {
 pub(crate) fn build<'a>(
     node: ComboBoxNode,
     state: &'a iced::widget::combo_box::State<std::string::String>,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let placeholder = std::string::String::from(node.placeholder);
     let selected =
         Option::<stabby::string::String>::from(node.selected).map(std::string::String::from);
@@ -93,7 +93,7 @@ pub(crate) fn build<'a>(
         widget = widget.width(iced::Length::from(width));
     }
 
-    widget.into()
+    widget
 }
 
 /// A builder for a [`ComboBoxNode`].

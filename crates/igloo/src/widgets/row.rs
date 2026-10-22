@@ -7,7 +7,7 @@ use crate::{
 pub fn build<'a, Theme, Renderer>(
     node: RowNode,
     children: Vec<iced::Element<'a, Message, Theme, Renderer>>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+) -> iced::widget::Row<iced::Element<'a, Message, Theme, Renderer>>
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -33,9 +33,5 @@ where
     }
 
     // must be last as it returns a different element type
-    if let Some(true) = node.wrap {
-        return iced::Element::from(row.wrap());
-    }
-
-    row.into()
+    row
 }

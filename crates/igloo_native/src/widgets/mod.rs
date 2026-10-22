@@ -30,6 +30,9 @@ pub mod tooltip;
 mod types;
 pub mod vertical_slider;
 
+#[cfg(feature = "host")]
+use iced::Widget as _;
+
 pub use button::{Button, button};
 pub use checkbox::{Checkbox, checkbox};
 pub use column::{Column, column};
@@ -253,7 +256,10 @@ impl PreparedView {
             .collect();
     }
     /// Renders an ABI tree using this view's owned state.
-    pub fn render<'a>(&'a self, tree: NodeTree) -> iced::Element<'a, crate::messages::Message> {
+    pub fn render<'a>(
+        &'a self,
+        tree: NodeTree,
+    ) -> impl iced::Widget<crate::messages::Message> + 'a {
         let root = tree.root;
         let mut nodes = RenderArena {
             nodes: tree.nodes.into_iter().map(Some).collect(),
@@ -299,38 +305,47 @@ pub(crate) fn build_node<'a>(
     id: NodeId,
 ) -> iced::Element<'a, Emitted> {
     let Some(node) = nodes.nodes.get_mut(id as usize).and_then(Option::take) else {
-        return iced::widget::Space::new().into();
+        return iced::widget::Space::new().boxed();
     };
     match node {
-        Node::Text(text) => text::build(text),
-        Node::Column(column) => column::build(nodes, column),
-        Node::Button(button) => button::build(nodes, button),
-        Node::Row(row) => row::build(nodes, row),
-        Node::Container(container) => container::build(nodes, container),
-        Node::Space(space) => space::build(space),
-        Node::Rule(rule) => rule::build(rule),
-        Node::Svg(svg) => svg::build(svg),
-        Node::Image(image) => image::build(image),
-        Node::ProgressBar(bar) => progress_bar::build(bar),
-        Node::Tooltip(tooltip) => tooltip::build(nodes, tooltip),
-        Node::Float(float) => float::build(nodes, float),
-        Node::Grid(grid) => grid::build(nodes, grid),
-        Node::KeyedColumn(column) => keyed::build(nodes, column),
-        Node::Explain(explain) => explain::build(nodes, explain),
-        Node::Checkbox(checkbox) => checkbox::build(checkbox),
-        Node::Toggler(toggler) => toggler::build(toggler),
-        Node::Radio(radio) => radio::build(radio),
-        Node::TextInput(input) => text_input::build(input),
-        Node::Slider(slider) => slider::build(slider),
-        Node::VerticalSlider(slider) => vertical_slider::build(slider),
-        Node::Scrollable(scrollable) => scrollable::build(nodes, scrollable),
-        Node::PickList(pick_list) => pick_list::build(pick_list),
+        Node::Text(text) => text::build(text).boxed(),
+        Node::Column(column) => column::build(nodes, column).boxed(),
+        Node::Button(button) => button::build(nodes, button).boxed(),
+        Node::Row(row) => {
+            let wrap = Option::<bool>::from(row.wrap.clone()).unwrap_or(false);
+            let widget = row::build(nodes, row);
+            if wrap {
+                widget.wrap().boxed()
+            } else {
+                widget.boxed()
+            }
+        }
+        Node::Container(container) => container::build(nodes, container).boxed(),
+        Node::Space(space) => space::build(space).boxed(),
+        Node::Rule(rule) => rule::build(rule).boxed(),
+        Node::Svg(svg) => svg::build(svg).boxed(),
+        Node::Image(image) => image::build(image).boxed(),
+        Node::ProgressBar(bar) => progress_bar::build(bar).boxed(),
+        Node::Tooltip(tooltip) => tooltip::build(nodes, tooltip).boxed(),
+        Node::Float(float) => float::build(nodes, float).boxed(),
+        Node::Grid(grid) => grid::build(nodes, grid).boxed(),
+        Node::KeyedColumn(column) => keyed::build(nodes, column).boxed(),
+        Node::Explain(explain) => explain::build(nodes, explain).boxed(),
+        Node::Checkbox(checkbox) => checkbox::build(checkbox).boxed(),
+        Node::Toggler(toggler) => toggler::build(toggler).boxed(),
+        Node::Radio(radio) => radio::build(radio).boxed(),
+        Node::TextInput(input) => text_input::build(input).boxed(),
+        Node::Slider(slider) => slider::build(slider).boxed(),
+        Node::VerticalSlider(slider) => vertical_slider::build(slider).boxed(),
+        Node::Scrollable(scrollable) => scrollable::build(nodes, scrollable).boxed(),
+        Node::PickList(pick_list) => pick_list::build(pick_list).boxed(),
         Node::ComboBox(combo_box) => combo_box::build(
             combo_box,
             nodes
                 .states
                 .get(&id)
                 .expect("combo box missing from prepared view"),
-        ),
+        )
+        .boxed(),
     }
 }

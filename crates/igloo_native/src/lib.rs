@@ -118,7 +118,7 @@ macro_rules! export {
 pub struct NativePlugin {
     application: BoxedApplication,
     /// Kept alive so the plugin's code stays mapped; never read directly.
-    _lib: &'static libloading::Library,
+    _lib: std::sync::Arc<libloading::Library>,
     instance: u64,
     prepared: widgets::PreparedView,
 }
@@ -144,13 +144,31 @@ impl NativePlugin {
         permissions: Permissions,
     ) -> Result<(Self, iced::Task<abi::Message>), NativePluginError> {
         use stabby::libloading::StabbyLibrary;
+        static LIBRARIES: std::sync::OnceLock<
+            std::sync::Mutex<
+                std::collections::HashMap<std::path::PathBuf, std::sync::Arc<libloading::Library>>,
+            >,
+        > = std::sync::OnceLock::new();
+        let path = path.as_ref();
+        let key = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
         #[allow(unsafe_code)]
         let (boot, lib) = unsafe {
-            let lib = libloading::Library::new(path.as_ref().to_path_buf())
-                .map_err(NativePluginError::Open)?;
+            // Retained callbacks and wakers require process-lifetime code mappings.
+            // Cache each library once instead of leaking another owner on every load.
+            let mut libraries = LIBRARIES.get_or_init(Default::default).lock().unwrap();
+            let lib = match libraries.get(&key) {
+                Some(lib) => std::sync::Arc::clone(lib),
+                None => std::sync::Arc::new(
+                    libloading::Library::new(path.to_path_buf())
+                        .map_err(NativePluginError::Open)?,
+                ),
+            };
             let boot = *lib
                 .get_stabbied::<Boot>(b"boot")
                 .map_err(NativePluginError::MissingBoot)?;
+            libraries
+                .entry(key)
+                .or_insert_with(|| std::sync::Arc::clone(&lib));
             (boot, lib)
         };
 
@@ -160,7 +178,7 @@ impl NativePlugin {
             Self {
                 application,
                 // Streams and retained wakers may outlive the plugin instance.
-                _lib: std::boxed::Box::leak(std::boxed::Box::new(lib)),
+                _lib: lib,
                 instance: next_instance(),
                 prepared,
             },
@@ -183,7 +201,7 @@ impl NativePlugin {
     }
 
     /// The plugin's current UI tree.
-    pub fn view(&self) -> iced::Element<'_, abi::Message> {
+    pub fn view(&self) -> impl iced::Widget<abi::Message> + '_ {
         self.prepared.render(self.application.view())
     }
     pub fn subscription(&self) -> iced::Subscription<abi::Message> {
@@ -205,6 +223,25 @@ fn next_instance() -> u64 {
 #[cfg(all(test, feature = "host"))]
 mod tests {
     use super::*;
+    #[test]
+    #[ignore = "build native_counter first, then run this test with --ignored"]
+    fn repeated_loads_reuse_the_library_owner() {
+        let executable = std::env::current_exe().unwrap();
+        let path = executable
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join(libloading::library_filename("native_counter"));
+        let (first, task) = NativePlugin::load(&path, Permissions::empty()).unwrap();
+        drop(task);
+        for _ in 0..10 {
+            let (next, task) = NativePlugin::load(&path, Permissions::empty()).unwrap();
+            drop(task);
+            assert!(std::sync::Arc::ptr_eq(&first._lib, &next._lib));
+        }
+    }
+
     #[test]
     fn loading_reports_missing_library() {
         let path = std::env::temp_dir().join("igloo-native-nonexistent-plugin.invalid");

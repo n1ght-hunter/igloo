@@ -40,7 +40,9 @@ impl std::fmt::Debug for CheckboxNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(checkbox: CheckboxNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(
+    checkbox: CheckboxNode,
+) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let mut widget = iced::widget::Checkbox::new(checkbox.is_checked);
     if let Some(label) = Option::<stabby::string::String>::from(checkbox.label) {
         widget = widget.label(std::string::String::from(label));
@@ -70,7 +72,7 @@ pub(crate) fn build(checkbox: CheckboxNode) -> iced::Element<'static, crate::wid
     if let Some(shaping) = Option::<Shaping>::from(checkbox.shaping) {
         widget = widget.shaping(iced::widget::text::Shaping::from(shaping));
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`CheckboxNode`].

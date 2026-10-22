@@ -4,7 +4,9 @@ use crate::{
 };
 
 /// Builds an `iced::Space` from its node.
-pub fn build<'a, Theme, Renderer>(node: SpaceNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: SpaceNode,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -16,5 +18,5 @@ where
     if let Some(h) = node.height {
         space = space.height(h);
     }
-    space.into()
+    space
 }

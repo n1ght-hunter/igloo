@@ -4,7 +4,9 @@ use crate::{
 };
 
 /// Builds an `iced::Toggler` from its node.
-pub fn build<'a, Theme, Renderer>(node: TogglerNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: TogglerNode,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -42,5 +44,5 @@ where
     if let Some(spacing) = node.spacing {
         toggler = toggler.spacing(spacing);
     }
-    toggler.into()
+    toggler
 }

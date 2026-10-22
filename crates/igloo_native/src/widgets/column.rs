@@ -24,7 +24,7 @@ pub struct ColumnNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     column: ColumnNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let children: std::vec::Vec<_> = column
         .children
         .into_iter()
@@ -53,7 +53,7 @@ pub(crate) fn build<'a>(
     if let Some(clip) = Option::<bool>::from(column.clip) {
         widget = widget.clip(clip);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`ColumnNode`].

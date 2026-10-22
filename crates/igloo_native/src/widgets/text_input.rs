@@ -43,7 +43,7 @@ impl std::fmt::Debug for TextInputNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(input: TextInputNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(input: TextInputNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let placeholder = std::string::String::from(input.placeholder);
     let value = std::string::String::from(input.value);
     let mut widget = iced::widget::TextInput::new(placeholder, value);
@@ -77,7 +77,7 @@ pub(crate) fn build(input: TextInputNode) -> iced::Element<'static, crate::widge
     if let Some(align_x) = Option::<Horizontal>::from(input.align_x) {
         widget = widget.align_x(iced::alignment::Horizontal::from(align_x));
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`TextInputNode`].

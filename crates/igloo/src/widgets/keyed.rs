@@ -7,7 +7,7 @@ use crate::{
 pub fn build<'a, Theme, Renderer>(
     node: KeyedColumnNode,
     children: Vec<iced::Element<'a, Message, Theme, Renderer>>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -32,5 +32,5 @@ where
     if let Some(align) = node.align_items {
         keyed_column = keyed_column.align_items(align.into());
     }
-    keyed_column.into()
+    keyed_column
 }

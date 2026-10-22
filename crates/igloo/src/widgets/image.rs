@@ -4,7 +4,9 @@ use crate::{
 };
 
 /// Builds an `iced::Image` from its node.
-pub fn build<'a, Theme, Renderer>(node: ImageNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: ImageNode,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -36,5 +38,5 @@ where
     if let Some(scale) = node.scale {
         image = image.scale(scale);
     }
-    image.into()
+    image
 }

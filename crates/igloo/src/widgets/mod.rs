@@ -11,6 +11,8 @@ pub mod image;
 pub mod keyed;
 pub mod markdown;
 pub mod pick_list;
+mod prepared;
+pub use prepared::PreparedView;
 pub mod progress_bar;
 pub mod radio;
 pub mod row;
@@ -26,6 +28,7 @@ pub mod tooltip;
 pub mod vertical_slider;
 
 use app::widgets::Node;
+use iced::Widget as _;
 
 /// Message wraps either an opaque callback id the guest minted ahead of time
 /// (fixed callbacks like `on_press`), or a mapper callback id paired with the
@@ -144,13 +147,14 @@ impl<T> WrapperRenderer for T where
 pub fn build_element<'a, Theme, Renderer>(
     tree: &mut Vec<Option<Node>>,
     id: u32,
+    prepared: &'a PreparedView,
 ) -> iced::Element<'a, Message, Theme, Renderer>
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a + 'static,
 {
     let Some(node) = tree.get_mut(id as usize).and_then(Option::take) else {
-        return iced::widget::Space::new().into();
+        return iced::widget::Space::new().boxed();
     };
 
     let build_child_elements = |children: Vec<u32>,
@@ -158,51 +162,62 @@ where
      -> Vec<iced::Element<'a, Message, Theme, Renderer>> {
         children
             .into_iter()
-            .map(|c| build_element(tree, c))
+            .map(|c| build_element(tree, c, prepared))
             .collect()
     };
 
     match node {
-        Node::Text(n) => text::build(n),
+        Node::Text(n) => text::build(n).boxed(),
         Node::Column(mut n) => {
             let children = std::mem::take(&mut n.children);
-            column::build(n, build_child_elements(children, tree))
+            column::build(n, build_child_elements(children, tree)).boxed()
         }
         Node::Row(mut n) => {
             let children = std::mem::take(&mut n.children);
-            row::build(n, build_child_elements(children, tree))
+            let wrap = n.wrap.unwrap_or(false);
+            let widget = row::build(n, build_child_elements(children, tree));
+            if wrap {
+                widget.wrap().boxed()
+            } else {
+                widget.boxed()
+            }
         }
-        Node::Container(n) => container::build(n, build_element(tree, n.content)),
+        Node::Container(n) => container::build(n, build_element(tree, n.content, prepared)).boxed(),
         Node::Tooltip(n) => tooltip::build(
             n,
-            build_element(tree, n.content),
-            build_element(tree, n.tooltip),
-        ),
-        Node::Button(n) => button::build(n, build_element(tree, n.content)),
-        Node::Rule(n) => rule::build(n),
-        Node::Space(n) => space::build(n),
-        Node::Svg(n) => svg::build(n),
-        Node::Image(n) => image::build(n),
-        Node::ProgressBar(n) => progress_bar::build(n),
-        Node::Radio(n) => radio::build(n),
-        Node::Checkbox(n) => checkbox::build(n),
-        Node::Toggler(n) => toggler::build(n),
-        Node::TextInput(n) => text_input::build(n),
-        Node::Slider(n) => slider::build(n),
-        Node::VerticalSlider(n) => vertical_slider::build(n),
-        Node::ComboBox(n) => combo_box::build(n),
-        Node::PickList(n) => pick_list::build(n),
-        Node::Markdown(n) => markdown::build(n),
-        Node::Float(n) => float::build(n, build_element(tree, n.content)),
+            build_element(tree, n.content, prepared),
+            build_element(tree, n.tooltip, prepared),
+        )
+        .boxed(),
+        Node::Button(n) => button::build(n, build_element(tree, n.content, prepared)).boxed(),
+        Node::Rule(n) => rule::build(n).boxed(),
+        Node::Space(n) => space::build(n).boxed(),
+        Node::Svg(n) => svg::build(n).boxed(),
+        Node::Image(n) => image::build(n).boxed(),
+        Node::ProgressBar(n) => progress_bar::build(n).boxed(),
+        Node::Radio(n) => radio::build(n).boxed(),
+        Node::Checkbox(n) => checkbox::build(n).boxed(),
+        Node::Toggler(n) => toggler::build(n).boxed(),
+        Node::TextInput(n) => text_input::build(n).boxed(),
+        Node::Slider(n) => slider::build(n).boxed(),
+        Node::VerticalSlider(n) => vertical_slider::build(n).boxed(),
+        Node::ComboBox(n) => combo_box::build(n, prepared.combo(id)).boxed(),
+        Node::PickList(n) => pick_list::build(n).boxed(),
+        Node::Markdown(n) => markdown::build(n, prepared.markdown(id)).boxed(),
+        Node::Float(n) => float::build(n, build_element(tree, n.content, prepared)).boxed(),
         Node::Grid(mut n) => {
             let children = std::mem::take(&mut n.elements);
-            grid::build(n, build_child_elements(children, tree))
+            grid::build(n, build_child_elements(children, tree)).boxed()
         }
         Node::KeyedColumn(mut n) => {
             let children = std::mem::take(&mut n.children);
-            keyed::build(n, build_child_elements(children, tree))
+            keyed::build(n, build_child_elements(children, tree)).boxed()
         }
-        Node::Scrollable(n) => scrollable::build(n, build_element(tree, n.content)),
-        Node::Explain(n) => build_element(tree, n.content).explain(iced::Color::from(n.color)),
+        Node::Scrollable(n) => {
+            scrollable::build(n, build_element(tree, n.content, prepared)).boxed()
+        }
+        Node::Explain(n) => build_element(tree, n.content, prepared)
+            .explain(iced::Color::from(n.color))
+            .boxed(),
     }
 }

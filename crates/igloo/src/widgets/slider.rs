@@ -4,7 +4,9 @@ use crate::{
 };
 
 /// Builds an `iced::Slider` from its node.
-pub fn build<'a, Theme, Renderer>(node: SliderNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: SliderNode,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -34,5 +36,5 @@ where
     if let Some(shift_step) = node.shift_step {
         slider = slider.shift_step(shift_step);
     }
-    slider.into()
+    slider
 }

@@ -19,7 +19,7 @@ pub struct ProgressBarNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(bar: ProgressBarNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(bar: ProgressBarNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let mut widget = iced::widget::ProgressBar::new(bar.range_start..=bar.range_end, bar.value);
     if let Some(length) = Option::<Length>::from(bar.length) {
         widget = widget.length(iced::Length::from(length));
@@ -30,7 +30,7 @@ pub(crate) fn build(bar: ProgressBarNode) -> iced::Element<'static, crate::widge
     if let Some(vertical) = Option::<bool>::from(bar.vertical) {
         widget = widget.vertical(vertical);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`ProgressBarNode`].

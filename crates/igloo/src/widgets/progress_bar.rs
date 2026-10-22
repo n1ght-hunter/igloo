@@ -6,7 +6,7 @@ use crate::{
 /// Builds an `iced::ProgressBar` from its node.
 pub fn build<'a, Theme, Renderer>(
     node: ProgressBarNode,
-) -> iced::Element<'a, Message, Theme, Renderer>
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -22,5 +22,5 @@ where
     if let Some(vertical) = node.vertical {
         bar = bar.vertical(vertical);
     }
-    bar.into()
+    bar
 }

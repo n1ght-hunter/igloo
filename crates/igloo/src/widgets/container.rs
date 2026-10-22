@@ -6,8 +6,8 @@ use crate::{
 /// Builds an `iced::Container` from its node and its already-built content element.
 pub fn build<'a, Theme, Renderer>(
     node: ContainerNode,
-    content: iced::Element<'a, Message, Theme, Renderer>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+    content: impl iced::Widget<Message, Theme, Renderer> + 'a,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -62,5 +62,5 @@ where
         container = container.align_bottom(align_bottom);
     }
 
-    container.into()
+    container
 }

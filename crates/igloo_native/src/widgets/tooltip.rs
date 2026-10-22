@@ -22,9 +22,11 @@ pub struct TooltipNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     tooltip: TooltipNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let content = crate::widgets::build_node(nodes, tooltip.content);
     let tooltip_content = crate::widgets::build_node(nodes, tooltip.tooltip);
+    let tooltip_content = iced::widget::Container::new(tooltip_content)
+        .padding(Option::<f32>::from(tooltip.padding).unwrap_or(0.0));
     let mut widget = iced::widget::Tooltip::new(
         content,
         tooltip_content,
@@ -33,13 +35,10 @@ pub(crate) fn build<'a>(
     if let Some(gap) = Option::<f32>::from(tooltip.gap) {
         widget = widget.gap(gap);
     }
-    if let Some(padding) = Option::<f32>::from(tooltip.padding) {
-        widget = widget.padding(padding);
-    }
     if let Some(snap) = Option::<bool>::from(tooltip.snap_within_viewport) {
         widget = widget.snap_within_viewport(snap);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`TooltipNode`].

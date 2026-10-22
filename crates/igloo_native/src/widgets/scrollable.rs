@@ -33,7 +33,7 @@ impl std::fmt::Debug for ScrollableNode {
 pub(crate) fn build<'a>(
     nodes: &mut crate::widgets::RenderArena<'a>,
     node: ScrollableNode,
-) -> iced::Element<'a, crate::widgets::Emitted> {
+) -> impl iced::Widget<crate::widgets::Emitted> + 'a {
     let content = crate::widgets::build_node(nodes, node.content);
     let mut widget = iced::widget::Scrollable::new(content);
 
@@ -48,12 +48,12 @@ pub(crate) fn build<'a>(
     }
     if let Some(emit) = Option::from(node.on_scroll) {
         let emit = std::rc::Rc::new(emit);
-        widget = widget.on_scroll(move |viewport| {
-            crate::widgets::Emitted::viewport(&emit, Viewport::from(viewport))
+        widget = widget.on_scroll(move |scroll: iced::widget::scrollable::Scroll| {
+            crate::widgets::Emitted::viewport(&emit, Viewport::from(scroll.viewport))
         });
     }
 
-    widget.into()
+    widget
 }
 
 /// A builder for a [`ScrollableNode`].

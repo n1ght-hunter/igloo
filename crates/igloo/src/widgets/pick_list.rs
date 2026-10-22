@@ -4,7 +4,9 @@ use crate::{
 };
 
 /// Builds an `iced::PickList` from its node.
-pub fn build<'a, Theme, Renderer>(node: PickListNode) -> iced::Element<'a, Message, Theme, Renderer>
+pub fn build<'a, Theme, Renderer>(
+    node: PickListNode,
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -42,5 +44,5 @@ where
         pick_list = pick_list.on_close(Message::Fixed { rep });
     }
 
-    pick_list.into()
+    pick_list
 }

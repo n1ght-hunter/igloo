@@ -30,7 +30,7 @@ impl State {
     fn subscription(&self) -> iced::Subscription<Message> {
         self.plugins.subscriptions()
     }
-    fn view(&self) -> iced::Element<'_, Message> {
+    fn view(&self) -> impl iced::Widget<Message> + '_ {
         self.plugins.view("counter").expect("counter plugin loaded")
     }
 }

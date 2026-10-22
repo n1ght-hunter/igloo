@@ -12,11 +12,11 @@ pub struct RuleNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(rule: RuleNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(rule: RuleNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     if rule.is_horizontal {
-        iced::widget::rule::horizontal(rule.thickness).into()
+        iced::widget::rule::horizontal(rule.thickness)
     } else {
-        iced::widget::rule::vertical(rule.thickness).into()
+        iced::widget::rule::vertical(rule.thickness)
     }
 }
 

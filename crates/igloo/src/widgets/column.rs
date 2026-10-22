@@ -7,7 +7,7 @@ use crate::{
 pub fn build<'a, Theme, Renderer>(
     node: ColumnNode,
     children: Vec<iced::Element<'a, Message, Theme, Renderer>>,
-) -> iced::Element<'a, Message, Theme, Renderer>
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -35,5 +35,5 @@ where
     if let Some(clip) = node.clip {
         col = col.clip(clip);
     }
-    col.into()
+    col
 }

@@ -6,7 +6,7 @@ use crate::{
 /// Builds an `iced::VerticalSlider` from its node.
 pub fn build<'a, Theme, Renderer>(
     node: VerticalSliderNode,
-) -> iced::Element<'a, Message, Theme, Renderer>
+) -> impl iced::Widget<Message, Theme, Renderer> + 'a
 where
     Theme: WrapperTheme + 'a,
     Renderer: WrapperRenderer + 'a,
@@ -36,5 +36,5 @@ where
     if let Some(shift_step) = node.shift_step {
         slider = slider.shift_step(shift_step);
     }
-    slider.into()
+    slider
 }

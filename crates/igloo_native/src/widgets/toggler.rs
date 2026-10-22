@@ -42,7 +42,7 @@ impl std::fmt::Debug for TogglerNode {
 }
 
 #[cfg(feature = "host")]
-pub(crate) fn build(toggler: TogglerNode) -> iced::Element<'static, crate::widgets::Emitted> {
+pub(crate) fn build(toggler: TogglerNode) -> impl iced::Widget<crate::widgets::Emitted> + 'static {
     let mut widget = iced::widget::Toggler::new(toggler.is_toggled);
     if let Some(label) = Option::<stabby::string::String>::from(toggler.label) {
         widget = widget.label(std::string::String::from(label));
@@ -75,7 +75,7 @@ pub(crate) fn build(toggler: TogglerNode) -> iced::Element<'static, crate::widge
     if let Some(spacing) = Option::<f32>::from(toggler.spacing) {
         widget = widget.spacing(spacing);
     }
-    widget.into()
+    widget
 }
 
 /// A builder for a [`TogglerNode`].

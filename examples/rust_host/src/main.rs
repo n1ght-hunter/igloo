@@ -1,4 +1,5 @@
 use anyhow::Result;
+use iced::Widget as _;
 use iced::{
     Task,
     widget::{self, Row, button, text},
@@ -37,7 +38,9 @@ impl IcedApp {
         let plugin_manager = PluginManager::new().unwrap();
         let engine = plugin_manager.engine();
         let mut native = igloo_native::NativePluginManager::new();
-        let native_path = PathBuf::from("../../target/debug")
+        let plugin_base = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let native_path = plugin_base
+            .join("../../target/debug")
             .join(libloading::library_filename("native_counter"));
         let native_boot = if native_path.exists() {
             match native.load(
@@ -67,7 +70,7 @@ impl IcedApp {
         let plugins_to_load: Vec<_> = available_plugins
             .into_iter()
             .filter_map(|(name, path)| {
-                let path = PathBuf::from(path);
+                let path = plugin_base.join(path);
                 if path.exists() {
                     tracing::info!("Plugin found, will load: {} from {}", name, path.display());
                     Some((name.to_string(), path))
@@ -153,7 +156,7 @@ impl IcedApp {
         }
     }
 
-    fn view(&self) -> iced::Element<'_, Message> {
+    fn view(&self) -> impl iced::Widget<Message> + '_ {
         let mut pages: Vec<String> = vec!["Home".to_string()];
 
         self.plugin_manager
@@ -164,32 +167,30 @@ impl IcedApp {
         pages.extend(self.native.ids().map(str::to_owned));
 
         let pages = Row::from_iter(pages.into_iter().map(|page| {
-            iced::Element::from(
-                button(text(page.clone())).on_press_with(move || Message::ChangePage(page.clone())),
-            )
+            button(text(page.clone())).on_press_with(move || Message::ChangePage(page.clone()))
         }));
 
         let page: iced::Element<'_, Message> = match self.current_page.as_str() {
             "Home" => {
                 if self.plugins_loading > 0 {
                     widget::Text::new(format!("Loading {} plugin(s)...", self.plugins_loading))
-                        .into()
+                        .boxed()
                 } else {
-                    widget::Text::new("Home").into()
+                    widget::Text::new("Home").boxed()
                 }
             }
             id if self.native.ids().any(|name| name == id) => self
                 .native
                 .view(id)
-                .map(|view| view.map(Message::Native))
-                .unwrap_or_else(|| widget::Text::new("Unknown native plugin").into()),
+                .map(|view| view.map(Message::Native).boxed())
+                .unwrap_or_else(|| widget::Text::new("Unknown native plugin").boxed()),
             id => self
                 .plugin_manager
                 .plugin_view(id)
-                .map(|e| e.map(|m| Message::Plugin(id.to_string(), m)))
-                .unwrap_or_else(|| widget::Text::new("Unknown Plugin").into()),
+                .map(|e| e.map(|m| Message::Plugin(id.to_string(), m)).boxed())
+                .unwrap_or_else(|| widget::Text::new("Unknown Plugin").boxed()),
         };
 
-        widget::Column::new().push(pages).push(page).into()
+        widget::Column::new().push(pages.boxed()).push(page)
     }
 }
